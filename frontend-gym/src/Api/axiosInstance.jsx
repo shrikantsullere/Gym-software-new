@@ -10,14 +10,21 @@ const axiosInstance = axios.create({
 // Request Interceptor to attach the token to the headers
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    console.log('[AXIOS DEBUG] Request URL:', config.url);
+    console.log('[AXIOS DEBUG] Token found:', token ? token.substring(0, 30) + '...' : 'NO TOKEN IN LOCALSTORAGE');
     if (token) {
-      if (config.headers && typeof config.headers.set === 'function') {
+      if (!config.headers) {
+        config.headers = {};
+      }
+      if (typeof config.headers.set === 'function') {
         config.headers.set('Authorization', `Bearer ${token}`);
       } else {
+        config.headers['Authorization'] = `Bearer ${token}`;
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    console.log('[AXIOS DEBUG] Final Auth Header:', config.headers?.Authorization || config.headers?.get?.('Authorization') || 'NOT SET');
     return config;
   },
   (error) => {

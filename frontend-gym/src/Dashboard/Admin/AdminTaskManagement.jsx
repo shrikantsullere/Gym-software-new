@@ -426,42 +426,49 @@ const AdminTaskManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {tasks
-                .filter(task => task.status === 'Review Pending')
-                .map(task => (
-                  <tr key={task.id}>
-                    <td>{getStaffName(task)}</td>
-                    <td>{task.title}</td>
-                    <td>{new Date(task.dueDate).toLocaleDateString()}</td>
-                    <td>
-                      <span className={`badge bg-${getStatusClass(task.status)}`}>
-                        {task.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="btn-group">
-                        <button
-                          className="btn btn-sm btn-success"
-                          onClick={() => handleApproveTask(task.id)}
-                          title="Approve"
-                        >
-                          <Check size={14} />
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleRejectTask(task.id)}
-                          title="Reject"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              {tasks.filter(t => t.status === 'Review Pending').length === 0 && (
+              {tasks.filter(task => {
+                const s = (task.status || '').toLowerCase();
+                return s === 'pending' || s === 'review pending' || s === 'pending approval' || s === 'in progress';
+              }).length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center">No tasks require approval</td>
+                  <td colSpan="5" className="text-center text-muted">No tasks require approval</td>
                 </tr>
+              ) : (
+                tasks
+                  .filter(task => {
+                    const s = (task.status || '').toLowerCase();
+                    return s === 'pending' || s === 'review pending' || s === 'pending approval' || s === 'in progress';
+                  })
+                  .map(task => (
+                    <tr key={task.id}>
+                      <td>{getStaffName(task)}</td>
+                      <td>{task.title}</td>
+                      <td>{new Date(task.dueDate).toLocaleDateString()}</td>
+                      <td>
+                        <span className={`badge bg-${getStatusClass(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="btn-group">
+                          <button
+                            className="btn btn-sm btn-success"
+                            onClick={() => handleApproveTask(task.id)}
+                            title="Approve"
+                          >
+                            <Check size={14} /> Approve
+                          </button>
+                          <button
+                            className="btn btn-sm btn-danger ms-1"
+                            onClick={() => handleRejectTask(task.id)}
+                            title="Reject"
+                          >
+                            <X size={14} /> Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>

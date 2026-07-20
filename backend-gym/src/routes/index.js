@@ -96,6 +96,7 @@ router.use("/subadmins", subadminRoutes);
 router.use("/global-settings", globalSettingRoutes);
 router.use("/v1/assessments", assessmentRoutes);
 router.use("/v1/leaderboard", leaderboardRoutes);
+router.use("/leaderboard", leaderboardRoutes);
 router.use("/v1/bodybuilding", bodybuildingRoutes);
 router.use("/receptionist-dashboard", receptionistDashboardRoutes);
 router.use("/v1/equipment", equipmentRoutes);

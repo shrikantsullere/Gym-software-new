@@ -39,16 +39,22 @@ export const createAssessment = async (data, createdBy) => {
   const demographic_multiplier = LeaderboardEngine.getDemographicMultiplier(data.age_at_assessment, data.gender_at_assessment);
   
   const is_baseline = !baselineAssessment;
-  const baseline_bf = baselineAssessment ? Number(baselineAssessment.body_fat_percentage) : calculated.metrics.body_fat_percentage;
-  const baseline_lbm = baselineAssessment ? Number(baselineAssessment.lean_body_mass) : calculated.metrics.lean_body_mass;
+  const baseline_bf  = baselineAssessment ? Number(baselineAssessment.body_fat_percentage) : calculated.metrics.body_fat_percentage;
+  const baseline_lbm = baselineAssessment ? Number(baselineAssessment.lean_body_mass)       : calculated.metrics.lean_body_mass;
+  const current_bf   = calculated.metrics.body_fat_percentage;
+  const current_lbm  = calculated.metrics.lean_body_mass;
 
+  // Calculate all 3 goal scores — spec: no demographic multipliers
+  const { fat_loss_score, muscle_gain_score, maintenance_score } = LeaderboardEngine.calculateAllScores({
+    baseline_bf,  current_bf,
+    baseline_lbm, current_lbm
+  });
+
+  // final_leaderboard_score = the score for the member's chosen goal
   const final_leaderboard_score = LeaderboardEngine.calculateScore({
     fitness_goal: data.fitness_goal,
-    baseline_bf: baseline_bf,
-    current_bf: calculated.metrics.body_fat_percentage,
-    baseline_lbm: baseline_lbm,
-    current_lbm: calculated.metrics.lean_body_mass,
-    demographic_multiplier: demographic_multiplier
+    baseline_bf,  current_bf,
+    baseline_lbm, current_lbm
   });
 
   // Map to DB
@@ -90,7 +96,14 @@ export const createAssessment = async (data, createdBy) => {
       is_baseline: is_baseline,
       baseline_bf_percent: baseline_bf,
       baseline_lbm: baseline_lbm,
+      current_bf_percent: current_bf,
+      current_lbm: current_lbm,
       demographic_multiplier: demographic_multiplier,
+      // Separate per-goal scores (spec requirement)
+      fat_loss_score: fat_loss_score,
+      muscle_gain_score: muscle_gain_score,
+      maintenance_score: maintenance_score,
+      // Active goal's score for ranking
       final_leaderboard_score: final_leaderboard_score,
 
       // Dashboard metadata

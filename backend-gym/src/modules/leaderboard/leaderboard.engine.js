@@ -1,15 +1,14 @@
 /**
- * GymCatalyst Engine Pipeline - Normalization Scoring & Demographic Multipliers
+ * Leaderboard Scoring Engine
+ * Spec compliant: Goal-based percentage scoring with safety clamps and no age/gender multipliers.
  */
 
 export class LeaderboardEngine {
   /**
-   * Get the exact Demographic Multiplier based on Age and Gender.
-   * Based on the official GymCatalyst Engine V2 specification.
+   * Kept for backward compatibility.
    */
   static getDemographicMultiplier(age, gender) {
-    const isMale = gender.toLowerCase() === 'male';
-    
+    const isMale = (gender || '').toLowerCase() === 'male';
     if (age < 18) return isMale ? 0.95 : 1.06;
     if (age >= 18 && age <= 29) return isMale ? 1.00 : 1.12;
     if (age >= 30 && age <= 35) return isMale ? 1.04 : 1.16;
@@ -18,59 +17,65 @@ export class LeaderboardEngine {
     if (age >= 46 && age <= 50) return isMale ? 1.22 : 1.37;
     if (age >= 51 && age <= 55) return isMale ? 1.30 : 1.46;
     if (age >= 56 && age <= 60) return isMale ? 1.39 : 1.56;
-    return isMale ? 1.50 : 1.68; // 61+
+    return isMale ? 1.50 : 1.68;
   }
 
   /**
-   * Calculate the final normalized leaderboard score.
-   * @param {Object} member - Data object containing baseline and current metrics.
-   * Expected structure:
-   * {
-   *   fitness_goal: 'fat_loss' | 'muscle_gain' | 'maintenance',
-   *   baseline_bf: number,
-   *   current_bf: number,
-   *   baseline_lbm: number,
-   *   current_lbm: number,
-   *   demographic_multiplier: number
-   * }
+   * Calculate leaderboard score per exact specification:
+   *
+   * 1. Fat Loss:
+   *    Fat Loss Score = ((Baseline BF% - Current BF%) / Baseline BF%) * 100
+   *
+   * 2. Muscle Gain:
+   *    Muscle Gain Score = ((Current LBM - Baseline LBM) / Baseline LBM) * 100
+   *
+   * 3. Maintenance:
+   *    Maintenance Score = MAX(0, 100 - ABS(Current BF% - Baseline BF%) - ABS(Current LBM - Baseline LBM))
    */
   static calculateScore(member) {
-    let rawScore = 0;
-    let finalScore = 0;
+    const { fitness_goal, baseline_bf, current_bf, baseline_lbm, current_lbm } = member;
 
-    // Safety check - if baseline data is missing, score is 0
+    // Safety checks for missing or non-numeric values
     if (
-      member.baseline_bf === undefined || member.baseline_bf === null ||
-      member.baseline_lbm === undefined || member.baseline_lbm === null ||
-      member.demographic_multiplier === undefined || member.demographic_multiplier === null
+      baseline_bf === undefined || baseline_bf === null || isNaN(Number(baseline_bf)) ||
+      current_bf === undefined || current_bf === null || isNaN(Number(current_bf)) ||
+      baseline_lbm === undefined || baseline_lbm === null || isNaN(Number(baseline_lbm)) ||
+      current_lbm === undefined || current_lbm === null || isNaN(Number(current_lbm))
     ) {
       return 0.0;
     }
 
-    if (member.fitness_goal === 'fat_loss') {
-      if (member.baseline_bf <= 0) return 0.0; // Prevent division by zero
-      rawScore = ((member.baseline_bf - member.current_bf) / member.baseline_bf) * 100;
-      finalScore = rawScore * member.demographic_multiplier;
+    const bBF = Number(baseline_bf);
+    const cBF = Number(current_bf);
+    const bLBM = Number(baseline_lbm);
+    const cLBM = Number(current_lbm);
 
-    } else if (member.fitness_goal === 'muscle_gain') {
-      if (member.baseline_lbm <= 0) return 0.0; // Prevent division by zero
-      rawScore = ((member.current_lbm - member.baseline_lbm) / member.baseline_lbm) * 100;
-      finalScore = rawScore * member.demographic_multiplier;
+    let score = 0;
 
-    } else if (member.fitness_goal === 'maintenance') {
-      let bfVariance = Math.abs(member.current_bf - member.baseline_bf);
-      let lbmVariance = Math.abs(member.current_lbm - member.baseline_lbm);
-      let totalVariance = bfVariance + lbmVariance;
-      
-      // Apply inverse multiplier buffer to protect scores against metabolic biological drift
-      let bufferFactor = 2.0 - member.demographic_multiplier;
-      finalScore = 100.0 - (totalVariance * bufferFactor);
+    if (fitness_goal === 'fat_loss') {
+      if (bBF <= 0) return 0.0; // Prevent division by zero
+      score = ((bBF - cBF) / bBF) * 100;
+    } else if (fitness_goal === 'muscle_gain') {
+      if (bLBM <= 0) return 0.0; // Prevent division by zero
+      score = ((cLBM - bLBM) / bLBM) * 100;
+    } else if (fitness_goal === 'maintenance') {
+      const bfDiff = Math.abs(cBF - bBF);
+      const lbmDiff = Math.abs(cLBM - bLBM);
+      score = Math.max(0, 100 - bfDiff - lbmDiff);
     } else {
-      // Default fallback
       return 0.0;
     }
 
-    // Bind to object storage rounded cleanly for database efficiency
-    return parseFloat(finalScore.toFixed(2));
+    if (isNaN(score) || !isFinite(score)) return 0.0;
+
+    return parseFloat(score.toFixed(2));
+  }
+
+  static calculateAllScores(member) {
+    return {
+      fat_loss_score: LeaderboardEngine.calculateScore({ ...member, fitness_goal: 'fat_loss' }),
+      muscle_gain_score: LeaderboardEngine.calculateScore({ ...member, fitness_goal: 'muscle_gain' }),
+      maintenance_score: LeaderboardEngine.calculateScore({ ...member, fitness_goal: 'maintenance' }),
+    };
   }
 }

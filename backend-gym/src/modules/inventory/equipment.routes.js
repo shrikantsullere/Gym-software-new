@@ -36,10 +36,10 @@ router.put("/update/:id", verifyToken(["ADMIN", "SUPERADMIN"]), updateEquipment)
 router.delete("/delete/:id", verifyToken(["ADMIN", "SUPERADMIN"]), deleteEquipment);
 
 // Admin: list all equipment across branches (by adminId)
-router.get("/admin/:adminId/list", verifyToken(["ADMIN", "SUPERADMIN", "MANAGER", "SALES_AGENT"]), listEquipmentByAdmin);
+router.get("/admin/:adminId/list", verifyToken(["ADMIN", "SUPERADMIN", "MANAGER", "SALES_AGENT", "PERSONALTRAINER", "GENERALTRAINER"]), listEquipmentByAdmin);
 
 // Admin: stats across all branches
-router.get("/admin/:adminId/stats", verifyToken(["ADMIN", "SUPERADMIN", "MANAGER", "SALES_AGENT"]), getEquipmentStatsByAdmin);
+router.get("/admin/:adminId/stats", verifyToken(["ADMIN", "SUPERADMIN", "MANAGER", "SALES_AGENT", "PERSONALTRAINER", "GENERALTRAINER"]), getEquipmentStatsByAdmin);
 
 // ========================
 // ITEM REQUEST ROUTES

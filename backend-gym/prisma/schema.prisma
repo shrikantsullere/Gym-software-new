@@ -356,16 +356,18 @@ model notificationlog {
 }
 
 model payment {
-  id          Int      @id @default(autoincrement())
-  memberId    Int
-  planId      Int
-  amount      Float
-  paymentDate DateTime @default(now())
-  invoiceNo   String   @unique(map: "Payment_invoiceNo_key")
-  gstAmount   Float?
-  gstPercent  Float?
-  member      member   @relation(fields: [memberId], references: [id], map: "Payment_memberId_fkey")
-  plan        plan     @relation(fields: [planId], references: [id], onDelete: Cascade, map: "Payment_planId_fkey")
+  id               Int       @id @default(autoincrement())
+  memberId         Int
+  planId           Int?      // references memberplan.id (not plan)
+  memberplanId     Int?
+  amount           Float
+  paymentDate      DateTime  @default(now())
+  invoiceNo        String    @unique(map: "Payment_invoiceNo_key")
+  gstAmount        Float?
+  gstPercent       Float?
+  collectedByName  String?   @db.VarChar(255)
+  collectedByRole  String?   @db.VarChar(100)
+  member           member    @relation(fields: [memberId], references: [id], map: "Payment_memberId_fkey")
 
   @@index([memberId], map: "Payment_memberId_idx")
   @@index([planId], map: "Payment_planId_idx")
@@ -384,7 +386,6 @@ model plan {
   sessions     Int           @default(0)
   validityDays Int           @default(0)
   taxRate      Decimal?      @default(0.00) @db.Decimal(5, 2)
-  payment      payment[]
   branch       branch?       @relation(fields: [branchId], references: [id], map: "Plan_branchId_fkey")
 
   @@index([branchId], map: "Plan_branchId_idx")

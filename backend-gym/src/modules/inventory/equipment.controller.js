@@ -1,9 +1,11 @@
 import {
   createEquipmentService,
   listEquipmentService,
+  listEquipmentByAdminService,
   updateEquipmentService,
   deleteEquipmentService,
   getEquipmentStatsService,
+  getEquipmentStatsByAdminService,
   createItemRequestService,
   listItemRequestsService,
   updateItemRequestStatusService,
@@ -36,6 +38,25 @@ export const getEquipmentStats = async (req, res, next) => {
   try {
     const branchId = parseInt(req.params.branchId);
     const stats = await getEquipmentStatsService(branchId);
+    res.json({ success: true, stats });
+  } catch (err) { next(err); }
+};
+
+// Admin-level: list equipment across all branches
+export const listEquipmentByAdmin = async (req, res, next) => {
+  try {
+    const adminId = parseInt(req.params.adminId);
+    const { search, category } = req.query;
+    const equipment = await listEquipmentByAdminService(adminId, search, category);
+    res.json({ success: true, equipment });
+  } catch (err) { next(err); }
+};
+
+// Admin-level: stats across all branches
+export const getEquipmentStatsByAdmin = async (req, res, next) => {
+  try {
+    const adminId = parseInt(req.params.adminId);
+    const stats = await getEquipmentStatsByAdminService(adminId);
     res.json({ success: true, stats });
   } catch (err) { next(err); }
 };

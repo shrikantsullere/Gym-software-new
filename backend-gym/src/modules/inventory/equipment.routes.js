@@ -3,7 +3,9 @@ import { verifyToken } from "../../middlewares/auth.js";
 import {
   createEquipment,
   listEquipment,
+  listEquipmentByAdmin,
   getEquipmentStats,
+  getEquipmentStatsByAdmin,
   updateEquipment,
   deleteEquipment,
   createItemRequest,
@@ -32,6 +34,12 @@ router.put("/update/:id", verifyToken(["ADMIN", "SUPERADMIN"]), updateEquipment)
 
 // Delete equipment (soft delete)
 router.delete("/delete/:id", verifyToken(["ADMIN", "SUPERADMIN"]), deleteEquipment);
+
+// Admin: list all equipment across branches (by adminId)
+router.get("/admin/:adminId/list", verifyToken(["ADMIN", "SUPERADMIN", "MANAGER", "SALES_AGENT"]), listEquipmentByAdmin);
+
+// Admin: stats across all branches
+router.get("/admin/:adminId/stats", verifyToken(["ADMIN", "SUPERADMIN", "MANAGER", "SALES_AGENT"]), getEquipmentStatsByAdmin);
 
 // ========================
 // ITEM REQUEST ROUTES

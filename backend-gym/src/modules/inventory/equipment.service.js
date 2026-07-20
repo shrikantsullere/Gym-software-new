@@ -46,7 +46,6 @@ export const listEquipmentService = async (branchId, search, category) => {
   sql += ` ORDER BY id DESC`;
   const [rows] = await pool.query(sql, params);
 
-  // Tag items as low stock or maintenance due
   return rows.map(item => ({
     ...item,
     status: item.quantity === 0
@@ -59,6 +58,66 @@ export const listEquipmentService = async (branchId, search, category) => {
       ? "Under Maintenance"
       : "Active"
   }));
+};
+
+// List all equipment across all branches for an admin
+export const listEquipmentByAdminService = async (adminId, search, category) => {
+  // Get all branchIds belonging to this admin
+  const [branches] = await pool.query(`SELECT id FROM branch WHERE adminId = ?`, [adminId]);
+  const branchIds = branches.map(b => b.id);
+
+  // If admin has no branches, return empty
+  if (branchIds.length === 0) return [];
+
+  let sql = `SELECT ge.*, b.name as branchName FROM gym_equipment ge LEFT JOIN branch b ON ge.branchId = b.id WHERE ge.branchId IN (${branchIds.map(() => '?').join(',')}) AND ge.isActive = 1`;
+  const params = [...branchIds];
+
+  if (search) {
+    sql += ` AND (ge.name LIKE ? OR ge.location LIKE ?)`;
+    params.push(`%${search}%`, `%${search}%`);
+  }
+  if (category && category !== "All") {
+    sql += ` AND ge.category = ?`;
+    params.push(category);
+  }
+
+  sql += ` ORDER BY ge.id DESC`;
+  const [rows] = await pool.query(sql, params);
+
+  return rows.map(item => ({
+    ...item,
+    status: item.quantity === 0
+      ? "Out of Stock"
+      : item.quantity <= 2
+      ? "Low Stock"
+      : item.nextMaintenanceDate && new Date(item.nextMaintenanceDate) <= new Date()
+      ? "Maintenance Due"
+      : item.condition === "Under Repair"
+      ? "Under Maintenance"
+      : "Active"
+  }));
+};
+
+// Stats across all branches for an admin
+export const getEquipmentStatsByAdminService = async (adminId) => {
+  const [branches] = await pool.query(`SELECT id FROM branch WHERE adminId = ?`, [adminId]);
+  const branchIds = branches.map(b => b.id);
+
+  if (branchIds.length === 0) {
+    return { totalItems: 0, totalQuantity: 0, lowStockCount: 0, outOfStockCount: 0, maintenanceCount: 0 };
+  }
+
+  const [rows] = await pool.query(
+    `SELECT 
+       COUNT(*) as totalItems,
+       SUM(quantity) as totalQuantity,
+       SUM(CASE WHEN quantity <= 2 AND quantity > 0 THEN 1 ELSE 0 END) as lowStockCount,
+       SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END) as outOfStockCount,
+       SUM(CASE WHEN \`condition\` = 'Under Repair' OR (nextMaintenanceDate IS NOT NULL AND nextMaintenanceDate <= CURDATE()) THEN 1 ELSE 0 END) as maintenanceCount
+     FROM gym_equipment WHERE branchId IN (${branchIds.map(() => '?').join(',')}) AND isActive = 1`,
+    branchIds
+  );
+  return rows[0];
 };
 
 export const updateEquipmentService = async (id, data) => {

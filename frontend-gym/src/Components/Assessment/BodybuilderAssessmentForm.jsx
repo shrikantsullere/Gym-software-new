@@ -76,6 +76,63 @@ const BodybuilderAssessmentForm = () => {
     }
   }, [location.state]);
 
+  // Auto-fill member details when a member is selected
+  useEffect(() => {
+    const fetchMemberData = async () => {
+      if (formData.memberId && members.length > 0) {
+        const selectedMember = members.find(m => m.id.toString() === formData.memberId.toString());
+        if (selectedMember) {
+          setFormData(prev => {
+            let newGender = prev.gender_at_assessment;
+            if (selectedMember.gender) {
+              newGender = selectedMember.gender.toLowerCase();
+            }
+
+            let newAge = prev.age_at_assessment;
+            if (selectedMember.dateOfBirth) {
+              const dob = new Date(selectedMember.dateOfBirth);
+              const today = new Date();
+              let age = today.getFullYear() - dob.getFullYear();
+              const m = today.getMonth() - dob.getMonth();
+              if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+              }
+              if (age > 0) {
+                newAge = age.toString();
+              }
+            }
+
+            return { ...prev, gender_at_assessment: newGender, age_at_assessment: newAge };
+          });
+          
+          // Fetch previous assessment logs to auto-fill measurements
+          try {
+            const res = await axiosInstance.get(`/bodybuilding/${formData.memberId}`);
+            if (res.data && res.data.success !== false && res.data.data && res.data.data.length > 0) {
+              const latestLog = res.data.data[0];
+              setFormData(prev => ({
+                ...prev,
+                weight_kg: latestLog.weight_kg || prev.weight_kg,
+                neck_cm: latestLog.neck_cm || prev.neck_cm, // neck_cm may not exist in DB, handle gracefully
+                chest_cm: latestLog.chest_cm || prev.chest_cm,
+                shoulders_cm: latestLog.shoulders_cm || prev.shoulders_cm,
+                arms_cm: latestLog.left_arm_cm || latestLog.right_arm_cm || prev.arms_cm,
+                forearms_cm: latestLog.left_forearm_cm || latestLog.right_forearm_cm || prev.forearms_cm,
+                waist_cm: latestLog.waist_cm || prev.waist_cm,
+                thighs_cm: latestLog.thighs_cm || prev.thighs_cm,
+                calves_cm: latestLog.calves_cm || prev.calves_cm,
+                coach_notes: latestLog.notes || prev.coach_notes
+              }));
+            }
+          } catch (err) {
+            console.error("Failed to fetch past logs", err);
+          }
+        }
+      }
+    };
+    fetchMemberData();
+  }, [formData.memberId, members]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -102,9 +159,22 @@ const BodybuilderAssessmentForm = () => {
     }
 
     try {
-      // Mocking the API response since the dedicated backend for this might not be ready
-      // We will pretend to save the detailed form successfully
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const dataToSubmit = {
+        weight_kg: formData.weight_kg,
+        chest_cm: formData.chest_cm,
+        shoulders_cm: formData.shoulders_cm,
+        left_arm_cm: formData.arms_cm,
+        right_arm_cm: formData.arms_cm,
+        left_forearm_cm: formData.forearms_cm,
+        right_forearm_cm: formData.forearms_cm,
+        waist_cm: formData.waist_cm,
+        thighs_cm: formData.thighs_cm,
+        calves_cm: formData.calves_cm,
+        notes: formData.coach_notes
+      };
+      
+      await axiosInstance.post(`/bodybuilding/${formData.memberId}`, dataToSubmit);
+      
       setSuccess(true);
       setTimeout(() => navigate(-1), 2000);
     } catch (err) {

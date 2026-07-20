@@ -350,13 +350,14 @@ const ManageStaff = () => {
   }, [roleFilterOpen, statusFilterOpen]);
 
   const getStatusBadge = (status) => {
+    const normalizedStatus = (status === 1 || status === true || status === 'Active' || !status) ? 'Active' : 'Inactive';
     const badgeClasses = {
-      Active: "bg-success-subtle text-success-emphasis",
-      Inactive: "bg-danger-subtle text-danger-emphasis"
+      Active: "bg-success text-white",
+      Inactive: "bg-danger text-white"
     };
     return (
-      <span className={`badge rounded-pill ${badgeClasses[status] || 'bg-secondary'} px-3 py-1`}>
-        {status || 'Active'}
+      <span className={`badge rounded-pill ${badgeClasses[normalizedStatus]} px-3 py-1`}>
+        {normalizedStatus}
       </span>
     );
   };

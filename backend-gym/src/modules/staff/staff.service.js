@@ -63,8 +63,8 @@ export const createStaffService = async (data) => {
   ---------------------------------------------------- */
   const [result] = await pool.query(
     `INSERT INTO user 
-     (adminId, fullName, email, phone, password, roleId, branchId, profileImage)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+     (adminId, fullName, email, phone, password, roleId, branchId, profileImage, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       adminId,
       fullName,
@@ -74,6 +74,7 @@ export const createStaffService = async (data) => {
       roleId,
       adminBranchId, // 👈 staff user bhi same branch me
       profilePhoto || null,
+      data.status || 'Active'
     ]
   );
 
@@ -309,7 +310,7 @@ export const updateStaffService = async (id, data) => {
   const userFields = [];
   const userValues = [];
 
-  const userColumns = ["fullName", "email", "phone", "password", "roleId","profileImage"];
+  const userColumns = ["fullName", "email", "phone", "password", "roleId","profileImage", "status"];
 
   for (const col of userColumns) {
     if (data[col] !== undefined) {

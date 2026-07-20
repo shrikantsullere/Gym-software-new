@@ -26,6 +26,7 @@ export const createStaff = async (req, res, next) => {
       joinDate,
       exitDate,
       profilePhoto,
+      status,
       adminId: adminIdFromBody, // optional fallback
     } = req.body;
 
@@ -72,6 +73,7 @@ export const createStaff = async (req, res, next) => {
       joinDate,
       exitDate: exitDate || null,
       profilePhoto: imageUrl || null,
+      status,
     });
 
     res.json({

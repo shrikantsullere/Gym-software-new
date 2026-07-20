@@ -109,7 +109,7 @@ const ReceptionistHouseKeepingAttendanceCheckOut = () => {
 
     const fetchStaffMembers = async () => {
         try {
-            const response = await axiosInstance.get(`${BaseUrl}staff/all`);
+            const response = await axiosInstance.get(`/staff/all/${adminId}`);
             if (response.data.success) {
                 const transformedStaff = response.data.staff.map(staff => ({
                     id: staff.staffId,

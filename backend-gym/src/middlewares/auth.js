@@ -46,6 +46,9 @@ export const verifyToken = (roles = []) => {
 
       next();
     } catch (err) {
+      if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+        err.status = 401;
+      }
       next(err);
     }
   };

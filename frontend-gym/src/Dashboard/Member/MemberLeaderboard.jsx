@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../Api/axiosInstance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMedal, faFire, faDumbbell, faBalanceScale, faTrophy, faCrown } from '@fortawesome/free-solid-svg-icons';
-import BaseUrl from '../../Api/BaseUrl';
 import './MemberLeaderboard.css';
 
 const MemberLeaderboard = () => {
@@ -30,8 +29,7 @@ const MemberLeaderboard = () => {
 
   const fetchBranches = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${BaseUrl}v1/branches`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axiosInstance.get('v1/branches');
       let branchesData = Array.isArray(res.data) ? res.data : res.data?.branches || res.data?.branch ? (Array.isArray(res.data.branches) ? res.data.branches : [res.data.branch]) : [];
       setBranches(branchesData);
     } catch (err) {
@@ -42,11 +40,7 @@ const MemberLeaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get(`${BaseUrl}v1/leaderboard?branchId=${selectedBranchId}&goal=${activeTab}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axiosInstance.get(`v1/leaderboard?branchId=${selectedBranchId}&goal=${activeTab}`);
 
       if (response.data.status) {
         setLeaderboardData(response.data.data);

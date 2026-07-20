@@ -3,6 +3,7 @@ import { pool } from "../../config/db.js";
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 import { uploadToCloudinary } from "../../config/cloudinary.js";
 import bcrypt from "bcryptjs";
+import { notifySuperAdmin } from "../notifications/notif.service.js";
 
 export const createPurchase = async (req, res) => {
   try {
@@ -34,6 +35,9 @@ export const createPurchase = async (req, res) => {
     data.visiblePassword = data.password || null;
 
     const purchase = await createPurchaseService(data);
+
+    // Notify Super Admin real-time
+    notifySuperAdmin(`New Purchase Request: ${data.companyName || 'Gym'} - Plan: ${data.selectedPlan} (Rs.${data.amount || 0})`, 'IN-APP');
 
     // If this is a demo payment, auto-approve and activate/create the account instantly!
     if (data.isDemoPaid) {

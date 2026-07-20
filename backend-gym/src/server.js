@@ -78,8 +78,4 @@ initTrialCronJobs();
   
   // Initialize Socket.io
   initSocket(server);
-<<<<<<< HEAD
 })();
-=======
-})();// Checked by akriti
->>>>>>> f9602844f9ccd7682c6bc14cf98ad54ef012d65e

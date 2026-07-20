@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 
-const ImageCropper = ({ image, onCropComplete, onCancel }) => {
+const ImageCropper = ({ image, onCropComplete, onCancel, onSkip }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -80,16 +80,23 @@ const ImageCropper = ({ image, onCropComplete, onCancel }) => {
               />
             </div>
           </div>
-          <div className="modal-footer border-0">
-            <button className="btn btn-outline-secondary" onClick={onCancel}>
-              Cancel
-            </button>
+          <div className="modal-footer border-0 d-flex justify-content-between">
+            <div className="d-flex gap-2">
+              <button className="btn btn-outline-secondary" onClick={onCancel}>
+                Cancel
+              </button>
+              {onSkip && (
+                <button className="btn btn-outline-primary" onClick={onSkip} title="Use image without cropping">
+                  Skip Crop
+                </button>
+              )}
+            </div>
             <button
               className="btn"
               style={{ backgroundColor: "#6EB2CC", color: "#fff" }}
               onClick={handleSave}
             >
-              Apply Crop
+              ✂️ Apply Crop
             </button>
           </div>
         </div>
@@ -97,6 +104,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel }) => {
     </div>
   );
 };
+
 
 // Helper function to create cropped image
 const createImage = (url) =>

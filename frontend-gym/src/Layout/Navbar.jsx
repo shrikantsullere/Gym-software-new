@@ -18,9 +18,10 @@ const Navbar = ({ toggleSidebar }) => {
   const dropdownRef = useRef();
   
   // Notification State
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);  // only UNREAD for badge
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifRef = useRef();
+  const notifPollRef = useRef(null);
 
   // Get user data from localStorage
   const getUserFromLocalStorage = () => {
@@ -85,32 +86,48 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   // useEffect to fetch logo on mount and then every minute (no changes here)
+  // Fetch only UNREAD notifications (for red dot badge)
+  const fetchUnreadNotifications = async () => {
+    try {
+      const u = getUserFromLocalStorage();
+      if (u && u.id) {
+        const res = await axiosInstance.get(`/notif/user/${u.id}`);
+        if (res.data && res.data.notifications) {
+          setNotifications(res.data.notifications);
+        }
+      }
+    } catch (err) {
+      // silently fail for notification polling
+    }
+  };
+
   useEffect(() => {
     fetchAppSettings();
-    
-    // Fetch notifications
-    const fetchNotifications = async () => {
-      try {
-        const u = getUserFromLocalStorage();
-        if (u && u.id) {
-          const res = await axiosInstance.get(`/notif/user/${u.id}`);
-          if (res.data && res.data.notifications) {
-            setNotifications(res.data.notifications);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch notifications:", err);
-      }
-    };
-    fetchNotifications();
+    fetchUnreadNotifications();
+
+    // Poll for new notifications every 30 seconds
+    notifPollRef.current = setInterval(fetchUnreadNotifications, 30000);
+    return () => clearInterval(notifPollRef.current);
   }, []);
 
+  // Mark notification as read — removes from unread list + updates DB
   const markNotificationRead = async (id) => {
     try {
       await axiosInstance.put(`/notif/read/${id}`);
-      setNotifications(notifications.filter(n => n.id !== id));
+      // Remove from local unread list so badge count decreases
+      setNotifications(prev => prev.filter(n => n.id !== id));
     } catch (err) {
       console.error("Failed to mark as read:", err);
+    }
+  };
+
+  // Mark ALL unread notifications as read
+  const markAllRead = async () => {
+    try {
+      await Promise.all(notifications.map(n => axiosInstance.put(`/notif/read/${n.id}`)));
+      setNotifications([]);
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
     }
   };
 
@@ -118,25 +135,19 @@ const Navbar = ({ toggleSidebar }) => {
     const u = getUserFromLocalStorage();
     if (!u || !u.id) return;
 
-    // Use standard config for Socket.IO
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-    const socket = io(backendUrl, {
-      withCredentials: true
-    });
+    const socket = io(backendUrl, { withCredentials: true });
 
     socket.on("connect", () => {
-      console.log("🟢 Connected to WebSocket Server", socket.id);
-      socket.emit("join_room", u.id); // Join room named as userId
+      socket.emit("join_room", u.id);
     });
 
+    // Real-time: new notification arrives → add to unread list → red dot appears
     socket.on("new_notification", (data) => {
-      console.log("🔔 Real-time notification received:", data);
       setNotifications(prev => [data, ...prev]);
     });
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, []);
 
   useEffect(() => {
@@ -328,11 +339,16 @@ const Navbar = ({ toggleSidebar }) => {
               className="btn text-white position-relative p-2"
               onClick={() => setShowNotifDropdown(!showNotifDropdown)}
               style={{ border: 'none', background: 'transparent' }}
+              title="Notifications"
             >
               <FaBell size={22} />
+              {/* Red dot only shows when there are UNREAD notifications */}
               {notifications.length > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.65rem' }}>
-                  {notifications.length}
+                <span 
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                  style={{ fontSize: '0.65rem', minWidth: '18px' }}
+                >
+                  {notifications.length > 99 ? '99+' : notifications.length}
                 </span>
               )}
             </button>
@@ -341,37 +357,71 @@ const Navbar = ({ toggleSidebar }) => {
               <div 
                 className="dropdown-menu show shadow p-0"
                 style={{
-                  position: "absolute", right: 0, top: "100%", width: "min(350px, calc(100vw - 20px))", zIndex: 1050,
-                  maxHeight: "450px", overflowY: "auto", borderRadius: "10px", border: "1px solid #e0e0e0"
+                  position: "absolute", right: 0, top: "110%",
+                  width: "min(360px, calc(100vw - 20px))", zIndex: 1050,
+                  maxHeight: "480px", overflowY: "auto",
+                  borderRadius: "12px", border: "1px solid #e0e0e0"
                 }}
               >
-                <div className="bg-light p-3 border-bottom fw-bold text-dark d-flex justify-content-between align-items-center" style={{ position: "sticky", top: 0, zIndex: 1, backgroundColor: "#f8f9fa" }}>
-                  <span>Notifications</span>
-                  <span className="badge bg-primary rounded-pill px-2 py-1">{notifications.length} New</span>
+                {/* Header */}
+                <div 
+                  className="p-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ position: "sticky", top: 0, zIndex: 2, background: "#fff", borderRadius: "12px 12px 0 0" }}
+                >
+                  <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>🔔 Notifications</span>
+                  <div className="d-flex align-items-center gap-2">
+                    {notifications.length > 0 && (
+                      <span className="badge bg-danger rounded-pill px-2 py-1" style={{ fontSize: "0.7rem" }}>
+                        {notifications.length} Unread
+                      </span>
+                    )}
+                    {notifications.length > 0 && (
+                      <button 
+                        className="btn btn-sm btn-outline-secondary py-0 px-2"
+                        style={{ fontSize: "0.7rem", lineHeight: "1.8" }}
+                        onClick={(e) => { e.stopPropagation(); markAllRead(); }}
+                        title="Mark all as read"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Notification list */}
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-muted">
-                    <FaBell size={30} className="text-light mb-2 d-block mx-auto" />
-                    No new notifications
+                  <div className="p-5 text-center text-muted">
+                    <FaBell size={32} style={{ color: "#ddd" }} className="mb-2 d-block mx-auto" />
+                    <p className="mb-0" style={{ fontSize: "0.9rem" }}>No new notifications</p>
                   </div>
                 ) : (
                   <ul className="list-group list-group-flush">
                     {notifications.map(n => (
-                      <li key={n.id} className="list-group-item list-group-item-action p-3 border-bottom" style={{ cursor: 'pointer', transition: "background-color 0.2s" }} onClick={() => markNotificationRead(n.id)}>
+                      <li 
+                        key={n.id} 
+                        className="list-group-item list-group-item-action p-3 border-bottom"
+                        style={{ cursor: 'pointer', background: "#f8faff", transition: "background-color 0.15s" }}
+                        onClick={() => markNotificationRead(n.id)}
+                        onMouseEnter={e => e.currentTarget.style.background = "#eef3ff"}
+                        onMouseLeave={e => e.currentTarget.style.background = "#f8faff"}
+                      >
                         <div className="d-flex w-100 justify-content-between align-items-center mb-1">
-                          <small className="text-primary fw-bold" style={{ fontSize: "0.85rem" }}>{n.type}</small>
-                          <small className="text-muted" style={{ fontSize: "0.75rem" }}>{new Date(n.createdAt).toLocaleString()}</small>
+                          <small className="text-primary fw-bold" style={{ fontSize: "0.8rem" }}>
+                            🔵 {n.type}
+                          </small>
+                          <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                            {new Date(n.createdAt).toLocaleString()}
+                          </small>
                         </div>
-                        <p className="mb-2 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "0.9rem", lineHeight: "1.4" }}>
+                        <p className="mb-1 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "0.88rem", lineHeight: "1.4" }}>
                           {n.message && n.message.includes("📎 Attachment:") ? (
                             <>
                               {n.message.split("📎 Attachment:")[0]}
                               <a 
                                 href={n.message.split("📎 Attachment:")[1]?.trim()} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="badge bg-info text-white text-decoration-none mt-2 d-inline-block px-2 py-1"
-                                onClick={(e) => e.stopPropagation()}
+                                target="_blank" rel="noopener noreferrer" 
+                                className="badge bg-info text-white text-decoration-none mt-1 d-inline-block px-2 py-1"
+                                onClick={e => e.stopPropagation()}
                               >
                                 📎 View Attachment
                               </a>
@@ -379,21 +429,25 @@ const Navbar = ({ toggleSidebar }) => {
                           ) : n.message}
                         </p>
                         <div className="text-end">
-                          <small className="text-primary fw-semibold" style={{ fontSize: "0.75rem" }}>Click to dismiss</small>
+                          <small className="text-primary" style={{ fontSize: "0.7rem" }}>✓ Click to dismiss</small>
                         </div>
                       </li>
                     ))}
                   </ul>
                 )}
                 
-                {/* View All Notifications Link */}
-                <div className="bg-light p-2 border-top text-center" style={{ position: "sticky", bottom: 0, zIndex: 1, borderRadius: "0 0 10px 10px" }}>
+                {/* Footer */}
+                <div 
+                  className="p-2 border-top text-center"
+                  style={{ position: "sticky", bottom: 0, zIndex: 2, background: "#fff", borderRadius: "0 0 12px 12px" }}
+                >
                   <Link 
                     to="/notifications" 
-                    className="text-primary text-decoration-none fw-bold"
+                    className="text-primary text-decoration-none fw-semibold"
+                    style={{ fontSize: "0.85rem" }}
                     onClick={() => setShowNotifDropdown(false)}
                   >
-                    View All Notifications <i className="fas fa-arrow-right ms-1"></i>
+                    View All Notifications →
                   </Link>
                 </div>
               </div>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../Api/axiosInstance';
 import AssessmentHistory from './AssessmentHistory';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const MemberAssessmentDashboard = ({ memberId }) => {
+  const navigate = useNavigate();
   const [assessment, setAssessment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +36,25 @@ const MemberAssessmentDashboard = ({ memberId }) => {
       <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div>
     </div>
   );
-  if (error) return <div className="container mt-5"><div className="alert alert-info text-center"><i className="bi bi-info-circle me-2"></i>{error}</div></div>;
+  if (error) return (
+    <div className="container mt-5">
+      <div className="card shadow-sm border-0 text-center py-5 px-4 rounded-3">
+        <div className="mb-3">
+          <i className="bi bi-journal-x display-4 text-secondary"></i>
+        </div>
+        <h4 className="fw-bold text-dark">{error}</h4>
+        <p className="text-muted small mb-4">No body composition or metrics recorded for this member yet.</p>
+        <div>
+          <button 
+            className="btn btn-primary px-4 py-2 fw-semibold"
+            onClick={() => navigate('/personaltrainer/assessment-form', { state: { preselectMember: memberId } })}
+          >
+            + Log New Assessment for Member
+          </button>
+        </div>
+      </div>
+    </div>
+  );
   if (!assessment) return null;
 
   // Defensive null checks for nested properties to prevent crashes

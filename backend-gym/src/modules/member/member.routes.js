@@ -27,14 +27,13 @@ router.get("/trainer/:trainerId", verifyToken(["Superadmin", "Admin", "Staff"]),
 router.post("/assign-trainer", verifyToken(["Superadmin", "Admin"]), assignTrainerToMemberController);
 router.get("/search", verifyToken(["Superadmin", "Admin", "Staff"]), searchMembersController);
 
-/** Create Member — Superadmin, Admin, Receptionist */
 router.post(
   "/create",
-  verifyToken(["Superadmin", "Admin", "receptionist"]),
+  verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]),
   createMember
 );
 
-router.put("/renew/:memberId", verifyToken(["Superadmin", "Admin", "receptionist"]), renewMembershipPlan);
+router.put("/renew/:memberId", verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]), renewMembershipPlan);
 
 /** List Members by Branch */
 router.get(
@@ -52,12 +51,12 @@ router.get(
   memberDetail
 );
 
-router.put("/admin/renewal/:memberId/status", verifyToken(["Superadmin", "Admin", "receptionist"]), updateMemberRenewalStatus);
+router.put("/admin/renewal/:memberId/status", verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]), updateMemberRenewalStatus);
 
 /** Update Member */
 router.put(
   "/update/:id",
-  verifyToken(["Superadmin", "Admin", "receptionist"]),
+  verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]),
   updateMember
 );
 

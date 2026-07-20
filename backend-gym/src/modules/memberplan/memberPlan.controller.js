@@ -18,10 +18,25 @@ export const createMemberPlan = async (req, res, next) => {
 
 export const getMemberPlans = async (req, res, next) => { 
   try {
-    const adminId = req.query.adminId || req.user?.adminId || req.user?.id;
+    let adminId = req.query.adminId || req.user?.adminId || req.user?.id;
     if (!adminId) throw { status: 400, message: "adminId is required" };
 
-    const plans = await getMemberPlansByAdminIdService(adminId);
+    // First try to get plans for the provided adminId
+    let plans = await getMemberPlansByAdminIdService(adminId);
+
+    // If no plans found, check if this user is a staff member and resolve their admin's plans
+    if (plans.length === 0) {
+      const { pool } = await import("../../config/db.js");
+      const [[userRow]] = await pool.query(
+        "SELECT adminId, roleId FROM user WHERE id = ?",
+        [Number(adminId)]
+      );
+      // If the user is a staff member (roleId 5-10) and has an adminId, use that
+      if (userRow && userRow.adminId && Number(userRow.roleId) >= 5) {
+        plans = await getMemberPlansByAdminIdService(userRow.adminId);
+      }
+    }
+
     res.json({ success: true, plans });
   } catch (err) {
     next(err);

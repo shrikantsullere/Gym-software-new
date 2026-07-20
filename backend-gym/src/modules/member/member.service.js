@@ -1012,6 +1012,16 @@ export const getMembersByAdminIdService = async (adminId) => {
 };
 
 export const getMembersByTrainerIdService = async (trainerId) => {
+  // Find associated staff and user IDs, and adminId for fallback
+  const [staffRows] = await pool.query(
+    "SELECT id, userId, adminId FROM staff WHERE id = ? OR userId = ?",
+    [trainerId, trainerId]
+  );
+
+  const realStaffId = staffRows.length ? staffRows[0].id : trainerId;
+  const realUserId = staffRows.length ? staffRows[0].userId : trainerId;
+  const adminId = staffRows.length ? staffRows[0].adminId : null;
+
   const [rows] = await pool.query(
     `
     SELECT DISTINCT m.*
@@ -1019,11 +1029,37 @@ export const getMembersByTrainerIdService = async (trainerId) => {
     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
     LEFT JOIN memberplan p1 ON mpa.planId = p1.id
     LEFT JOIN memberplan p2 ON m.planId = p2.id
-    WHERE (p1.trainerId = ? OR p2.trainerId = ? OR m.trainerId = ?)
+    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
     ORDER BY m.fullName
     `,
-    [trainerId, trainerId, trainerId]
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
+
+  if (rows.length > 0) {
+    return rows;
+  }
+
+  // Fallback: If no assigned members found, return all members for this gym admin
+  if (adminId) {
+    const [allMembers] = await pool.query(
+      `SELECT * FROM member WHERE adminId = ? ORDER BY fullName`,
+      [adminId]
+    );
+    return allMembers;
+  }
+
+  // Second Fallback: Query by user.adminId if user is passed directly
+  const [userRows] = await pool.query(
+    "SELECT adminId FROM user WHERE id = ?",
+    [trainerId]
+  );
+  if (userRows.length && userRows[0].adminId) {
+    const [allMembers] = await pool.query(
+      `SELECT * FROM member WHERE adminId = ? ORDER BY fullName`,
+      [userRows[0].adminId]
+    );
+    return allMembers;
+  }
 
   return rows;
 };

@@ -230,12 +230,7 @@ const AdminMember = () => {
   const fetchMembersByAdminId = async () => {
     setMembersLoading(true);
     try {
-      let endpoint = `${BaseUrl}members/admin/${adminId}`;
-      if (user && (Number(user.roleId) === 5 || user.roleName === 'PERSONAL TRAINER')) {
-        const staffId = getCurrentStaffId(user);
-        endpoint = `${BaseUrl}members/trainer/${staffId}`;
-      }
-
+      let endpoint = `${BaseUrl}members/admin/${effectiveAdminId}`;
       const response = await axiosInstance.get(endpoint);
 
       if (response.data && response.data.success) {
@@ -481,7 +476,7 @@ const AdminMember = () => {
       const response = await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
         memberId: assignTrainerMember.id,
         trainerId: parseInt(selectedTrainerId),
-        adminId,
+        adminId: effectiveAdminId,
       });
       if (response.data && response.data.success) {
         alert("Trainer assigned successfully!");
@@ -510,7 +505,7 @@ const AdminMember = () => {
       const formData = new FormData();
 
       // Append all member data
-      formData.append("adminId", adminId);
+      formData.append("adminId", effectiveAdminId);
       formData.append("fullName", newMember.fullName);
       formData.append("email", newMember.email);
       formData.append("password", newMember.password);
@@ -563,7 +558,7 @@ const AdminMember = () => {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: createdMemberId,
               trainerId: parseInt(newMember.trainerId),
-              adminId,
+              adminId: effectiveAdminId,
             });
           } catch (trainerErr) {
             console.error("Failed to automatically assign trainer:", trainerErr);
@@ -627,7 +622,7 @@ const AdminMember = () => {
       const formData = new FormData();
 
       // Append all member data
-      formData.append("adminId", adminId);
+      formData.append("adminId", effectiveAdminId);
       formData.append("fullName", editMember.fullName);
       formData.append("email", editMember.email);
       formData.append("phone", editMember.phone);
@@ -800,7 +795,7 @@ const AdminMember = () => {
 
     try {
       const payload = {
-        adminId: adminId,
+        adminId: effectiveAdminId,
         planId: parseInt(renewPlan.plan),
         paymentMode:
           renewPlan.paymentMode.charAt(0).toUpperCase() +

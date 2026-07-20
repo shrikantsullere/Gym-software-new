@@ -67,7 +67,10 @@ export const registerUser = async (data,payload) => {
   let welcomeTemplate = null;
 
   // Assuming roleId = 2 means Admin (Gym Owner)
-  if (roleId === 2 || roleId === '2') {
+  // ONLY apply trial if subscriptionPlan is 'Trial'
+  const isTrialSelected = subscriptionPlan === 'Trial' || data.isTrial === true || data.isTrial === 'true' || data.isTrial === 1;
+
+  if ((roleId === 2 || roleId === '2') && isTrialSelected) {
     const [settings] = await pool.query('SELECT * FROM automation_settings LIMIT 1');
     if (settings.length > 0) {
       const trialDays = settings[0].trialDurationDays || 7;
@@ -92,9 +95,9 @@ export const registerUser = async (data,payload) => {
       fullName, email, password, phone, roleId, branchId, 
       gymName, address, planName, price, duration, description, status, adminId, profileImage, gstNumber, tax, gymAddress,
       subscriptionPlan, licenseExpiryDate,
-      trialStartDate, trialEndDate, trialStatus, gracePeriodEndDate
+      trialStartDate, trialEndDate, trialStatus, gracePeriodEndDate, isTrial
     ) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const [result] = await pool.query(sql, [
@@ -121,7 +124,8 @@ export const registerUser = async (data,payload) => {
     trialStartDate,
     trialEndDate,
     trialStatus,
-    gracePeriodEndDate
+    gracePeriodEndDate,
+    isTrialSelected ? 1 : 0
   ]);
 
   // Simulate Sending Welcome Email & WhatsApp if it's an Admin

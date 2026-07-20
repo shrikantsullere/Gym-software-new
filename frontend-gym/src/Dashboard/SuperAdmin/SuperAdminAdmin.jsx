@@ -872,6 +872,35 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
   const handlePlanChange = (planId) => {
     const selectedPlan = plans.find((p) => p.id == planId);
     if (selectedPlan) {
+      // 1. Auto-determine the Subscription Tier (Basic, Growth, Premium)
+      let subPlan = "Basic";
+      const lowPlan = selectedPlan.name.toLowerCase();
+      if (lowPlan.includes("trial")) subPlan = "Trial";
+      else if (lowPlan.includes("premium") || lowPlan.includes("pro")) subPlan = "Premium";
+      else if (lowPlan.includes("growth")) subPlan = "Growth";
+
+      // 2. Auto-calculate the Expiry Date based on duration string
+      const durationStr = selectedPlan.duration ? selectedPlan.duration.toLowerCase() : "";
+      const startDate = new Date();
+      let expiryDate = new Date(startDate);
+      
+      if (durationStr.includes("year")) {
+         const match = durationStr.match(/(\d+)/);
+         const years = match ? parseInt(match[1], 10) : 1;
+         expiryDate.setFullYear(expiryDate.getFullYear() + years);
+      } else if (durationStr.includes("month")) {
+         const match = durationStr.match(/(\d+)/);
+         const months = match ? parseInt(match[1], 10) : 1;
+         expiryDate.setMonth(expiryDate.getMonth() + months);
+      } else if (durationStr.includes("day")) {
+         const match = durationStr.match(/(\d+)/);
+         const days = match ? parseInt(match[1], 10) : 7;
+         expiryDate.setDate(expiryDate.getDate() + days);
+      } else {
+         // Default fallback to 1 month
+         expiryDate.setMonth(expiryDate.getMonth() + 1);
+      }
+
       setFormData((prev) => ({
         ...prev,
         selectedPlanId: planId,
@@ -879,6 +908,8 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
         planPrice: selectedPlan.price.toString(),
         planDuration: selectedPlan.duration,
         planDescription: selectedPlan.description || `Plan for ${selectedPlan.duration} @ ₹${selectedPlan.price}`,
+        subscriptionPlan: subPlan,
+        licenseExpiryDate: expiryDate.toISOString().split("T")[0]
       }));
     } else {
       setFormData((prev) => ({
@@ -888,6 +919,8 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
         planPrice: "",
         planDuration: "",
         planDescription: "",
+        subscriptionPlan: "Basic",
+        licenseExpiryDate: ""
       }));
     }
   };
@@ -1250,6 +1283,7 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
               <option value="Basic">🔵 Basic</option>
               <option value="Growth">🟡 Growth</option>
               <option value="Premium">🟢 Premium</option>
+              <option value="Trial">⚪ Trial (7 Days)</option>
             </select>
             <small className="text-muted">Select the SaaS tier for this gym owner.</small>
           </div>

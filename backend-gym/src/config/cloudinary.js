@@ -9,7 +9,39 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// ✅ Check if Cloudinary is properly configured
+const isCloudinaryConfigured = () => {
+  const name = process.env.CLOUDINARY_CLOUD_NAME;
+  const key = process.env.CLOUDINARY_API_KEY;
+  const secret = process.env.CLOUDINARY_API_SECRET;
+  return (
+    name && name !== "your_cloud_name_here" &&
+    key && key !== "your_api_key_here" &&
+    secret && secret !== "your_api_secret_here"
+  );
+};
+
 export const uploadToCloudinary = async (file, folder) => {
+  // ✅ If Cloudinary not configured, convert file to base64 and return data URL
+  if (!isCloudinaryConfigured()) {
+    console.warn("⚠️  Cloudinary not configured. Saving image as base64 to database.");
+    try {
+      const fileObj = Array.isArray(file) ? file[0] : file;
+      const fileBuffer = fs.readFileSync(fileObj.tempFilePath);
+      const base64 = fileBuffer.toString("base64");
+      const mimeType = fileObj.mimetype || "image/jpeg";
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+      // Cleanup temp file
+      if (fileObj.tempFilePath && fs.existsSync(fileObj.tempFilePath)) {
+        fs.unlinkSync(fileObj.tempFilePath);
+      }
+      return dataUrl;
+    } catch (err) {
+      console.error("Base64 fallback error:", err);
+      return null;
+    }
+  }
+
   try {
     const fileObj = Array.isArray(file) ? file[0] : file;
 

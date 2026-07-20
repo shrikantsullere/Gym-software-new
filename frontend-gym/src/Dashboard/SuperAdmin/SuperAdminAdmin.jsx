@@ -901,31 +901,74 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        setTempImageSrc(reader.result);
-        setShowCropper(true);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file (JPG, PNG).");
+      e.target.value = "";
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB.");
+      e.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTempImageSrc(reader.result);
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCropComplete = (croppedImage) => {
+    // croppedImage = { blob, url }
+    if (!croppedImage || !croppedImage.blob) {
+      console.error("Crop failed: no blob");
+      return;
+    }
     const file = new File([croppedImage.blob], "profile.jpg", { type: "image/jpeg" });
     setProfileImageFile(file);
     setProfilePreview(croppedImage.url);
     setShowCropper(false);
     setTempImageSrc(null);
+    // reset file input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSkipCrop = () => {
+    // Convert base64 dataURL to File and use directly without cropping
+    if (tempImageSrc) {
+      try {
+        const arr = tempImageSrc.split(",");
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        const blob = new Blob([u8arr], { type: mime });
+        const file = new File([blob], "profile.jpg", { type: mime });
+        setProfileImageFile(file);
+        setProfilePreview(tempImageSrc);
+      } catch (err) {
+        console.error("Skip crop error:", err);
+      }
+    }
+    setShowCropper(false);
+    setTempImageSrc(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCropCancel = () => {
     setShowCropper(false);
     setTempImageSrc(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveImage = () => {
+    setProfileImageFile(null);
+    setProfilePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = (e) => {
@@ -935,23 +978,32 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <>
+      <form onSubmit={handleSubmit}>
       {/* Profile Image */}
       <div className="mb-4 text-center">
         <h6 className="fw-bold mb-2 text-primary">Profile Picture</h6>
         <div
           className="mx-auto rounded-circle overflow-hidden mb-2"
-          style={{ width: "100px", height: "100px", border: "2px solid #eee" }}
+          style={{
+            width: "100px",
+            height: "100px",
+            border: profilePreview ? "3px solid #6EB2CC" : "2px dashed #ccc",
+            cursor: !isView ? "pointer" : "default",
+            background: "#f8f9fa",
+          }}
+          onClick={() => !isView && fileInputRef.current?.click()}
         >
           {profilePreview ? (
             <img
               src={profilePreview}
               alt="Profile"
-              className="w-100 h-100 object-fit-cover"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
-              <span className="text-muted">No Image</span>
+            <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+              <span style={{ fontSize: "1.5rem" }}>📷</span>
+              <span className="text-muted" style={{ fontSize: "0.65rem" }}>Click to upload</span>
             </div>
           )}
         </div>
@@ -960,11 +1012,32 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
             <input
               type="file"
               ref={fileInputRef}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
               onChange={handleImageChange}
               className="form-control form-control-sm"
+              style={{ display: "none" }}
             />
-            <small className="text-muted">Allowed: JPG, PNG (Max 5MB)</small>
+            <div className="d-flex gap-2 justify-content-center mt-1">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => fileInputRef.current?.click()}
+                style={{ fontSize: "0.75rem" }}
+              >
+                {profilePreview ? "Change Photo" : "Choose File"}
+              </button>
+              {profilePreview && (
+                <button
+                  type="button"
+                  className="btn btn-outline-danger btn-sm"
+                  onClick={handleRemoveImage}
+                  style={{ fontSize: "0.75rem" }}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <small className="text-muted d-block mt-1">JPG, PNG (Max 5MB)</small>
           </div>
         )}
       </div>
@@ -1227,14 +1300,18 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
           </button>
         )}
       </div>
-      {showCropper && tempImageSrc && (
-        <ImageCropper
-          image={tempImageSrc}
-          onCropComplete={handleCropComplete}
-          onCancel={handleCropCancel}
-        />
-      )}
-    </form>
+      </form>
+
+    {/* Image Cropper rendered OUTSIDE form to avoid form submission conflicts */}
+    {showCropper && tempImageSrc && (
+      <ImageCropper
+        image={tempImageSrc}
+        onCropComplete={handleCropComplete}
+        onCancel={handleCropCancel}
+        onSkip={handleSkipCrop}
+      />
+    )}
+    </>
   );
 };
 

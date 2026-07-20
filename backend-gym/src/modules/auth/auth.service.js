@@ -20,6 +20,9 @@ export const registerUser = async (data,payload) => {
   const tax = data.tax || '18';
   const gymAddress = data.gymAddress || null;
 
+  // ✅ Subscription & License fields
+  const subscriptionPlan = data.subscriptionPlan || 'Basic';
+  const licenseExpiryDate = data.licenseExpiryDate || null;
 
   const gymName = data.gymName || null;
   const address = data.address || null;
@@ -87,9 +90,10 @@ export const registerUser = async (data,payload) => {
     INSERT INTO user (
       fullName, email, password, phone, roleId, branchId, 
       gymName, address, planName, price, duration, description, status, adminId, profileImage, gstNumber, tax, gymAddress,
+      subscriptionPlan, licenseExpiryDate,
       trialStartDate, trialEndDate, trialStatus, gracePeriodEndDate
     ) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const [result] = await pool.query(sql, [
@@ -106,11 +110,13 @@ export const registerUser = async (data,payload) => {
     duration,
     description,
     status,
-    adminId, 
+    adminId,
     payload.profileImage || null,
     gstNumber,
     tax,
     gymAddress,
+    subscriptionPlan,
+    licenseExpiryDate,
     trialStartDate,
     trialEndDate,
     trialStatus,
@@ -150,7 +156,9 @@ export const registerUser = async (data,payload) => {
     profileImage: payload.profileImage || null,
     gstNumber,
     tax,
-    gymAddress
+    gymAddress,
+    subscriptionPlan,
+    licenseExpiryDate
   };
 };
 

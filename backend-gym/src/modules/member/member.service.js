@@ -950,6 +950,10 @@ export const getMembersByAdminIdService = async (adminId) => {
       m.interestedIn,
       m.amountPaid,
       m.dateOfBirth,
+<<<<<<< HEAD
+=======
+      m.trainerId,
+>>>>>>> 9bfda108573f73d8535891332c1614fc1838e732
       u.profileImage,
       p.trainerId,
       p.trainerType,

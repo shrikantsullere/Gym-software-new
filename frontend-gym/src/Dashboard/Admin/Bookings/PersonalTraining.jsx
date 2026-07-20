@@ -40,7 +40,7 @@ const PersonalTraining = () => {
             date: item.date ? new Date(item.date).toLocaleDateString() : 'N/A',
             startTime: item.startTime || 'N/A',
             endTime: item.endTime || 'N/A',
-            time: item.startTime && item.endTime ? `${item.startTime} - ${item.endTime}` : 'N/A',
+            time: item.time || (item.startTime && item.endTime ? `${item.startTime} - ${item.endTime}` : 'N/A'),
             bookingType: item.bookingType || 'N/A',
             bookingStatus: item.bookingStatus || 'N/A',
             paymentStatus: item.paymentStatus || 'N/A',
@@ -53,7 +53,7 @@ const PersonalTraining = () => {
             sessionName: item.sessionName || 'N/A',
             // Adding additional fields that might be needed for UI
             type: item.sessionName || item.notes || 'Personal Training',
-            price: 'N/A', // Price is not provided in API response
+            price: item.price ? `₹${item.price}` : 'N/A', // Map price from API response
             memberEmail: 'N/A', // Email is not provided in API response
             memberPhone: 'N/A', // Phone is not provided in API response
             memberJoinDate: 'N/A', // Join date is not provided in API response

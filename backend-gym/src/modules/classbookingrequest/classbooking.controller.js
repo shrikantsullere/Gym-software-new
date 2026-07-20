@@ -2017,6 +2017,17 @@ export const deleteUnifiedBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
 
+    if (String(bookingId).startsWith('M-')) {
+      const memberId = bookingId.split('-')[1];
+      const [result] = await pool.query(
+        `UPDATE member SET trainerId = NULL WHERE id = ?`,
+        [memberId]
+      );
+      if (!result.affectedRows)
+        return res.status(404).json({ success: false, message: "Member not found" });
+      return res.json({ success: true, message: "Trainer assignment removed!" });
+    }
+
     const [result] = await pool.query(
       `DELETE FROM unified_bookings WHERE id = ?`,
       [bookingId]
@@ -2190,7 +2201,24 @@ export const getPTBookingsByAdminId = async (req, res) => {
     const [bookings] = await pool.query(
       `
       SELECT 
-        ub.*,
+        ub.id AS id,
+        ub.memberId,
+        ub.trainerId,
+        ub.sessionId,
+        ub.classId,
+        ub.date,
+        ub.endDate,
+        ub.startTime,
+        ub.endTime,
+        ub.bookingType,
+        ub.bookingStatus,
+        ub.paymentStatus,
+        ub.price,
+        NULL AS time,
+        ub.notes,
+        ub.branchId,
+        ub.createdAt,
+        ub.updatedAt,
         m.fullName AS memberName,
         t.fullName AS trainerName,
         s.sessionName
@@ -2205,9 +2233,43 @@ export const getPTBookingsByAdminId = async (req, res) => {
             SELECT id FROM user WHERE adminId = ?
           )
         )
-      ORDER BY ub.date DESC
+
+      UNION ALL
+
+      SELECT
+        CONCAT('M-', m.id) AS id,
+        m.id AS memberId,
+        m.trainerId AS trainerId,
+        NULL AS sessionId,
+        NULL AS classId,
+        m.joinDate AS date,
+        m.membershipTo AS endDate,
+        NULL AS startTime,
+        NULL AS endTime,
+        'PT' AS bookingType,
+        'Assigned' AS bookingStatus,
+        'Completed' AS paymentStatus,
+        IFNULL(p.price, m.amountPaid) AS price,
+        TIME_FORMAT(m.joinDate, '%h:%i %p') AS time,
+        'PT Assigned from Profile' AS notes,
+        m.branchId AS branchId,
+        m.joinDate AS createdAt,
+        m.joinDate AS updatedAt,
+        m.fullName AS memberName,
+        t.fullName AS trainerName,
+        'Assigned PT' AS sessionName
+      FROM member m
+      JOIN user t ON t.id = m.trainerId
+      LEFT JOIN plan p ON p.id = m.planId
+      WHERE m.adminId = ?
+        AND m.trainerId IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM unified_bookings ub 
+          WHERE ub.memberId = m.id AND ub.bookingType = 'PT'
+        )
+      ORDER BY date DESC
       `,
-      [adminId, adminId]
+      [adminId, adminId, adminId]
     );
 
     return res.json({

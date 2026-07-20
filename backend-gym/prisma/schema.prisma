@@ -155,9 +155,11 @@ model expense {
   amount    Float
   date      DateTime @default(now())
   branchId  Int
-  notes     String?
-  createdAt DateTime @default(now())
-  branch    branch   @relation(fields: [branchId], references: [id], map: "Expense_branchId_fkey")
+  notes       String?
+  description String?  @db.VarChar(255)
+  paymentMode String?  @default("Cash") @db.VarChar(50)
+  createdAt   DateTime @default(now())
+  branch      branch   @relation(fields: [branchId], references: [id], map: "Expense_branchId_fkey")
 
   @@index([branchId], map: "Expense_branchId_idx")
 }
@@ -230,6 +232,8 @@ model member {
   password                    String?
   status                      String                        @default("ACTIVE")
   planId                      Int?
+  trainerId                   Int?
+  trainerType                 String?
   discount                    Decimal?                      @default(0.00) @db.Decimal(10, 2)
   goal                        String?
   profileImage                String?                       @db.Text
@@ -350,6 +354,7 @@ model notificationlog {
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
   memberId  Int?
+  error     String?  @db.Text
   member    member?  @relation(fields: [memberId], references: [id], map: "NotificationLog_memberId_fkey")
 
   @@index([memberId], map: "NotificationLog_memberId_idx")
@@ -950,4 +955,39 @@ enum fitness_goal_enum {
   fat_loss
   maintenance
   muscle_gain
+}
+
+model equipment_requests {
+  id           Int       @id @default(autoincrement())
+  requestedBy  Int
+  role         String    @default("MEMBER") @db.VarChar(50)
+  itemName     String    @db.VarChar(255)
+  category     String    @default("Other") @db.VarChar(100)
+  quantity     Int
+  reason       String?   @db.Text
+  branchId     Int?
+  adminId      Int?
+  imageUrl     String?   @db.VarChar(255)
+  status       String    @default("PENDING") @db.VarChar(50)
+  adminRemarks String?   @db.Text
+  createdAt    DateTime? @default(now()) @db.DateTime(0)
+  updatedAt    DateTime? @default(now()) @updatedAt @db.DateTime(0)
+}
+
+model gym_equipment {
+  id                  Int       @id @default(autoincrement())
+  name                String    @db.VarChar(255)
+  category            String?   @db.VarChar(100)
+  quantity            Int       @default(1)
+  condition           String?   @default("Good") @db.VarChar(50)
+  purchaseDate        DateTime? @db.Date
+  purchaseCost        Float?
+  location            String?   @db.VarChar(255)
+  nextMaintenanceDate DateTime? @db.Date
+  branchId            Int
+  notes               String?   @db.Text
+  imageUrl            String?   @db.VarChar(255)
+  isActive            Int       @default(1) @db.TinyInt
+  createdAt           DateTime? @default(now()) @db.DateTime(0)
+  updatedAt           DateTime? @default(now()) @updatedAt @db.DateTime(0)
 }

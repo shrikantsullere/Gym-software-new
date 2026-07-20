@@ -18,7 +18,7 @@ const InventoryManagement = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '', category: 'Cardio', quantity: 1, condition: 'Good',
-    purchaseDate: '', purchaseCost: '', location: '', notes: ''
+    purchaseDate: '', purchaseCost: '', location: '', notes: '', nextMaintenanceDate: ''
   });
   const [equipmentImage, setEquipmentImage] = useState(null);
   const [equipmentImagePreview, setEquipmentImagePreview] = useState(null);
@@ -129,7 +129,7 @@ const InventoryManagement = () => {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       setShowAddModal(false);
-      setFormData({ name: '', category: 'Cardio', quantity: 1, condition: 'Good', purchaseDate: '', purchaseCost: '', location: '', notes: '' });
+      setFormData({ name: '', category: 'Cardio', quantity: 1, condition: 'Good', purchaseDate: '', purchaseCost: '', location: '', notes: '', nextMaintenanceDate: '' });
       setEquipmentImage(null);
       setEquipmentImagePreview(null);
       fetchData();
@@ -148,7 +148,8 @@ const InventoryManagement = () => {
       purchaseDate: item.purchaseDate ? new Date(item.purchaseDate).toISOString().split('T')[0] : '',
       purchaseCost: item.purchaseCost || '',
       location: item.location || '',
-      notes: item.notes || ''
+      notes: item.notes || '',
+      nextMaintenanceDate: item.nextMaintenanceDate ? new Date(item.nextMaintenanceDate).toISOString().split('T')[0] : ''
     });
     setEditEquipmentImage(null);
     setEditEquipmentImagePreview(item.imageUrl || null);
@@ -561,16 +562,22 @@ const InventoryManagement = () => {
                   <Form.Control type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="e.g. First Floor Cardio" />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <Form.Group>
                   <Form.Label>Purchase Date</Form.Label>
                   <Form.Control type="date" value={formData.purchaseDate} onChange={e => setFormData({...formData, purchaseDate: e.target.value})} />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <Form.Group>
                   <Form.Label>Purchase Cost</Form.Label>
                   <Form.Control type="number" step="0.01" value={formData.purchaseCost} onChange={e => setFormData({...formData, purchaseCost: e.target.value})} placeholder="e.g. 15000" />
+                </Form.Group>
+              </div>
+              <div className="col-md-4">
+                <Form.Group>
+                  <Form.Label>Next Maintenance Date</Form.Label>
+                  <Form.Control type="date" value={formData.nextMaintenanceDate || ''} onChange={e => setFormData({...formData, nextMaintenanceDate: e.target.value})} />
                 </Form.Group>
               </div>
               <div className="col-12">
@@ -669,16 +676,22 @@ const InventoryManagement = () => {
                   <Form.Control type="text" value={editFormData.location || ''} onChange={e => setEditFormData({...editFormData, location: e.target.value})} />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <Form.Group>
                   <Form.Label>Purchase Date</Form.Label>
                   <Form.Control type="date" value={editFormData.purchaseDate || ''} onChange={e => setEditFormData({...editFormData, purchaseDate: e.target.value})} />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <Form.Group>
                   <Form.Label>Purchase Cost</Form.Label>
                   <Form.Control type="number" step="0.01" value={editFormData.purchaseCost || ''} onChange={e => setEditFormData({...editFormData, purchaseCost: e.target.value})} />
+                </Form.Group>
+              </div>
+              <div className="col-md-4">
+                <Form.Group>
+                  <Form.Label>Next Maintenance Date</Form.Label>
+                  <Form.Control type="date" value={editFormData.nextMaintenanceDate || ''} onChange={e => setEditFormData({...editFormData, nextMaintenanceDate: e.target.value})} />
                 </Form.Group>
               </div>
               <div className="col-12">

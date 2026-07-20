@@ -20,11 +20,17 @@ export const recordPaymentService = async (data) => {
   );
   if (!member) throw { status: 404, message: "Member not found" };
 
-  // Verify plan exists
-  const [[plan]] = await pool.query(
-    "SELECT * FROM plan WHERE id = ?",
+  // Verify plan exists (check memberplan first, then plan)
+  let [[plan]] = await pool.query(
+    "SELECT * FROM memberplan WHERE id = ?",
     [planId]
   );
+  if (!plan) {
+    [[plan]] = await pool.query(
+      "SELECT * FROM plan WHERE id = ?",
+      [planId]
+    );
+  }
   if (!plan) throw { status: 404, message: "Plan not found" };
 
   const invoiceNo = generateInvoiceNo();
@@ -96,8 +102,9 @@ export const createRazorpayOrderService = async (data) => {
 // --- PAYMENT HISTORY FOR MEMBER ---
 export const paymentHistoryService = async (memberId) => {
   const [rows] = await pool.query(
-    `SELECT p.*, pl.name AS planName, pl.price AS planPrice
+    `SELECT p.*, COALESCE(mp.name, pl.name) AS planName, COALESCE(mp.price, pl.price) AS planPrice
      FROM payment p
+     LEFT JOIN memberplan mp ON p.planId = mp.id
      LEFT JOIN plan pl ON p.planId = pl.id
      WHERE p.memberId = ?
      ORDER BY p.id DESC`,
@@ -108,20 +115,52 @@ export const paymentHistoryService = async (memberId) => {
 
 // --- ALL PAYMENTS BY ADMIN/BRANCH ---
 export const allPaymentsService = async (adminId, branchId) => {
-  let query = `SELECT p.*, m.fullName AS memberName, pl.name AS planName, pl.price AS planPrice
-     FROM payment p
-     LEFT JOIN member m ON p.memberId = m.id
-     LEFT JOIN plan pl ON p.planId = pl.id
-     WHERE m.adminId = ?`;
-     
-  const params = [adminId];
-  
-  if (branchId && branchId !== 'all' && branchId !== '') {
-    query += ` AND m.branchId = ?`;
-    params.push(branchId);
-  }
-  
-  query += ` ORDER BY p.id DESC`;
+  const hasBranchFilter = branchId && branchId !== 'all' && branchId !== '' && branchId !== 'null' && branchId !== 'undefined';
+
+  let query = `
+    SELECT 
+      p.id,
+      p.memberId,
+      p.planId,
+      p.amount,
+      p.paymentDate,
+      p.invoiceNo,
+      COALESCE(p.collectedByName, 'Sales Agent') AS collectedByName,
+      COALESCE(p.collectedByRole, 'Staff') AS collectedByRole,
+      m.fullName AS memberName,
+      COALESCE(mp.name, pl.name, 'Membership Plan') AS planName,
+      COALESCE(mp.price, pl.price, p.amount) AS planPrice
+    FROM payment p
+    JOIN member m ON p.memberId = m.id
+    LEFT JOIN memberplan mp ON p.planId = mp.id
+    LEFT JOIN plan pl ON p.planId = pl.id
+    WHERE m.adminId = ? ${hasBranchFilter ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
+
+    UNION ALL
+
+    SELECT 
+      (m.id + 10000) AS id,
+      m.id AS memberId,
+      m.planId AS planId,
+      m.amountPaid AS amount,
+      m.joinDate AS paymentDate,
+      CONCAT('INV-', m.id) AS invoiceNo,
+      'System' AS collectedByName,
+      'Registration' AS collectedByRole,
+      m.fullName AS memberName,
+      COALESCE(mp.name, pl.name, 'Membership Plan') AS planName,
+      COALESCE(mp.price, pl.price, m.amountPaid) AS planPrice
+    FROM member m
+    LEFT JOIN memberplan mp ON m.planId = mp.id
+    LEFT JOIN plan pl ON m.planId = pl.id
+    WHERE m.adminId = ? AND m.amountPaid > 0 ${hasBranchFilter ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
+
+    ORDER BY paymentDate DESC
+  `;
+
+  const params = hasBranchFilter 
+    ? [adminId, branchId, adminId, branchId] 
+    : [adminId, adminId];
 
   const [rows] = await pool.query(query, params);
   return rows;

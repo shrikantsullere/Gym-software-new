@@ -196,7 +196,7 @@ export const getSuperAdminDashboard = async (req, res, next) => {
 export const getSalesDashboard = async (req, res, next) => {
   try {
     const adminId = Number(req.query.adminId);
-    const branchId = req.query.branchId ? Number(req.query.branchId) : null;
+    const branchId = (req.query.branchId && req.query.branchId !== "all" && req.query.branchId !== "null" && req.query.branchId !== "undefined") ? Number(req.query.branchId) : null;
 
     if (!adminId) {
       return res.status(400).json({
@@ -213,15 +213,25 @@ export const getSalesDashboard = async (req, res, next) => {
     ========================= */
     const [[revenueThisMonth]] = await pool.query(
       `
-      SELECT SUM(p.amount) AS total
-      FROM payment p
-      JOIN member m ON p.memberId = m.id
-      WHERE m.adminId = ?
-        ${branchId ? "AND m.branchId = ?" : ""}
-        AND MONTH(p.paymentDate) = MONTH(CURDATE())
-        AND YEAR(p.paymentDate) = YEAR(CURDATE())
+      SELECT (
+        COALESCE((
+          SELECT SUM(p.amount)
+          FROM payment p
+          JOIN member m ON p.memberId = m.id
+          WHERE m.adminId = ? ${branchId ? "AND m.branchId = ?" : ""}
+            AND MONTH(p.paymentDate) = MONTH(CURDATE())
+            AND YEAR(p.paymentDate) = YEAR(CURDATE())
+        ), 0) +
+        COALESCE((
+          SELECT SUM(m.amountPaid)
+          FROM member m
+          WHERE m.adminId = ? ${branchId ? "AND m.branchId = ?" : ""}
+            AND MONTH(m.joinDate) = MONTH(CURDATE())
+            AND YEAR(m.joinDate) = YEAR(CURDATE())
+        ), 0)
+      ) AS total
       `,
-      bIdParams
+      branchId ? [adminId, branchId, adminId, branchId] : [adminId, adminId]
     );
 
     /* =========================
@@ -232,7 +242,7 @@ export const getSalesDashboard = async (req, res, next) => {
       SELECT COUNT(*) AS count
       FROM member m
       WHERE m.adminId = ?
-        ${bIdFilter}
+        ${branchId ? "AND m.branchId = ?" : ""}
         AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
       `,
       bIdParams
@@ -247,7 +257,7 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM leads
       WHERE adminId = ?
         ${bIdFilter}
-        AND status IN ('New', 'Contacted', 'Follow Up')
+        AND (status IS NULL OR status NOT IN ('Converted', 'Lost'))
       `,
       bIdParams
     );
@@ -258,12 +268,10 @@ export const getSalesDashboard = async (req, res, next) => {
     const [[pendingRenewals]] = await pool.query(
       `
       SELECT COUNT(*) AS count
-      FROM member_plan_assignment mpa
-      JOIN member m ON mpa.memberId = m.id
+      FROM member m
       WHERE m.adminId = ?
         ${branchId ? "AND m.branchId = ?" : ""}
-        AND mpa.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-        AND mpa.status = 'Active'
+        AND m.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
       `,
       bIdParams
     );
@@ -275,16 +283,15 @@ export const getSalesDashboard = async (req, res, next) => {
     const [incomeData] = await pool.query(
       `
       SELECT 
-        DATE_FORMAT(p.paymentDate, '%b') AS month,
-        YEAR(p.paymentDate) AS year,
-        SUM(p.amount) AS total
-      FROM payment p
-      JOIN member m ON p.memberId = m.id
+        DATE_FORMAT(m.joinDate, '%b') AS month,
+        YEAR(m.joinDate) AS year,
+        SUM(m.amountPaid) AS total
+      FROM member m
       WHERE m.adminId = ?
         ${branchId ? "AND m.branchId = ?" : ""}
-        AND p.paymentDate >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
       GROUP BY year, month
-      ORDER BY year, MONTH(p.paymentDate)
+      ORDER BY year, MONTH(m.joinDate)
       `,
       bIdParams
     );
@@ -305,15 +312,13 @@ export const getSalesDashboard = async (req, res, next) => {
       `,
       bIdParams
     );
-    
-    // We can also fetch salaries but for simplicity and speed, let's just use expense table for now
-    
+
     /* =========================
        6️⃣ LEAD CONVERSION
     ========================= */
     const [leadConversion] = await pool.query(
       `
-      SELECT status, COUNT(*) AS count
+      SELECT COALESCE(status, 'New') AS status, COUNT(*) AS count
       FROM leads
       WHERE adminId = ?
         ${bIdFilter}
@@ -328,18 +333,17 @@ export const getSalesDashboard = async (req, res, next) => {
     const [recentTransactions] = await pool.query(
       `
       SELECT 
-        p.id,
-        p.invoiceNo,
-        p.amount,
-        p.paymentDate,
+        m.id,
+        CONCAT('INV-', m.id) AS invoiceNo,
+        COALESCE(m.amountPaid, 0) AS amount,
+        m.joinDate AS paymentDate,
         m.fullName AS memberName,
         pl.name AS planName
-      FROM payment p
-      JOIN member m ON p.memberId = m.id
-      LEFT JOIN plan pl ON p.planId = pl.id
+      FROM member m
+      LEFT JOIN plan pl ON m.planId = pl.id
       WHERE m.adminId = ?
         ${branchId ? "AND m.branchId = ?" : ""}
-      ORDER BY p.paymentDate DESC
+      ORDER BY m.joinDate DESC
       LIMIT 5
       `,
       bIdParams
@@ -354,7 +358,7 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM leads
       WHERE adminId = ?
         ${bIdFilter}
-        AND DATE(followUpDate) = CURDATE()
+        AND (DATE(followUpDate) = CURDATE() OR followUpDate IS NULL)
       LIMIT 5
       `,
       bIdParams

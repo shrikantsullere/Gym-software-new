@@ -61,7 +61,6 @@ const ReceptionistPaymentCollection = () => {
         if (activeTab === 'payment') {
           // Fetch Payments
           const res = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
-<<<<<<< HEAD
           if(res.data.success) setPayments(res.data.payments || res.data.data || []);
           
           // Fetch Members (for dropdown)
@@ -71,40 +70,16 @@ const ReceptionistPaymentCollection = () => {
           // Fetch Plans (for dropdown)
           const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
           if(planRes.data.success) setPlans(planRes.data.plans || planRes.data.data || []);
-=======
-          console.log("Payments fetched:", res.data);
-          if(res.data.success) setPayments(res.data.payments);
-          
-          // Fetch Members (for dropdown)
-          const memRes = await axiosInstance.get(`/members/admin/${adminId}`);
-          console.log("Members fetched:", memRes.data);
-          if(memRes.data.success) setMembers(memRes.data.members || memRes.data.data);
-          
-          // Fetch Plans (for dropdown)
-          const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
-          console.log("Plans fetched:", planRes.data);
-          if(planRes.data.success) setPlans(planRes.data.plans);
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
           
         } else if (activeTab === 'attendance') {
           // Fetch Attendance
           const res = await axiosInstance.get(`/memberattendence/admin?adminId=${adminId}`);
-<<<<<<< HEAD
           if(res.data.success) setAttendanceRecords(res.data.attendance || res.data.data || []);
-=======
-          console.log("Attendance fetched:", res.data);
-          if(res.data.success) setAttendanceRecords(res.data.attendance);
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
           
         } else if (activeTab === 'plans') {
           // Fetch Plans View
           const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
-<<<<<<< HEAD
           if(planRes.data.success) setPlans(planRes.data.plans || planRes.data.data || []);
-=======
-          console.log("Plans view fetched:", planRes.data);
-          if(planRes.data.success) setPlans(planRes.data.plans);
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
         }
       } catch (err) {
         console.error("Error fetching data inside ReceptionistPaymentCollection:", err);
@@ -151,13 +126,25 @@ const ReceptionistPaymentCollection = () => {
   const [memberType, setMemberType] = useState('existing');
   const [selectedMemberDetails, setSelectedMemberDetails] = useState(null);
 
-  const handleAddPayment = () => {
+  const handleAddPayment = async () => {
     setPaymentModalType('add');
     setSelectedPayment(null);
-    setNewPayment({ memberId: "", planId: "", amount: "", paymentMode: "Razorpay", status: "Paid" });
+    setNewPayment({ memberId: "", planId: "", amount: "", paymentMode: "Cash", status: "Paid" });
     setSelectedMemberDetails(null);
     setMemberType('existing');
     setIsPaymentModalOpen(true);
+
+    if (adminId) {
+      try {
+        const memRes = await axiosInstance.get(`/members/admin/${adminId}`);
+        if (memRes.data.success) setMembers(memRes.data.data || memRes.data.members || []);
+
+        const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
+        if (planRes.data.success) setPlans(planRes.data.data || planRes.data.plans || []);
+      } catch (err) {
+        console.error("Error fetching modal dropdown data:", err);
+      }
+    }
   };
 
   const handleViewPayment = (payment) => {
@@ -169,12 +156,17 @@ const ReceptionistPaymentCollection = () => {
   const submitNewPayment = async (e) => {
     e.preventDefault();
     try {
+      const userStr = localStorage.getItem("user");
+      const userObj = userStr ? JSON.parse(userStr) : {};
+
       const payload = {
         memberId: newPayment.memberId,
         planId: newPayment.planId,
         amount: newPayment.amount,
         paymentMode: newPayment.paymentMode,
-        trainerName: newPayment.trainerName
+        trainerName: newPayment.trainerName,
+        collectedByName: userObj?.fullName || "Sales Agent",
+        collectedByRole: userObj?.role || "SALES_AGENT"
       };
       const res = await axiosInstance.post("/payments/create", payload);
       if(res.data.success) {
@@ -182,15 +174,11 @@ const ReceptionistPaymentCollection = () => {
         closePaymentModal();
         // Refresh Payments
         const refreshRes = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
-<<<<<<< HEAD
         if(refreshRes.data.success) setPayments(refreshRes.data.payments || refreshRes.data.data || []);
-=======
-        if(refreshRes.data.success) setPayments(refreshRes.data.payments);
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
       }
     } catch (error) {
       console.error("Payment submission failed:", error);
-      alert("Failed to add payment. Please check details.");
+      alert(error.response?.data?.message || "Failed to add payment. Please check details.");
     }
   };
 

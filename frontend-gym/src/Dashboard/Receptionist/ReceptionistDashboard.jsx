@@ -35,9 +35,9 @@ const SalesDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const branchId = userData.branchId || 1;
-  const adminId = userData.adminId || 90;
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const branchId = user.branchId || "";
+  const adminId = user.adminId || user.id || 90;
 
   const [dashboardData, setDashboardData] = useState({
     summary: {

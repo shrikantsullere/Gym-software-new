@@ -55,7 +55,12 @@ export const addLeadService = async (data) => {
  */
 export const getAllLeadsService = async (adminId) => {
   const [rows] = await pool.query(
-    `SELECT * FROM leads WHERE adminId = ? ORDER BY createdAt DESC`,
+    `SELECT l.*, u.fullName AS assignedStaffName 
+     FROM leads l 
+     LEFT JOIN staff s ON l.assignedToStaffId = s.id 
+     LEFT JOIN user u ON s.userId = u.id 
+     WHERE l.adminId = ? 
+     ORDER BY l.createdAt DESC`,
     [adminId]
   );
   return rows;
@@ -64,13 +69,10 @@ export const getAllLeadsService = async (adminId) => {
 /**
  * Get all leads for superadmin (global CRM)
  */
-/**
- * Get SAAS leads only for superadmin (landing page inquiries from potential gym owners)
- */
 export const getSuperAdminLeadsService = async () => {
   const [rows] = await pool.query(
     `SELECT * FROM leads 
-     WHERE leadType = 'SAAS'
+     WHERE leadType = 'SAAS' OR adminId IS NULL
      ORDER BY createdAt DESC`
   );
   return rows;
@@ -86,7 +88,7 @@ export const getSuperAdminLeadStatsService = async () => {
      SUM(CASE WHEN status = 'New' THEN 1 ELSE 0 END) as newLeads
      FROM leads WHERE leadType = 'SAAS'`
   );
-  const rate = total.total > 0 ? Math.round((total.converted / total.total) * 100) : 0;
+  const rate = total.total > 0 ? ((total.converted / total.total) * 100).toFixed(1) : 0;
   return { total: total.total, converted: total.converted, newLeads: total.newLeads, conversionRate: rate };
 };
 
@@ -94,42 +96,23 @@ export const getSuperAdminLeadStatsService = async () => {
  * Public (no auth) — Save a SaaS lead from the landing page
  */
 export const addSaasLeadService = async (data) => {
-  const { fullName, phone, email, gymName, city, source = 'Landing Page', interestedPlan, notes } = data;
-
-  if (!fullName || !phone) {
-    throw { status: 400, message: 'fullName and phone are required' };
-  }
-
+  const { fullName, email, phone, source = 'Landing Page', status = 'New', notes, interestedPlan } = data;
   const [result] = await pool.query(
     `INSERT INTO leads (adminId, fullName, email, phone, source, status, notes, leadType, interestedPlan, createdAt, updatedAt)
-     VALUES (NULL, ?, ?, ?, ?, 'New', ?, 'SAAS', ?, NOW(), NOW())`,
-    [fullName, email || null, phone, source, notes ? `City: ${city || 'N/A'} | Gym: ${gymName || 'N/A'} | ${notes}` : `City: ${city || 'N/A'} | Gym: ${gymName || 'N/A'}`, interestedPlan || null]
+     VALUES (NULL, ?, ?, ?, ?, ?, ?, 'SAAS', ?, NOW(), NOW())`,
+    [fullName, email || null, phone, source, status, notes || null, interestedPlan || null]
   );
-
-  return { id: result.insertId, fullName, phone, source, interestedPlan, leadType: 'SAAS' };
+  return { id: result.insertId, fullName, email, phone, source, status, leadType: 'SAAS' };
 };
 
 /**
  * Update a lead (status, notes, etc.)
  */
 export const updateLeadService = async (id, data) => {
-  const { status, notes, fullName, email, phone, gender, followUpDate, source, assignedToStaffId } = data;
-
-  // Fetch existing
   const [[existing]] = await pool.query("SELECT * FROM leads WHERE id = ?", [id]);
-  if (!existing) {
-    throw { status: 404, message: "Lead not found" };
-  }
+  if (!existing) throw { status: 404, message: "Lead not found" };
 
-  let parsedStaffId = existing.assignedToStaffId;
-  if (assignedToStaffId !== undefined) {
-    parsedStaffId = (assignedToStaffId && assignedToStaffId !== "undefined" && assignedToStaffId !== "null" && assignedToStaffId !== "") ? parseInt(assignedToStaffId) : null;
-  }
-
-  let parsedFollowUpDate = existing.followUpDate;
-  if (followUpDate !== undefined) {
-    parsedFollowUpDate = (followUpDate && followUpDate !== "undefined" && followUpDate !== "null" && followUpDate !== "") ? followUpDate : null;
-  }
+  const { fullName, email, phone, gender, source, status, notes, followUpDate, assignedToStaffId, interestedPlan } = data;
 
   await pool.query(
     `UPDATE leads SET 
@@ -139,21 +122,23 @@ export const updateLeadService = async (id, data) => {
       gender = COALESCE(?, gender),
       source = COALESCE(?, source),
       status = COALESCE(?, status),
-      assignedToStaffId = ?,
       notes = COALESCE(?, notes),
-      followUpDate = ?,
+      followUpDate = COALESCE(?, followUpDate),
+      assignedToStaffId = COALESCE(?, assignedToStaffId),
+      interestedPlan = COALESCE(?, interestedPlan),
       updatedAt = NOW()
      WHERE id = ?`,
     [
-      fullName !== undefined ? fullName : null, 
-      email !== undefined ? email : null, 
-      phone !== undefined ? phone : null, 
-      gender !== undefined ? gender : null, 
-      source !== undefined ? source : null, 
-      status !== undefined ? status : null, 
-      parsedStaffId, 
-      notes !== undefined ? notes : null, 
-      parsedFollowUpDate, 
+      fullName || null,
+      email || null,
+      phone || null,
+      gender || null,
+      source || null,
+      status || null,
+      notes || null,
+      followUpDate || null,
+      assignedToStaffId || null,
+      interestedPlan || null,
       id
     ]
   );
@@ -167,15 +152,13 @@ export const updateLeadService = async (id, data) => {
  */
 export const deleteLeadService = async (id) => {
   const [result] = await pool.query("DELETE FROM leads WHERE id = ?", [id]);
-  if (result.affectedRows === 0) {
-    throw { status: 404, message: "Lead not found" };
-  }
+  if (result.affectedRows === 0) throw { status: 404, message: "Lead not found" };
   return true;
 };
 
 /**
  * Get leads assigned to a specific staff member (Sales Agent view)
- * Sales agents can ONLY see their own assigned leads - Clash-Free CRM
+ * Sales agents can see assigned leads + leads created under their admin
  */
 export const getLeadsByStaffService = async (userId) => {
   const parsedUserId = parseInt(userId);
@@ -183,15 +166,31 @@ export const getLeadsByStaffService = async (userId) => {
     throw { status: 400, message: "userId is required" };
   }
 
-  const [rows] = await pool.query(
-    `SELECT leads.*, 
-            user.fullName as assignedStaffName
-     FROM leads
-     JOIN staff ON leads.assignedToStaffId = staff.id
-     JOIN user ON staff.userId = user.id
-     WHERE staff.userId = ?
-     ORDER BY leads.createdAt DESC`,
+  // Find staff record or user adminId
+  const [[staffRecord]] = await pool.query(
+    `SELECT s.id AS staffId, s.adminId FROM staff s WHERE s.userId = ?`,
     [parsedUserId]
+  );
+
+  const [[userRecord]] = await pool.query(
+    `SELECT adminId FROM user WHERE id = ?`,
+    [parsedUserId]
+  );
+
+  const staffId = staffRecord?.staffId || null;
+  const adminId = staffRecord?.adminId || userRecord?.adminId || null;
+
+  const [rows] = await pool.query(
+    `SELECT l.*, u.fullName as assignedStaffName
+     FROM leads l
+     LEFT JOIN staff s ON l.assignedToStaffId = s.id
+     LEFT JOIN user u ON s.userId = u.id
+     WHERE l.assignedToStaffId = ? 
+        OR s.userId = ? 
+        OR l.assignedToStaffId = ?
+        ${adminId ? `OR (l.adminId = ?)` : ""}
+     ORDER BY l.createdAt DESC`,
+    adminId ? [staffId || 0, parsedUserId, parsedUserId, adminId] : [staffId || 0, parsedUserId, parsedUserId]
   );
   return rows;
 };

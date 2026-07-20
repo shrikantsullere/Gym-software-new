@@ -13,35 +13,35 @@ const router = Router();
 // Record new payment
 router.post(
   "/create",
-  verifyToken(["Admin", "Superadmin", "receptionist"]),
+  verifyToken(["Admin", "Superadmin", "receptionist", "Staff"]),
   recordPayment
 );
 
 // Create Razorpay Order
 router.post(
   "/create-razorpay-order",
-  verifyToken(["Admin", "Superadmin", "member"]),
+  verifyToken(["Admin", "Superadmin", "member", "Staff"]),
   createRazorpayOrder
 );
 
 // Verify Razorpay Payment
 router.post(
   "/verify-member-payment",
-  verifyToken(["Admin", "Superadmin", "member"]),
+  verifyToken(["Admin", "Superadmin", "member", "Staff"]),
   verifyMemberPayment
 );
 
 // Member payment history
 router.get(
   "/member/:memberId",
-  verifyToken(["Admin", "Superadmin", "receptionist", "member"]),
+  verifyToken(["Admin", "Superadmin", "receptionist", "member", "Staff"]),
   paymentHistory
 );
 
 // All payments of a branch
 router.get(
   "/branch/:branchId",
-  verifyToken(["Admin", "Superadmin", "receptionist"]),
+  verifyToken(["Admin", "Superadmin", "receptionist", "Staff"]),
   allPayments
 );
 

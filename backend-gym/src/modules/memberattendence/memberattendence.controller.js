@@ -253,12 +253,13 @@ export const getAttendanceByMemberId = async (req, res, next) => {
       });
     }
 
-    // 📌 Fetch all attendance of this member (latest first)
+    // 📌 Fetch all attendance of this member or staff (latest first)
     const [rows] = await pool.query(
       `
       SELECT 
         id,
         memberId,
+        staffId,
         branchId,
         checkIn,
         checkOut,
@@ -267,10 +268,13 @@ export const getAttendanceByMemberId = async (req, res, next) => {
         status,
         mode
       FROM memberattendance
-      WHERE memberId = ?
+      WHERE memberId = ? 
+         OR staffId = ? 
+         OR memberId = (SELECT id FROM member WHERE userId = ? LIMIT 1)
+         OR staffId = (SELECT id FROM staff WHERE userId = ? LIMIT 1)
       ORDER BY id DESC
       `,
-      [memberId]
+      [memberId, memberId, memberId, memberId]
     );
 
     if (rows.length === 0) {

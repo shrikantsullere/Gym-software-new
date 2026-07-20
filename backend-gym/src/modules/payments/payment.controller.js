@@ -21,19 +21,23 @@ export const recordPayment = async (req, res, next) => {
     const adminId = req.user?.adminId || req.user?.id;
     
     // Assign the plan using the payment details
-    await assignPlansToMember({
-      memberId: req.body.memberId,
-      plans: [
-        {
-          planId: req.body.planId,
-          membershipFrom: new Date().toISOString().split('T')[0],
-          paymentMode: req.body.paymentMode || "Cash",
-          amountPaid: req.body.amount,
-          trainerName: req.body.trainerName || null
-        }
-      ],
-      assignedBy: adminId
-    });
+    try {
+      await assignPlansToMember({
+        memberId: req.body.memberId,
+        plans: [
+          {
+            planId: req.body.planId,
+            membershipFrom: new Date().toISOString().split('T')[0],
+            paymentMode: req.body.paymentMode || "Cash",
+            amountPaid: req.body.amount,
+            trainerName: req.body.trainerName || null
+          }
+        ],
+        assignedBy: adminId
+      });
+    } catch (assignErr) {
+      console.warn("Notice: Plan assignment warning:", assignErr.message);
+    }
 
     res.json({ success: true, payment: p });
   } catch (err) {

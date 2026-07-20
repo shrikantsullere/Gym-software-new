@@ -59,7 +59,7 @@ const BodybuilderAssessmentForm = () => {
                 const goalStr = (m.goal || m.interestedIn || "").toLowerCase();
                 return goalStr.includes('body building') || goalStr.includes('bodybuilding') || goalStr.includes('muscle');
               });
-              setMembers(bodybuilders);
+              setMembers(bodybuilders.length > 0 ? bodybuilders : allFetchedMembers);
             }
           }
         }

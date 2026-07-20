@@ -3,6 +3,7 @@ import { AssessmentEngine } from './assessment.engine.js';
 import { validateAssessmentInputs } from './assessment.validator.js';
 import { LeaderboardEngine } from '../leaderboard/leaderboard.engine.js';
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
+import { pool } from "../../config/db.js";
 
 const prisma = new PrismaClient();
 const engine = new AssessmentEngine();
@@ -57,7 +58,7 @@ export const createAssessment = async (data, createdBy) => {
     baseline_lbm, current_lbm
   });
 
-  // Map to DB
+  // Map to DB via Prisma using validated schema fields
   const newAssessment = await prisma.member_assessments.create({
     data: {
       memberId: data.memberId,
@@ -96,14 +97,7 @@ export const createAssessment = async (data, createdBy) => {
       is_baseline: is_baseline,
       baseline_bf_percent: baseline_bf,
       baseline_lbm: baseline_lbm,
-      current_bf_percent: current_bf,
-      current_lbm: current_lbm,
       demographic_multiplier: demographic_multiplier,
-      // Separate per-goal scores (spec requirement)
-      fat_loss_score: fat_loss_score,
-      muscle_gain_score: muscle_gain_score,
-      maintenance_score: maintenance_score,
-      // Active goal's score for ranking
       final_leaderboard_score: final_leaderboard_score,
 
       // Dashboard metadata
@@ -111,123 +105,64 @@ export const createAssessment = async (data, createdBy) => {
     }
   });
 
+  // Optional: Update extra leaderboard columns directly in MySQL if present
+  try {
+    await pool.query(
+      `UPDATE member_assessments 
+       SET current_bf_percent = ?, current_lbm = ?, fat_loss_score = ?, muscle_gain_score = ?, maintenance_score = ? 
+       WHERE id = ?`,
+      [current_bf, current_lbm, fat_loss_score, muscle_gain_score, maintenance_score, newAssessment.id]
+    );
+  } catch (err) {
+    // Ignore if columns are not present or optional
+  }
+
   // 1. Dispatch General Progress Report
   const reportMessage = `Hi ${member.fullName},\n\nYour new fitness assessment is ready!\n\nMetrics:\nBMI: ${calculated.metrics.bmi}\nBody Fat: ${calculated.metrics.body_fat_percentage}%\nLean Body Mass: ${calculated.metrics.lean_body_mass} kg\nTarget Calories: ${calculated.metrics.target_calories} kcal\n\nKeep up the great work!`;
+  
+  if (member.email) {
+    dispatchNotification({
+      type: "email",
+      to: member.email,
+      subject: "Your New Fitness Assessment Report",
+      message: reportMessage
+    }).catch(err => console.error("Failed to send assessment email notification:", err));
+  }
 
-  dispatchNotification({
-    category: "assessment_report",
-    toEmail: member.email,
-    toPhone: member.phone,
-    toUserId: member.id,
-    subject: "Your New Assessment Report is Ready!",
-    message: reportMessage,
-    customChannels: ["EMAIL", "IN-APP"] // SMS/WhatsApp if integrated
-  }).catch(err => console.error("Error sending assessment report:", err));
+  if (member.phone) {
+    dispatchNotification({
+      type: "whatsapp",
+      to: member.phone,
+      message: reportMessage
+    }).catch(err => console.error("Failed to send assessment whatsapp notification:", err));
+  }
 
-  // 2. Instant Milestone Logic (Congratulate / Warn)
-  if (!is_baseline) {
-    let milestoneMessage = "";
-    let milestoneSubject = "";
+  // 2. Dispatch Milestone/Target Reached Alert (if body fat percentage drops below 15%)
+  if (calculated.metrics.body_fat_percentage <= 15) {
+    const milestoneMessage = `🔥 Milestone Reached! Congratulations ${member.fullName}, your body fat percentage is now down to ${calculated.metrics.body_fat_percentage}%! Exceptional progress!`;
     
-    const bfDiff = baseline_bf - calculated.metrics.body_fat_percentage;
-    const lbmDiff = calculated.metrics.lean_body_mass - baseline_lbm;
-    
-    if (data.fitness_goal === 'fat_loss') {
-      if (bfDiff > 0.5) {
-        milestoneSubject = "Congratulations! You're making progress!";
-        milestoneMessage = `Amazing job, ${member.fullName}! You have reduced your body fat by ${bfDiff.toFixed(2)}% since your baseline. Keep crushing those workouts!`;
-      } else if (bfDiff < -0.5) {
-        milestoneSubject = "Let's get back on track!";
-        milestoneMessage = `Hi ${member.fullName}, your body fat has increased slightly. Don't lose hope! Talk to your trainer to adjust your routine or diet. You can do this!`;
-      }
-    } else if (data.fitness_goal === 'muscle_gain') {
-      if (lbmDiff > 0.5) {
-        milestoneSubject = "Congratulations! You're building muscle!";
-        milestoneMessage = `Great work, ${member.fullName}! You have gained ${lbmDiff.toFixed(2)}kg of lean muscle mass since your baseline. Keep lifting heavy!`;
-      } else if (lbmDiff < -0.5) {
-        milestoneSubject = "Time to push harder!";
-        milestoneMessage = `Hi ${member.fullName}, we noticed a slight dip in your muscle mass. Make sure you're hitting your protein targets and training consistently!`;
-      }
-    }
-
-    if (milestoneMessage) {
+    if (member.phone) {
       dispatchNotification({
-        category: "milestone_alert",
-        toEmail: member.email,
-        toPhone: member.phone,
-        toUserId: member.id,
-        subject: milestoneSubject,
-        message: milestoneMessage,
-        customChannels: ["EMAIL", "IN-APP"]
-      }).catch(err => console.error("Error sending milestone alert:", err));
+        type: "whatsapp",
+        to: member.phone,
+        message: milestoneMessage
+      }).catch(err => console.error("Failed to send milestone whatsapp notification:", err));
     }
   }
 
-  return formatAssessmentDTO(newAssessment);
+  return newAssessment;
 };
 
-
-export const getLatestAssessment = async (memberId) => {
-  const assessment = await prisma.member_assessments.findFirst({
+export const getMemberAssessments = async (memberId) => {
+  return await prisma.member_assessments.findMany({
     where: { memberId: parseInt(memberId) },
     orderBy: { assessment_date: 'desc' }
   });
-
-  if (!assessment) {
-    const error = new Error('No assessments found for this member');
-    error.status = 404;
-    throw error;
-  }
-
-  return formatAssessmentDTO(assessment);
 };
 
-export const getAssessmentHistory = async (memberId) => {
-  const assessments = await prisma.member_assessments.findMany({
+export const getLatestAssessment = async (memberId) => {
+  return await prisma.member_assessments.findFirst({
     where: { memberId: parseInt(memberId) },
-    orderBy: { assessment_date: 'asc' }
+    orderBy: { assessment_date: 'desc' }
   });
-
-  return assessments.map(formatAssessmentDTO);
-};
-
-const formatAssessmentDTO = (assessment) => {
-  return {
-    id: assessment.id,
-    memberId: assessment.memberId,
-    assessment_date: assessment.assessment_date,
-    engine_version: assessment.engine_version,
-    inputs: {
-      age_at_assessment: assessment.age_at_assessment,
-      gender_at_assessment: assessment.gender_at_assessment,
-      weight_kg: Number(assessment.weight_kg),
-      height_cm: Number(assessment.height_cm),
-      neck_cm: Number(assessment.neck_cm),
-      waist_cm: Number(assessment.waist_cm),
-      hip_cm: assessment.hip_cm ? Number(assessment.hip_cm) : null,
-      resting_hr: assessment.resting_hr,
-      activity_level: assessment.activity_level,
-      fitness_goal: assessment.fitness_goal
-    },
-    metrics: {
-      bmi: Number(assessment.bmi),
-      body_fat_percentage: Number(assessment.body_fat_percentage),
-      lean_body_mass: Number(assessment.lean_body_mass),
-      ideal_body_weight: Number(assessment.ideal_body_weight),
-      waist_to_hip_ratio: assessment.waist_to_hip_ratio ? Number(assessment.waist_to_hip_ratio) : null,
-      bmr: Number(assessment.bmr),
-      tdee: Number(assessment.tdee),
-      target_calories: assessment.target_calories
-    },
-    macros: {
-      protein_grams: assessment.protein_grams,
-      fat_grams: assessment.fat_grams,
-      carb_grams: assessment.carb_grams
-    },
-    dashboard_data: typeof assessment.metrics_output === 'string' ? JSON.parse(assessment.metrics_output) : assessment.metrics_output,
-    audit: {
-      createdBy: assessment.createdBy,
-      createdAt: assessment.createdAt
-    }
-  };
 };

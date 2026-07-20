@@ -23,22 +23,22 @@ import { verifyToken } from "../../middlewares/auth.js";
 
 const router = Router();
 
-router.get("/trainer/:trainerId", verifyToken(["Superadmin", "Admin", "Staff", "PERSONALTRAINER", "GENERALTRAINER", "personal trainer", "general trainer"]), getMembersByTrainerIdController);
-router.post("/assign-trainer", verifyToken(["Superadmin", "Admin"]), assignTrainerToMemberController);
-router.get("/search", verifyToken(["Superadmin", "Admin", "Staff"]), searchMembersController);
+router.get("/trainer/:trainerId", verifyToken(["Superadmin", "Admin", "Staff", "PERSONALTRAINER", "GENERALTRAINER", "personal trainer", "general trainer", "personaltrainer", "generaltrainer"]), getMembersByTrainerIdController);
+router.post("/assign-trainer", verifyToken(["Superadmin", "Admin", "Staff", "PERSONALTRAINER", "GENERALTRAINER", "personal trainer", "general trainer", "personaltrainer", "generaltrainer", "receptionist", "manager", "sales_agent"]), assignTrainerToMemberController);
+router.get("/search", verifyToken(["Superadmin", "Admin", "Staff", "PERSONALTRAINER", "GENERALTRAINER", "personal trainer", "general trainer", "personaltrainer", "generaltrainer"]), searchMembersController);
 
 router.post(
   "/create",
-  verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]),
+  verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "personaltrainer", "PERSONALTRAINER", "general trainer", "generaltrainer", "GENERALTRAINER", "sales_agent", "manager", "Staff"]),
   createMember
 );
 
-router.put("/renew/:memberId", verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]), renewMembershipPlan);
+router.put("/renew/:memberId", verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "personaltrainer", "PERSONALTRAINER", "general trainer", "generaltrainer", "GENERALTRAINER", "sales_agent", "manager", "Staff"]), renewMembershipPlan);
 
 /** List Members by Branch */
 router.get(
   "/branch/:branchId",
-  verifyToken(["Superadmin", "Admin", "Staff", "personaltrainer", "generaltrainer", "receptionist"]),
+  verifyToken(["Superadmin", "Admin", "Staff", "personaltrainer", "PERSONALTRAINER", "generaltrainer", "GENERALTRAINER", "receptionist"]),
   listMembers
 );
 
@@ -47,43 +47,43 @@ router.get("/renew/:adminId", verifyToken(), getRenewalPreview);
 /** Get Member Detail */
 router.get(
   "/detail/:id",
-  verifyToken(["Superadmin", "Admin", "Staff", "Member"]),
+  verifyToken(["Superadmin", "Admin", "Staff", "Member", "personaltrainer", "PERSONALTRAINER", "generaltrainer", "GENERALTRAINER"]),
   memberDetail
 );
 
-router.put("/admin/renewal/:memberId/status", verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]), updateMemberRenewalStatus);
+router.put("/admin/renewal/:memberId/status", verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "personaltrainer", "PERSONALTRAINER", "general trainer", "generaltrainer", "GENERALTRAINER", "sales_agent", "manager", "Staff"]), updateMemberRenewalStatus);
 
 /** Update Member */
 router.put(
   "/update/:id",
-  verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "general trainer", "sales_agent", "manager", "Staff"]),
+  verifyToken(["Superadmin", "Admin", "receptionist", "personal trainer", "personaltrainer", "PERSONALTRAINER", "general trainer", "generaltrainer", "GENERALTRAINER", "sales_agent", "manager", "Staff"]),
   updateMember
 );
 
 /** Soft Delete / Deactivate Member */
 router.delete(
   "/delete/:id",
-  verifyToken(["Superadmin", "Admin", "receptionist"]),
+  verifyToken(["Superadmin", "Admin", "receptionist", "manager"]),
   deleteMember
 );
 
-router.get("/admin/:adminId", verifyToken(["Superadmin", "Admin", "Staff", "generaltrainer", "receptionist", "sales_agent"]), getMembersByAdminId);
-router.get("/admin/:adminId/plan", verifyToken(["Superadmin", "Admin", "Staff", "generaltrainer", "receptionist"]), getMembersByAdminAndPlanController);
+router.get("/admin/:adminId", verifyToken(["Superadmin", "Admin", "Staff", "generaltrainer", "GENERALTRAINER", "personaltrainer", "PERSONALTRAINER", "receptionist", "sales_agent", "manager"]), getMembersByAdminId);
+router.get("/admin/:adminId/plan", verifyToken(["Superadmin", "Admin", "Staff", "generaltrainer", "GENERALTRAINER", "personaltrainer", "PERSONALTRAINER", "receptionist", "manager"]), getMembersByAdminAndPlanController);
 router.get(
   "/group-plan/:adminId/admin/:planId",
-  verifyToken(["Superadmin", "Admin", "Staff"]),
+  verifyToken(["Superadmin", "Admin", "Staff", "personaltrainer", "PERSONALTRAINER", "generaltrainer", "GENERALTRAINER"]),
   getMembersByAdminAndGroupPlanController
 );
 router.get(
   "/member-plan/general/:adminId/admin/:planId",
-  verifyToken(["Superadmin", "Admin", "Staff"]),
+  verifyToken(["Superadmin", "Admin", "Staff", "personaltrainer", "PERSONALTRAINER", "generaltrainer", "GENERALTRAINER"]),
   getMembersByAdminAndGeneralMemberPlanController
 );
 
-router.get("/pt-bookings/:branchId", verifyToken(["Superadmin", "Admin", "Staff"]), listPTBookings);
+router.get("/pt-bookings/:branchId", verifyToken(["Superadmin", "Admin", "Staff", "personaltrainer", "PERSONALTRAINER"]), listPTBookings);
 
 /** Excel Member Import */
 router.post("/import", verifyToken(["Superadmin", "Admin"]), importMembers);
-router.get("/import/template", verifyToken(["Superadmin", "Admin"]), downloadMemberTemplate);
+router.get("/export/template", downloadMemberTemplate);
 
 export default router;

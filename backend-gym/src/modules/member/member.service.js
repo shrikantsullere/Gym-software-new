@@ -950,14 +950,15 @@ export const getMembersByAdminIdService = async (adminId) => {
       m.interestedIn,
       m.amountPaid,
       m.dateOfBirth,
-      m.trainerId,
-      m.trainerType,
       u.profileImage,
+      p.trainerId,
+      p.trainerType,
       trainerUser.fullName AS trainerName
 
     FROM member m
-    JOIN user u ON u.id = m.userId
-    LEFT JOIN user trainerUser ON m.trainerId = trainerUser.id
+    LEFT JOIN user u ON u.id = m.userId
+    LEFT JOIN memberplan p ON m.planId = p.id
+    LEFT JOIN user trainerUser ON p.trainerId = trainerUser.id
     WHERE m.adminId = ?
     ORDER BY m.id DESC
     `,

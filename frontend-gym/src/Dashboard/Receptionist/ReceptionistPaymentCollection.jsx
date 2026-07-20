@@ -59,26 +59,26 @@ const ReceptionistPaymentCollection = () => {
       try {
         if (activeTab === 'payment') {
           // Fetch Payments
-          const res = await axiosInstance.get(`/payment/branch/${branchId}?adminId=${adminId}`);
-          if(res.data.success) setPayments(res.data.payments);
+          const res = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
+          if(res.data.success) setPayments(res.data.payments || res.data.data || []);
           
           // Fetch Members (for dropdown)
-          const memRes = await axiosInstance.get(`/member/admin/${adminId}`);
-          if(memRes.data.success) setMembers(memRes.data.members || memRes.data.data);
+          const memRes = await axiosInstance.get(`/members/admin/${adminId}`);
+          if(memRes.data.success) setMembers(memRes.data.members || memRes.data.data || []);
           
           // Fetch Plans (for dropdown)
           const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
-          if(planRes.data.success) setPlans(planRes.data.plans);
+          if(planRes.data.success) setPlans(planRes.data.plans || planRes.data.data || []);
           
         } else if (activeTab === 'attendance') {
           // Fetch Attendance
           const res = await axiosInstance.get(`/memberattendence/admin?adminId=${adminId}`);
-          if(res.data.success) setAttendanceRecords(res.data.attendance);
+          if(res.data.success) setAttendanceRecords(res.data.attendance || res.data.data || []);
           
         } else if (activeTab === 'plans') {
           // Fetch Plans View
           const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
-          if(planRes.data.success) setPlans(planRes.data.plans);
+          if(planRes.data.success) setPlans(planRes.data.plans || planRes.data.data || []);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -150,13 +150,13 @@ const ReceptionistPaymentCollection = () => {
         paymentMode: newPayment.paymentMode,
         trainerName: newPayment.trainerName
       };
-      const res = await axiosInstance.post("/payment/create", payload);
+      const res = await axiosInstance.post("/payments/create", payload);
       if(res.data.success) {
         alert("Payment added successfully!");
         closePaymentModal();
         // Refresh Payments
-        const refreshRes = await axiosInstance.get(`/payment/branch/${branchId}?adminId=${adminId}`);
-        if(refreshRes.data.success) setPayments(refreshRes.data.payments);
+        const refreshRes = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
+        if(refreshRes.data.success) setPayments(refreshRes.data.payments || refreshRes.data.data || []);
       }
     } catch (error) {
       console.error("Payment submission failed:", error);

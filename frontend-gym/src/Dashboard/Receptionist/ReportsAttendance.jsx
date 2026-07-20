@@ -51,9 +51,9 @@ const ReportsAttendance = () => {
   const fetchBranches = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`${BaseUrl}branches/by-admin/${adminId}`);
+      const response = await axiosInstance.get(`branches/by-admin/${adminId}`);
       if (response.data.success) {
-        setBranches(response.data.branches);
+        setBranches(response.data.branches || response.data.data || []);
       } else {
         setError('Failed to load branches');
       }
@@ -68,11 +68,12 @@ const ReportsAttendance = () => {
   const fetchStaffMembers = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`${BaseUrl}staff/all`);
+      const response = await axiosInstance.get(`staff/admin/${adminId}`);
       if (response.data.success) {
-        const transformedStaff = response.data.staff.map(staff => ({
-          id: staff.staffId,
-          staffId: staff.staffId,
+        const staffList = response.data.staff || response.data.data || [];
+        const transformedStaff = staffList.map(staff => ({
+          id: staff.staffId || staff.id,
+          staffId: staff.staffId || staff.id,
           name: staff.fullName,
           role: getRoleName(staff.roleId),
           branch: getBranchName(staff.branchId),
@@ -98,24 +99,25 @@ const ReportsAttendance = () => {
       const date = new Date(checkInTime);
       const hours = date.getHours();
       if (hours >= 5 && hours < 12) return 'Morning Shift';
-      else if (hours >= 12 && hours < 17) return 'Day Shift';
-      else if (hours >= 17 && hours < 22) return 'Evening Shift';
-      else return 'Night Shift';
-    } catch (err) {
+      if (hours >= 12 && hours < 17) return 'Afternoon Shift';
+      if (hours >= 17 && hours < 22) return 'Evening Shift';
+      return 'Night Shift';
+    } catch (e) {
       return 'Unknown';
     }
   };
 
   const formatRoleFromApi = (apiRole) => {
-    if (!apiRole) return 'Unknown';
+    if (!apiRole) return 'Staff';
     const roleMap = {
       personaltrainer: 'Personal Trainer',
       generaltrainer: 'General Trainer',
       receptionist: 'Receptionist',
       housekeeping: 'Housekeeping',
-      admin: 'Admin',
+      sales_agent: 'Sales Agent',
       manager: 'Manager',
-      trainer: 'Trainer'
+      member: 'Member',
+      admin: 'Admin'
     };
     const normalized = apiRole.toLowerCase().trim();
     return roleMap[normalized] || apiRole.charAt(0).toUpperCase() + apiRole.slice(1);
@@ -124,7 +126,7 @@ const ReportsAttendance = () => {
   const fetchAttendanceRecords = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`${BaseUrl}memberattendence/admin?adminId=${adminId}`);
+      const response = await axiosInstance.get(`memberattendence/admin?adminId=${adminId}`);
       if (response.data?.success && Array.isArray(response.data.attendance)) {
         const transformedRecords = response.data.attendance.map(record => ({
           attendance_id: record.id,

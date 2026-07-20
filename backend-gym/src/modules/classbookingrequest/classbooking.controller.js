@@ -2214,6 +2214,7 @@ export const getPTBookingsByAdminId = async (req, res) => {
         ub.bookingStatus,
         ub.paymentStatus,
         ub.price,
+        NULL AS time,
         ub.notes,
         ub.branchId,
         ub.createdAt,
@@ -2241,14 +2242,15 @@ export const getPTBookingsByAdminId = async (req, res) => {
         m.trainerId AS trainerId,
         NULL AS sessionId,
         NULL AS classId,
-        NULL AS date,
-        NULL AS endDate,
+        m.joinDate AS date,
+        m.membershipTo AS endDate,
         NULL AS startTime,
         NULL AS endTime,
         'PT' AS bookingType,
         'Assigned' AS bookingStatus,
-        'Pending' AS paymentStatus,
-        0 AS price,
+        'Completed' AS paymentStatus,
+        IFNULL(p.price, m.amountPaid) AS price,
+        TIME_FORMAT(m.joinDate, '%h:%i %p') AS time,
         'PT Assigned from Profile' AS notes,
         m.branchId AS branchId,
         m.joinDate AS createdAt,
@@ -2258,6 +2260,7 @@ export const getPTBookingsByAdminId = async (req, res) => {
         'Assigned PT' AS sessionName
       FROM member m
       JOIN user t ON t.id = m.trainerId
+      LEFT JOIN plan p ON p.id = m.planId
       WHERE m.adminId = ?
         AND m.trainerId IS NOT NULL
         AND NOT EXISTS (

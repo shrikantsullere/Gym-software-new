@@ -2674,7 +2674,7 @@ const handleDownloadReceipt = async (member) => {
                   >
                     <option value="">-- Select Trainer --</option>
                     {personalTrainers.map((t) => (
-                      <option key={t.staffId} value={t.staffId}>
+                      <option key={t.staffId} value={t.userId}>
                         {t.fullName || t.name} ({t.phone || "No phone"})
                       </option>
                     ))}
@@ -3142,7 +3142,7 @@ const handleDownloadReceipt = async (member) => {
                     <option disabled>No personal trainers found</option>
                   ) : (
                     personalTrainers.map((t) => (
-                      <option key={t.staffId} value={t.staffId}>
+                      <option key={t.staffId} value={t.userId}>
                         {t.fullName || t.name} ({t.phone || "No phone"})
                       </option>
                     ))

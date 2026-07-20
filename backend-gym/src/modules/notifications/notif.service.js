@@ -59,21 +59,38 @@ export const sendNotificationService = async ({ type, to, message, memberId }) =
 };
 
 export const getUserNotificationsService = async (userId) => {
+  const [userRows] = await pool.query(
+    "SELECT id, adminId FROM user WHERE id = ?",
+    [userId]
+  );
+  const user = userRows[0] || {};
+  const adminIdStr = user.adminId ? user.adminId.toString() : userId.toString();
+
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
-     WHERE \`to\` = ? AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH') AND status = 'UNREAD'
+     WHERE (\`to\` = ? OR \`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
+       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH', 'IN_APP')
+       AND (status = 'UNREAD' OR status = 'PENDING')
      ORDER BY createdAt DESC LIMIT 20`,
-    [userId.toString()]
+    [userId.toString(), adminIdStr]
   );
   return rows;
 };
 
 export const getAllUserNotificationsService = async (userId) => {
+  const [userRows] = await pool.query(
+    "SELECT id, adminId FROM user WHERE id = ?",
+    [userId]
+  );
+  const user = userRows[0] || {};
+  const adminIdStr = user.adminId ? user.adminId.toString() : userId.toString();
+
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
-     WHERE \`to\` = ? AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH')
+     WHERE (\`to\` = ? OR \`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
+       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH', 'IN_APP')
      ORDER BY createdAt DESC LIMIT 100`,
-    [userId.toString()]
+    [userId.toString(), adminIdStr]
   );
   return rows;
 };

@@ -419,10 +419,10 @@ const Navbar = ({ toggleSidebar }) => {
               )}
               <div className="d-none d-sm-block text-white">
                 <small className="mb-0">
-                  Welcome {profile?.role?.toLowerCase() === 'receptionist' ? 'Sales' : (profile?.role || "User")}
+                  Welcome {profile?.role || "User"}
                 </small>
                 <div className="fw-bold">
-                  {profile?.name?.toLowerCase().includes('receptionist') ? 'Sales Team' : (profile?.name || "Guest")}
+                  {profile?.name || "Guest"}
                 </div>
               </div>
             </div>

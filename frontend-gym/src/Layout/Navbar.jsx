@@ -4,6 +4,7 @@ const Logo = "/logo.png"; // Default fallback logo
 import Account from "../Dashboard/Member/Account";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../Api/axiosInstance";
+import { io } from "socket.io-client";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -116,6 +117,31 @@ const Navbar = ({ toggleSidebar }) => {
       console.error("Failed to mark as read:", err);
     }
   };
+
+  useEffect(() => {
+    const u = getUserFromLocalStorage();
+    if (!u || !u.id) return;
+
+    // Use standard config for Socket.IO
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+    const socket = io(backendUrl, {
+      withCredentials: true
+    });
+
+    socket.on("connect", () => {
+      console.log("🟢 Connected to WebSocket Server", socket.id);
+      socket.emit("join_room", u.id); // Join room named as userId
+    });
+
+    socket.on("new_notification", (data) => {
+      console.log("🔔 Real-time notification received:", data);
+      setNotifications(prev => [data, ...prev]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(fetchAppSettings, 60000); // Fetch every 60 seconds

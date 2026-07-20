@@ -417,8 +417,8 @@ export const changeMemberPasswordService = async (
     throw { status: 404, message: "Member not found" };
   }
 
-  // 2) Old password compare karo
-  const match = await bcrypt.compare(currentPassword, userRow.password);
+  // 2) Old password compare karo (trim input to avoid space issues)
+  const match = await bcrypt.compare(currentPassword.trim(), userRow.password);
   if (!match) {
     throw { status: 400, message: "Current password is incorrect" };
   }

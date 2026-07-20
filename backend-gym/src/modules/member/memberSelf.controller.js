@@ -70,6 +70,11 @@ export const changeMemberPassword = async (req, res, next) => {
     // Body se current password + new password
     const { current, new: newPassword } = req.body;
 
+    console.log("=== changeMemberPassword Debug ===");
+    console.log("userId:", userId);
+    console.log("currentPassword:", current);
+    console.log("newPassword:", newPassword);
+
     // Password change service
     const result = await changeMemberPasswordService(
       userId,

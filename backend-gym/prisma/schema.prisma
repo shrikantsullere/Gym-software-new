@@ -844,6 +844,12 @@ model whatsapp_credit_transactions {
   paymentStatus    String    @db.VarChar(50)
   transactionId    String?
   createdAt        DateTime? @default(now()) @db.DateTime(0)
+  userId           Int?
+  transactionType  String?   @db.VarChar(50)
+  description      String?   @db.VarChar(255)
+  creditsAdded     Int?      @default(0)
+  creditsUsed      Int?      @default(0)
+  packageType      String?   @default("WHATSAPP") @db.VarChar(50)
 }
 
 model member_assessments {

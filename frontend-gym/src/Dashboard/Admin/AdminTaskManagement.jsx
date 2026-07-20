@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calendar, Plus, Check, X
 } from 'react-bootstrap-icons';
-import axios from 'axios';
-import BaseUrl from '../../Api/BaseUrl';
+import axiosInstance from '../../Api/axiosInstance';
 import GetAdminId from '../../Api/GetAdminId';
 import { FaTrash } from 'react-icons/fa';
 
@@ -38,20 +37,24 @@ const AdminTaskManagement = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log("AdminTaskManagement fetchData: adminId =", adminId);
 
         // Fetch staff
-        const staffResponse = await axios.get(`${BaseUrl}staff/admin/${adminId}`);
+        const staffResponse = await axiosInstance.get(`/staff/admin/${adminId}`);
+        console.log("Staff fetched:", staffResponse.data);
         const staff = staffResponse.data.staff || [];
         setStaffMembers(staff);
         const housekeeping = staff.filter(s => s.roleId === 8);
         setHousekeepingStaff(housekeeping);
 
         // Fetch branches
-        const branchesResponse = await axios.get(`${BaseUrl}branches/by-admin/${adminId}`);
+        const branchesResponse = await axiosInstance.get(`/branches/by-admin/${adminId}`);
+        console.log("Branches fetched:", branchesResponse.data);
         setBranches(branchesResponse.data.branches || []);
 
         // ✅ Use correct GET endpoint
-        const tasksResponse = await axios.get(`${BaseUrl}housekeepingtask/tasks/admin/${adminId}`);
+        const tasksResponse = await axiosInstance.get(`/housekeepingtask/tasks/admin/${adminId}`);
+        console.log("Tasks fetched:", tasksResponse.data);
 
         if (tasksResponse.data.success) {
           const transformed = (tasksResponse.data.data || []).map(task => ({
@@ -70,7 +73,7 @@ const AdminTaskManagement = () => {
           setError('Failed to fetch tasks');
         }
       } catch (err) {
-
+        console.error("Error in AdminTaskManagement fetchData:", err);
       } finally {
         setLoading(false);
       }
@@ -119,7 +122,7 @@ const AdminTaskManagement = () => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
 
     try {
-      const response = await axios.delete(`${BaseUrl}housekeepingtask/${taskId}`);
+      const response = await axiosInstance.delete(`/housekeepingtask/${taskId}`);
       if (response.data.success) {
         setTasks(tasks.filter(t => t.id !== taskId));
         alert('Task deleted successfully!');
@@ -134,7 +137,7 @@ const AdminTaskManagement = () => {
 
   const handleApproveTask = async (taskId) => {
     try {
-      const response = await axios.put(`${BaseUrl}housekeepingtask/status/${taskId}`, {
+      const response = await axiosInstance.put(`/housekeepingtask/status/${taskId}`, {
         status: 'Approved'
       });
       if (response.data.success) {
@@ -151,7 +154,7 @@ const AdminTaskManagement = () => {
 
   const handleRejectTask = async (taskId) => {
     try {
-      const response = await axios.put(`${BaseUrl}housekeepingtask/status/${taskId}`, {
+      const response = await axiosInstance.put(`/housekeepingtask/status/${taskId}`, {
         status: 'Assigned' // Return to staff
       });
       if (response.data.success) {
@@ -183,8 +186,9 @@ const AdminTaskManagement = () => {
         dueDate, // "YYYY-MM-DD" format
         priority // API expects "High", "Medium", etc. (case-sensitive as per your example)
       };
+      console.log("AdminTaskManagement: Creating task with payload:", payload);
 
-      const response = await axios.post(`${BaseUrl}housekeepingtask/create`, payload);
+      const response = await axiosInstance.post(`/housekeepingtask/create`, payload);
 
       if (response.data.success) {
         const newTask = {

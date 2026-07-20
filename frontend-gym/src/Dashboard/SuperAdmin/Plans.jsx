@@ -98,8 +98,8 @@ const MembershipPlans = () => {
 
   // ---------------- Save Plan ----------------
   const handleSavePlan = async () => {
-    if (!planName.trim() || !basePrice || Number(basePrice) <= 0) {
-      alert("Please enter a valid plan name and price.");
+    if (!planName.trim() || basePrice === "" || Number(basePrice) < 0) {
+      alert("Please enter a valid plan name and a non-negative price.");
       return;
     }
 
@@ -366,6 +366,7 @@ const MembershipPlans = () => {
                     >
                       <option value="Monthly">Monthly</option>
                       <option value="Yearly">Yearly</option>
+                      <option value="7 Days">7 Days</option>
                     </select>
 
                     <label className="form-label">Category</label>
@@ -378,6 +379,7 @@ const MembershipPlans = () => {
                       <option value="BASIC">Basic</option>
                       <option value="ENTERPRISE">Enterprise</option>
                       <option value="GYM">Gym</option>
+                      <option value="Trial">Trial</option>
                     </select>
 
                     <label className="form-label">Status</label>

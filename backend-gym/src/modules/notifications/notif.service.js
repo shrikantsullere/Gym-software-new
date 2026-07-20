@@ -61,8 +61,18 @@ export const sendNotificationService = async ({ type, to, message, memberId }) =
 export const getUserNotificationsService = async (userId) => {
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
-     WHERE \`to\` = ? AND type = 'IN-APP' AND status = 'UNREAD'
+     WHERE \`to\` = ? AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH') AND status = 'UNREAD'
      ORDER BY createdAt DESC LIMIT 20`,
+    [userId.toString()]
+  );
+  return rows;
+};
+
+export const getAllUserNotificationsService = async (userId) => {
+  const [rows] = await pool.query(
+    `SELECT * FROM notificationlog 
+     WHERE \`to\` = ? AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH')
+     ORDER BY createdAt DESC LIMIT 100`,
     [userId.toString()]
   );
   return rows;

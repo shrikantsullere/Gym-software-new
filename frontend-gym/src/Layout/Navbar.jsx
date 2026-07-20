@@ -343,27 +343,30 @@ const Navbar = ({ toggleSidebar }) => {
             
             {showNotifDropdown && (
               <div 
-                className="dropdown-menu show shadow-sm p-0"
+                className="dropdown-menu show shadow p-0"
                 style={{
-                  position: "absolute", right: 0, top: "100%", width: "min(300px, calc(100vw - 30px))", zIndex: 1050,
-                  maxHeight: "400px", overflowY: "auto", borderRadius: "8px"
+                  position: "absolute", right: 0, top: "100%", width: "min(420px, calc(100vw - 20px))", zIndex: 1050,
+                  maxHeight: "450px", overflowY: "auto", borderRadius: "10px", border: "1px solid #e0e0e0"
                 }}
               >
-                <div className="bg-light p-3 border-bottom fw-bold text-dark d-flex justify-content-between align-items-center">
+                <div className="bg-light p-3 border-bottom fw-bold text-dark d-flex justify-content-between align-items-center" style={{ position: "sticky", top: 0, zIndex: 1, backgroundColor: "#f8f9fa" }}>
                   <span>Notifications</span>
-                  <span className="badge bg-primary rounded-pill">{notifications.length}</span>
+                  <span className="badge bg-primary rounded-pill px-2 py-1">{notifications.length} New</span>
                 </div>
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-muted">No new notifications</div>
+                  <div className="p-4 text-center text-muted">
+                    <FaBell size={30} className="text-light mb-2 d-block mx-auto" />
+                    No new notifications
+                  </div>
                 ) : (
                   <ul className="list-group list-group-flush">
                     {notifications.map(n => (
-                      <li key={n.id} className="list-group-item list-group-item-action p-3" style={{ cursor: 'pointer' }} onClick={() => markNotificationRead(n.id)}>
-                        <div className="d-flex w-100 justify-content-between">
-                          <small className="text-primary fw-bold mb-1">{n.type}</small>
-                          <small className="text-muted">{new Date(n.createdAt).toLocaleDateString()}</small>
+                      <li key={n.id} className="list-group-item list-group-item-action p-3 border-bottom" style={{ cursor: 'pointer', transition: "background-color 0.2s" }} onClick={() => markNotificationRead(n.id)}>
+                        <div className="d-flex w-100 justify-content-between align-items-center mb-1">
+                          <small className="text-primary fw-bold" style={{ fontSize: "0.85rem" }}>{n.type}</small>
+                          <small className="text-muted" style={{ fontSize: "0.75rem" }}>{new Date(n.createdAt).toLocaleString()}</small>
                         </div>
-                        <p className="mb-1 small text-dark" style={{ whiteSpace: "pre-line" }}>
+                        <p className="mb-2 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "0.9rem", lineHeight: "1.4" }}>
                           {n.message && n.message.includes("📎 Attachment:") ? (
                             <>
                               {n.message.split("📎 Attachment:")[0]}
@@ -371,7 +374,7 @@ const Navbar = ({ toggleSidebar }) => {
                                 href={n.message.split("📎 Attachment:")[1]?.trim()} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="badge bg-info text-white text-decoration-none mt-1 d-inline-block"
+                                className="badge bg-info text-white text-decoration-none mt-2 d-inline-block px-2 py-1"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 📎 View Attachment
@@ -379,11 +382,24 @@ const Navbar = ({ toggleSidebar }) => {
                             </>
                           ) : n.message}
                         </p>
-                        <small className="text-muted d-block text-end">Click to dismiss</small>
+                        <div className="text-end">
+                          <small className="text-primary fw-semibold" style={{ fontSize: "0.75rem" }}>Click to dismiss</small>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 )}
+                
+                {/* View All Notifications Link */}
+                <div className="bg-light p-2 border-top text-center" style={{ position: "sticky", bottom: 0, zIndex: 1, borderRadius: "0 0 10px 10px" }}>
+                  <Link 
+                    to="/notifications" 
+                    className="text-primary text-decoration-none fw-bold"
+                    onClick={() => setShowNotifDropdown(false)}
+                  >
+                    View All Notifications <i className="fas fa-arrow-right ms-1"></i>
+                  </Link>
+                </div>
               </div>
             )}
           </div>

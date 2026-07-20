@@ -199,7 +199,7 @@ const TrainerHealthLog = () => {
           </div>
           <button 
             className="btn btn-primary flex-shrink-0 align-self-start align-self-md-auto" 
-            style={{ background: "#4318FF", border: "none", borderRadius: "10px" }}
+            style={{ background: selectedMember ? "#4318FF" : "#a0aec0", cursor: selectedMember ? "pointer" : "not-allowed", border: "none", borderRadius: "10px" }}
             onClick={openAddModal}
             disabled={!selectedMember}
           >

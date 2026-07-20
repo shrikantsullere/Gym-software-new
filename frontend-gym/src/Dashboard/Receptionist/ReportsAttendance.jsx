@@ -68,7 +68,11 @@ const ReportsAttendance = () => {
   const fetchStaffMembers = async () => {
     try {
       setLoading(true);
+<<<<<<< HEAD
       const response = await axiosInstance.get(`staff/admin/${adminId}`);
+=======
+      const response = await axiosInstance.get(`${BaseUrl}staff/all/${adminId}`);
+>>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
       if (response.data.success) {
         const staffList = response.data.staff || response.data.data || [];
         const transformedStaff = staffList.map(staff => ({

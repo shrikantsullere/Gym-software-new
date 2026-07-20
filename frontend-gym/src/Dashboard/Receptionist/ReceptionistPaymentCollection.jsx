@@ -57,9 +57,11 @@ const ReceptionistPaymentCollection = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        console.log("fetchData: activeTab =", activeTab, "adminId =", adminId, "branchId =", branchId);
         if (activeTab === 'payment') {
           // Fetch Payments
           const res = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
+<<<<<<< HEAD
           if(res.data.success) setPayments(res.data.payments || res.data.data || []);
           
           // Fetch Members (for dropdown)
@@ -69,19 +71,43 @@ const ReceptionistPaymentCollection = () => {
           // Fetch Plans (for dropdown)
           const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
           if(planRes.data.success) setPlans(planRes.data.plans || planRes.data.data || []);
+=======
+          console.log("Payments fetched:", res.data);
+          if(res.data.success) setPayments(res.data.payments);
+          
+          // Fetch Members (for dropdown)
+          const memRes = await axiosInstance.get(`/members/admin/${adminId}`);
+          console.log("Members fetched:", memRes.data);
+          if(memRes.data.success) setMembers(memRes.data.members || memRes.data.data);
+          
+          // Fetch Plans (for dropdown)
+          const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
+          console.log("Plans fetched:", planRes.data);
+          if(planRes.data.success) setPlans(planRes.data.plans);
+>>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
           
         } else if (activeTab === 'attendance') {
           // Fetch Attendance
           const res = await axiosInstance.get(`/memberattendence/admin?adminId=${adminId}`);
+<<<<<<< HEAD
           if(res.data.success) setAttendanceRecords(res.data.attendance || res.data.data || []);
+=======
+          console.log("Attendance fetched:", res.data);
+          if(res.data.success) setAttendanceRecords(res.data.attendance);
+>>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
           
         } else if (activeTab === 'plans') {
           // Fetch Plans View
           const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
+<<<<<<< HEAD
           if(planRes.data.success) setPlans(planRes.data.plans || planRes.data.data || []);
+=======
+          console.log("Plans view fetched:", planRes.data);
+          if(planRes.data.success) setPlans(planRes.data.plans);
+>>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
         }
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching data inside ReceptionistPaymentCollection:", err);
       } finally {
         setLoading(false);
       }
@@ -156,7 +182,11 @@ const ReceptionistPaymentCollection = () => {
         closePaymentModal();
         // Refresh Payments
         const refreshRes = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
+<<<<<<< HEAD
         if(refreshRes.data.success) setPayments(refreshRes.data.payments || refreshRes.data.data || []);
+=======
+        if(refreshRes.data.success) setPayments(refreshRes.data.payments);
+>>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
       }
     } catch (error) {
       console.error("Payment submission failed:", error);

@@ -439,6 +439,14 @@ model purchase {
   phone           String?  @db.VarChar(20)
   adminName       String?
   branchName      String?
+  gstNumber       String?
+  city            String?
+  profileImage    String?  @db.Text
+  password        String?
+  visiblePassword String?
+  paymentMethod   String?
+  paymentDetails  String?  @db.Text
+  transactionId   String?  @db.VarChar(255)
 }
 
 model role {
@@ -714,6 +722,8 @@ model leads {
   updatedAt         DateTime  @updatedAt
   branchId          Int?
   followUpDate      DateTime?
+  leadType          String?   @default("GYM") @db.VarChar(50)
+  interestedPlan    String?   @db.VarChar(100)
   admin             user?     @relation(fields: [adminId], references: [id])
   staff             staff?    @relation(fields: [assignedToStaffId], references: [id])
 
@@ -784,6 +794,9 @@ model announcement {
   channels    String   @db.VarChar(255)
   targetRoles String   @db.VarChar(255)
   sentBy      Int?
+  branchId    Int?
+  adminId     Int?
+  imageUrl    String?  @db.Text
   createdAt   DateTime @default(now()) @db.Timestamp(0)
 }
 

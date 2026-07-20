@@ -439,6 +439,13 @@ model purchase {
   phone           String?  @db.VarChar(20)
   adminName       String?
   branchName      String?
+  gstNumber       String?
+  city            String?
+  profileImage    String?  @db.Text
+  password        String?
+  visiblePassword String?
+  paymentMethod   String?
+  paymentDetails  String?  @db.Text
 }
 
 model role {

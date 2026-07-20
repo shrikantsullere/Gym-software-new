@@ -4,7 +4,7 @@ import { pool } from "../../config/db.js";
  * CREATE PLAN
  **************************************/
 export const createPlanService = async (data) => {
-  const allowedDurations = ["Monthly", "Yearly"];
+  const allowedDurations = ["Monthly", "Yearly", "7 Days"];
   const allowedFields = [
     "name",
     "price",
@@ -24,7 +24,7 @@ export const createPlanService = async (data) => {
   if (data.duration && !allowedDurations.includes(data.duration)) {
     throw {
       status: 400,
-      message: "Invalid duration. Allowed: Monthly, Yearly",
+      message: "Invalid duration. Allowed: Monthly, Yearly, 7 Days",
     };
   }
 
@@ -72,7 +72,7 @@ export const listPlansService = async (duration) => {
   let query = "SELECT * FROM plan";
   const params = [];
 
-  if (duration && ["Monthly", "Yearly"].includes(duration)) {
+  if (duration && ["Monthly", "Yearly", "7 Days"].includes(duration)) {
     query += " WHERE duration = ?";
     params.push(duration);
   }
@@ -87,7 +87,7 @@ export const listPlansService = async (duration) => {
  * UPDATE PLAN
  **************************************/
 export const updatePlanService = async (id, data) => {
-  const allowedDurations = ["Monthly", "Yearly"];
+  const allowedDurations = ["Monthly", "Yearly", "7 Days"];
   const allowedFields = [
     "name",
     "price",
@@ -105,7 +105,7 @@ export const updatePlanService = async (id, data) => {
   if (data.duration && !allowedDurations.includes(data.duration)) {
     throw {
       status: 400,
-      message: "Invalid duration. Allowed: Monthly, Yearly",
+      message: "Invalid duration. Allowed: Monthly, Yearly, 7 Days",
     };
   }
 

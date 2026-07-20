@@ -155,9 +155,11 @@ model expense {
   amount    Float
   date      DateTime @default(now())
   branchId  Int
-  notes     String?
-  createdAt DateTime @default(now())
-  branch    branch   @relation(fields: [branchId], references: [id], map: "Expense_branchId_fkey")
+  notes       String?
+  description String?  @db.VarChar(255)
+  paymentMode String?  @default("Cash") @db.VarChar(50)
+  createdAt   DateTime @default(now())
+  branch      branch   @relation(fields: [branchId], references: [id], map: "Expense_branchId_fkey")
 
   @@index([branchId], map: "Expense_branchId_idx")
 }
@@ -953,4 +955,21 @@ enum fitness_goal_enum {
   fat_loss
   maintenance
   muscle_gain
+}
+
+model equipment_requests {
+  id           Int       @id @default(autoincrement())
+  requestedBy  Int
+  role         String    @default("MEMBER") @db.VarChar(50)
+  itemName     String    @db.VarChar(255)
+  category     String    @default("Other") @db.VarChar(100)
+  quantity     Int
+  reason       String?   @db.Text
+  branchId     Int?
+  adminId      Int?
+  imageUrl     String?   @db.VarChar(255)
+  status       String    @default("PENDING") @db.VarChar(50)
+  adminRemarks String?   @db.Text
+  createdAt    DateTime? @default(now()) @db.DateTime(0)
+  updatedAt    DateTime? @default(now()) @updatedAt @db.DateTime(0)
 }

@@ -107,7 +107,7 @@ const BodybuilderAssessmentForm = () => {
           
           // Fetch previous assessment logs to auto-fill measurements
           try {
-            const res = await axiosInstance.get(`/bodybuilding/${formData.memberId}`);
+            const res = await axiosInstance.get(`/v1/bodybuilding/${formData.memberId}`);
             if (res.data && res.data.success !== false && res.data.data && res.data.data.length > 0) {
               const latestLog = res.data.data[0];
               setFormData(prev => ({
@@ -173,7 +173,7 @@ const BodybuilderAssessmentForm = () => {
         notes: formData.coach_notes
       };
       
-      await axiosInstance.post(`/bodybuilding/${formData.memberId}`, dataToSubmit);
+      await axiosInstance.post(`/v1/bodybuilding/${formData.memberId}`, dataToSubmit);
       
       setSuccess(true);
       setTimeout(() => navigate(-1), 2000);

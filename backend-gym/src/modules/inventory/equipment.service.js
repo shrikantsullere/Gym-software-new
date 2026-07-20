@@ -14,9 +14,9 @@ export const createEquipmentService = async (data) => {
   if (!name) throw { status: 400, message: "Equipment name is required" };
   if (!branchId) throw { status: 400, message: "Branch ID is required" };
 
-  const nextMaintenanceDate = purchaseDate
+  const nextMaintenanceDate = data.nextMaintenanceDate || (purchaseDate
     ? new Date(new Date(purchaseDate).getTime() + maintenanceDueDays * 86400000).toISOString().split("T")[0]
-    : null;
+    : null);
 
   const [result] = await pool.query(
     `INSERT INTO gym_equipment 

@@ -973,3 +973,21 @@ model equipment_requests {
   createdAt    DateTime? @default(now()) @db.DateTime(0)
   updatedAt    DateTime? @default(now()) @updatedAt @db.DateTime(0)
 }
+
+model gym_equipment {
+  id                  Int       @id @default(autoincrement())
+  name                String    @db.VarChar(255)
+  category            String?   @db.VarChar(100)
+  quantity            Int       @default(1)
+  condition           String?   @default("Good") @db.VarChar(50)
+  purchaseDate        DateTime? @db.Date
+  purchaseCost        Float?
+  location            String?   @db.VarChar(255)
+  nextMaintenanceDate DateTime? @db.Date
+  branchId            Int
+  notes               String?   @db.Text
+  imageUrl            String?   @db.VarChar(255)
+  isActive            Int       @default(1) @db.TinyInt
+  createdAt           DateTime? @default(now()) @db.DateTime(0)
+  updatedAt           DateTime? @default(now()) @updatedAt @db.DateTime(0)
+}

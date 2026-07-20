@@ -74,22 +74,25 @@ const GeneralClassesSchedule = () => {
 
       setClasses(transformedClasses);
       
-      // Fetch trainers - Add this API call
+      // Fetch trainers (staff with roleId 5=personaltrainer or 6=generaltrainer)
       try {
-        const trainersRes = await axiosInstance.get(`trainers/all/${adminId}`);
+        const trainersRes = await axiosInstance.get(`staff/admin/${adminId}`);
         if (trainersRes.data.success) {
-          setTrainers(trainersRes.data.data || []);
+          // Filter only trainers (roleId 5 = Personal Trainer, 6 = General Trainer)
+          const allStaff = trainersRes.data.staff || [];
+          const trainersList = allStaff.filter(s => s.roleId === 5 || s.roleId === 6);
+          setTrainers(trainersList);
         }
       } catch (err) {
         console.error("Error fetching trainers:", err);
         // Continue even if trainers fetch fails
       }
       
-      // Fetch members - Add this API call
+      // Fetch members
       try {
-        const membersRes = await axiosInstance.get(`members/all`);
+        const membersRes = await axiosInstance.get(`members/admin/${adminId}`);
         if (membersRes.data.success) {
-          setMembers(membersRes.data.data || []);
+          setMembers(membersRes.data.members || membersRes.data.data || []);
         }
       } catch (err) {
         console.error("Error fetching members:", err);

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import BaseUrl from '../../Api/BaseUrl';
-import GetAdminId from '../../Api/GetAdminId';
 
 const PersonsalTrainerShiftManagement = () => {
-  const [shift, setShift] = useState(null); // Single shift object
+  const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,12 +17,10 @@ const PersonsalTrainerShiftManagement = () => {
   };
 
   const user = getUserFromStorage();
-  const staffId = user?.staffId || user?.id; // Try staffId first, fallback to id
-
-  console.log("Staff ID:", staffId);
+  const staffId = user?.staffId || user?.id;
 
   useEffect(() => {
-    const fetchShift = async () => {
+    const fetchShifts = async () => {
       if (!staffId) {
         setError('Staff ID not found in user data');
         setLoading(false);
@@ -36,20 +33,20 @@ const PersonsalTrainerShiftManagement = () => {
         const data = await response.json();
 
         if (data.success && data.data) {
-          // API returns a single shift object under `data`
-          setShift(data.data);
+          const list = Array.isArray(data.data) ? data.data : [data.data];
+          setShifts(list);
         } else {
-          setShift(null); // No shift assigned
+          setShifts([]);
         }
       } catch (err) {
-        console.error('Error fetching shift:', err);
+        console.error('Error fetching shifts:', err);
         setError('Failed to load shift data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchShift();
+    fetchShifts();
   }, [staffId]);
 
   const getShiftColor = (type) => {
@@ -88,11 +85,11 @@ const PersonsalTrainerShiftManagement = () => {
   if (loading) {
     return (
       <div className="container-fluid py-4">
-        <div className="text-center">
+        <div className="text-center my-4">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-2">Loading your shift...</p>
+          <p className="mt-2 text-muted">Loading your shift roster...</p>
         </div>
       </div>
     );
@@ -101,47 +98,58 @@ const PersonsalTrainerShiftManagement = () => {
   return (
     <div className="container-fluid py-4">
       <h2 className="mb-4">Shift Management</h2>
-      <h3>Duty Roster</h3>
+      <h4 className="mb-3 text-secondary">Duty Roster</h4>
 
-      <div className="table-responsive">
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>Staff ID</th>
-              <th>Date</th>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Shift Type</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shift ? (
-              <tr key={shift.id}>
-                <td>{shift.staffIds}</td>
-                <td>{formatDate(shift.shiftDate)}</td>
-                <td>{shift.startTime}</td>
-                <td>{shift.endTime}</td>
-                <td>
-                  <span className={`badge bg-${getShiftColor(shift.shiftType)}`}>
-                    {shift.shiftType || 'Custom'}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge bg-${getStatusClass(shift.status)}`}>
-                    {shift.status || 'Unknown'}
-                  </span>
-                </td>
-              </tr>
-            ) : (
-              <tr>
-                <td colSpan="6" className="text-center text-muted">
-                  No shift assigned
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {error ? (
+        <div className="alert alert-danger mb-4">{error}</div>
+      ) : null}
+
+      <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th className="px-4 py-3">Staff ID</th>
+                  <th className="py-3">Date</th>
+                  <th className="py-3">Start Time</th>
+                  <th className="py-3">End Time</th>
+                  <th className="py-3">Shift Type</th>
+                  <th className="px-4 py-3 text-end">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shifts.length > 0 ? (
+                  shifts.map((shift) => (
+                    <tr key={shift.id}>
+                      <td className="px-4 py-3 fw-bold">{shift.staffIds || staffId}</td>
+                      <td className="py-3">{formatDate(shift.shiftDate)}</td>
+                      <td className="py-3">{shift.startTime}</td>
+                      <td className="py-3">{shift.endTime}</td>
+                      <td className="py-3">
+                        <span className={`badge bg-${getShiftColor(shift.shiftType)} px-3 py-2 rounded-pill`}>
+                          {shift.shiftType || 'Custom'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-end">
+                        <span className={`badge bg-${getStatusClass(shift.status)} px-3 py-2 rounded-pill`}>
+                          {shift.status || 'Pending'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted py-5">
+                      <h5>No shifts assigned</h5>
+                      <small>Shifts assigned by your admin will appear here.</small>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

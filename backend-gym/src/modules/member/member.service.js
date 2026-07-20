@@ -28,33 +28,51 @@ export const createMemberService = async (data) => {
     goal,
   } = data;
 
-  if (!fullName || !email || !password) {
+  if (!fullName) {
     throw {
       status: 400,
-      message: "fullName, email, and password are required",
+      message: "fullName is required",
     };
   }
 
-  // HASH PASSWORD
-  const hashedPassword = await bcrypt.hash(password, 10);
+  // Use provided password or default password fallback
+  const userPassword = password || "12345678";
+  const hashedPassword = await bcrypt.hash(userPassword, 10);
 
-  // Check duplicate email
-  const [u1] = await pool.query("SELECT id FROM user WHERE email = ?", [email]);
-  const [m1] = await pool.query("SELECT id FROM member WHERE email = ?", [
-    email,
-  ]);
-  if (u1.length > 0 || m1.length > 0)
-    throw { status: 400, message: "Email already exists" };
+  // Handle email: if not provided or empty, auto-generate unique email
+  let memberEmail = email ? String(email).trim() : "";
+  if (!memberEmail) {
+    const cleanName = (fullName || 'member').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    memberEmail = `${cleanName}${Date.now()}${randomSuffix}@gym.com`;
+  } else {
+    // Check duplicate email
+    const [u1] = await pool.query("SELECT id, fullName FROM user WHERE email = ?", [memberEmail]);
+    const [m1] = await pool.query("SELECT id, fullName FROM member WHERE email = ?", [memberEmail]);
+    if (u1.length > 0 || m1.length > 0) {
+      const existingName = u1[0]?.fullName || m1[0]?.fullName || 'an existing member';
+      throw {
+        status: 400,
+        message: `Email '${memberEmail}' is already registered to ${existingName}. Please enter a different email address.`,
+      };
+    }
+  }
 
-  // Global phone duplicate check — user table is the single source of truth
+  // Global phone duplicate check
   if (phone) {
-    const cleanPhone = phone.trim();
-    const [phoneExists] = await pool.query(
-      "SELECT id FROM user WHERE phone = ?",
-      [cleanPhone]
-    );
-    if (phoneExists.length > 0) {
-      throw { status: 400, message: "Phone number already registered" };
+    const cleanPhone = String(phone).trim();
+    if (cleanPhone) {
+      const [phoneExists] = await pool.query(
+        "SELECT id, fullName FROM user WHERE phone = ?",
+        [cleanPhone]
+      );
+      if (phoneExists.length > 0) {
+        const existingName = phoneExists[0]?.fullName || 'an existing member';
+        throw {
+          status: 400,
+          message: `Phone number '${cleanPhone}' is already registered to ${existingName}. Please enter a different phone number.`,
+        };
+      }
     }
   }
 
@@ -92,7 +110,7 @@ export const createMemberService = async (data) => {
     [
       adminId,
       fullName,
-      email,
+      memberEmail,
       hashedPassword,
       phone || null,
       4, // roleId = 4 = MEMBER
@@ -117,7 +135,7 @@ export const createMemberService = async (data) => {
     [
       userId,
       fullName,
-      email,
+      memberEmail,
       hashedPassword,
       phone || null,
       firstPlanId || null,
@@ -216,11 +234,11 @@ export const createMemberService = async (data) => {
   console.log(`✅ Total plans assigned: ${assignedPlans.length} out of ${plansToAssign.length} requested`);
 
   // Send welcome note using global channels configured by Super Admin
-  const welcomeMsg = `Hi ${fullName},\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: ${email}\nPassword: ${password}\n\nRegards,\nGym Management`;
+  const welcomeMsg = `Hi ${fullName},\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: ${memberEmail}\nPassword: ${userPassword}\n\nRegards,\nGym Management`;
 
   dispatchNotification({
     category: "welcome_note",
-    toEmail: email,
+    toEmail: memberEmail,
     toPhone: phone,
     toUserId: userId,
     memberId: memberId,
@@ -239,13 +257,13 @@ export const createMemberService = async (data) => {
 
     dispatchNotification({
       category: "invoice",
-      toEmail: email,
+      toEmail: memberEmail,
       toPhone: phone,
       toUserId: userId,
       memberId: memberId,
-      subject: `Payment Receipt - ${planNames} 🧾`,
+      subject: "Payment Receipt",
       message: invoiceMsg,
-    }).catch(err => console.error("Error sending registration invoice notification:", err.message));
+    }).catch(err => console.error("Error sending invoice notification:", err.message));
   }
 
   return {
@@ -253,7 +271,7 @@ export const createMemberService = async (data) => {
     userId,
     memberId,
     fullName,
-    email,
+    email: memberEmail,
     branchId,
     membershipFrom: startDate,
     membershipTo: endDate,

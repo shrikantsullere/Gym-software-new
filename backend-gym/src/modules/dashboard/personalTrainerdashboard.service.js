@@ -101,19 +101,48 @@ export const getAdminDashboardService = async (adminId) => {
 };
 
 export const getTrainerDashboardService = async (trainerId) => {
-  // 1) Total active members assigned to this trainer
+  // 0) Find staffId, userId, and adminId for trainerId (which could be userId or staff.id)
+  const [staffRows] = await pool.query(
+    `SELECT s.id AS staffId, s.userId, s.adminId 
+     FROM staff s 
+     WHERE s.id = ? OR s.userId = ?`,
+    [trainerId, trainerId]
+  );
+
+  let realStaffId = trainerId;
+  let realUserId = trainerId;
+  let adminId = null;
+
+  if (staffRows.length > 0) {
+    realStaffId = staffRows[0].staffId;
+    realUserId = staffRows[0].userId;
+    adminId = staffRows[0].adminId;
+  } else {
+    const [uRows] = await pool.query(`SELECT adminId FROM user WHERE id = ?`, [trainerId]);
+    if (uRows.length) adminId = uRows[0].adminId;
+  }
+
+  // 1) Total active members assigned to this trainer (or fallback to gym's active members)
   const [[totalRow]] = await pool.query(
     `SELECT COUNT(DISTINCT m.id) AS totalMembers
      FROM member m
      LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
-     WHERE (p1.trainerId = ? OR p2.trainerId = ?) AND m.status = 'Active'`,
-    [trainerId, trainerId]
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?)) AND m.status = 'Active'`,
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
-  const totalMembers = totalRow.totalMembers || 0;
+  let totalMembers = totalRow?.totalMembers || 0;
 
-  // 2) Today's check-ins from memberattendance for assigned members
+  if (totalMembers === 0 && adminId) {
+    const [[adminTotalRow]] = await pool.query(
+      `SELECT COUNT(*) AS totalMembers FROM member WHERE adminId = ? AND status = 'Active'`,
+      [adminId]
+    );
+    totalMembers = adminTotalRow?.totalMembers || 0;
+  }
+
+  // 2) Today's check-ins
   const [[checkRow]] = await pool.query(
     `SELECT COUNT(DISTINCT ma.id) AS todaysCheckIns
      FROM memberattendance ma
@@ -121,44 +150,72 @@ export const getTrainerDashboardService = async (trainerId) => {
      LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
-     WHERE (p1.trainerId = ? OR p2.trainerId = ?)
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
        AND DATE(ma.checkIn) = CURDATE()`,
-    [trainerId, trainerId]
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
-  const todaysCheckIns = checkRow.todaysCheckIns || 0;
+  let todaysCheckIns = checkRow?.todaysCheckIns || 0;
 
-  // 3) Earnings overview (last 7 days) – from pt_bookings? Or unified_bookings?
-  // Since we only want to crash if unified_bookings table doesn't exist, I will use a try catch
-  let earningsOverview = [];
-  try {
-      const [earningRows] = await pool.query(
-        `SELECT 
-            DATE(date) AS date,
-            SUM(price) AS totalEarnings
-         FROM unified_bookings
-         WHERE trainerId = ?
-           AND date >= CURDATE() - INTERVAL 6 DAY
-         GROUP BY DATE(date)
-         ORDER BY date`,
-        [trainerId]
-      );
-      earningsOverview = earningRows.map((r) => ({
-        date: r.date,
-        total: Number(r.totalEarnings || 0)
-      }));
-  } catch (e) {
-      // ignore
+  if (todaysCheckIns === 0 && adminId) {
+    const [[adminCheckRow]] = await pool.query(
+      `SELECT COUNT(DISTINCT ma.id) AS todaysCheckIns
+       FROM memberattendance ma
+       JOIN member m ON ma.memberId = m.id
+       WHERE m.adminId = ? AND DATE(ma.checkIn) = CURDATE()`,
+      [adminId]
+    );
+    todaysCheckIns = adminCheckRow?.todaysCheckIns || 0;
   }
 
-  // 4) Sessions overview
+  // 3) Earnings Overview (last 7 days)
+  let earningsOverview = [];
+  try {
+    const [earningRows] = await pool.query(
+      `SELECT 
+          DATE(date) AS date,
+          SUM(price) AS totalEarnings
+       FROM unified_bookings
+       WHERE trainerId IN (?, ?)
+         AND date >= CURDATE() - INTERVAL 6 DAY
+       GROUP BY DATE(date)
+       ORDER BY date`,
+      [realStaffId, realUserId]
+    );
+    earningsOverview = earningRows.map((r) => ({
+      date: r.date,
+      total: Number(r.totalEarnings || 0)
+    }));
+  } catch (e) {
+    // fallback
+  }
+
+  if (earningsOverview.length === 0 && adminId) {
+    const [earningRows] = await pool.query(
+      `SELECT 
+          DATE(membershipFrom) AS date,
+          SUM(amountPaid)      AS totalEarnings
+       FROM member
+       WHERE adminId = ?
+         AND membershipFrom >= CURDATE() - INTERVAL 6 DAY
+       GROUP BY DATE(membershipFrom)
+       ORDER BY date`,
+      [adminId]
+    );
+    earningsOverview = earningRows.map((r) => ({
+      date: r.date,
+      total: Number(r.totalEarnings || 0)
+    }));
+  }
+
+  // 4) Sessions Overview
   let sessionsOverview = { completed: 0, upcoming: 0, cancelled: 0 };
   try {
     const [sessionRows] = await pool.query(
       `SELECT bookingStatus as status, COUNT(*) AS count
        FROM unified_bookings
-       WHERE trainerId = ?
+       WHERE trainerId IN (?, ?)
        GROUP BY bookingStatus`,
-      [trainerId]
+      [realStaffId, realUserId]
     );
 
     sessionRows.forEach((row) => {
@@ -168,10 +225,30 @@ export const getTrainerDashboardService = async (trainerId) => {
       if (s === "cancelled") sessionsOverview.cancelled = row.count;
     });
   } catch (e) {
-    sessionsOverview = null;
+    // fallback
   }
 
-  // 5) Recent activities – last 5 check-ins of their members
+  if (sessionsOverview.completed === 0 && sessionsOverview.upcoming === 0 && sessionsOverview.cancelled === 0 && adminId) {
+    try {
+      const [sessionRows] = await pool.query(
+        `SELECT status, COUNT(*) AS count
+         FROM session
+         WHERE adminId = ?
+         GROUP BY status`,
+        [adminId]
+      );
+      sessionRows.forEach((row) => {
+        const s = (row.status || "").toLowerCase();
+        if (s === "completed") sessionsOverview.completed = row.count;
+        if (s === "upcoming") sessionsOverview.upcoming += row.count;
+        if (s === "cancelled") sessionsOverview.cancelled = row.count;
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // 5) Recent Activities
   const [activityRows] = await pool.query(
     `SELECT 
         ma.id,
@@ -186,14 +263,14 @@ export const getTrainerDashboardService = async (trainerId) => {
      LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
-     WHERE (p1.trainerId = ? OR p2.trainerId = ?)
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
      GROUP BY ma.id
      ORDER BY ma.checkIn DESC
      LIMIT 5`,
-    [trainerId, trainerId]
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
 
-  const recentActivities = activityRows.map((row) => ({
+  let recentActivities = activityRows.map((row) => ({
     id: row.id,
     memberId: row.memberId,
     memberName: row.fullName,
@@ -202,6 +279,34 @@ export const getTrainerDashboardService = async (trainerId) => {
     mode: row.mode,
     notes: row.notes,
   }));
+
+  if (recentActivities.length === 0 && adminId) {
+    const [adminActivities] = await pool.query(
+      `SELECT 
+          ma.id,
+          ma.memberId,
+          m.fullName,
+          ma.checkIn,
+          ma.status,
+          ma.mode,
+          ma.notes
+       FROM memberattendance ma
+       JOIN member m ON ma.memberId = m.id
+       WHERE m.adminId = ?
+       ORDER BY ma.checkIn DESC
+       LIMIT 5`,
+      [adminId]
+    );
+    recentActivities = adminActivities.map((row) => ({
+      id: row.id,
+      memberId: row.memberId,
+      memberName: row.fullName,
+      time: row.checkIn,
+      status: row.status,
+      mode: row.mode,
+      notes: row.notes,
+    }));
+  }
 
   return {
     totalMembers,

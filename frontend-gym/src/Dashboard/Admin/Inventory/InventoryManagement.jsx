@@ -23,6 +23,13 @@ const InventoryManagement = () => {
   const [equipmentImage, setEquipmentImage] = useState(null);
   const [equipmentImagePreview, setEquipmentImagePreview] = useState(null);
 
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  const [editEquipmentImage, setEditEquipmentImage] = useState(null);
+  const [editEquipmentImagePreview, setEditEquipmentImagePreview] = useState(null);
+
   const [requestData, setRequestData] = useState({
     itemName: '', category: 'Other', quantity: 1, reason: ''
   });
@@ -129,6 +136,47 @@ const InventoryManagement = () => {
     } catch (err) {
       console.error("Equipment add error:", err.response?.data || err);
       alert("Error adding item: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleEditClick = (item) => {
+    setEditFormData({
+      name: item.name || '',
+      category: item.category || 'Cardio',
+      quantity: item.quantity || 1,
+      condition: item.condition || 'Good',
+      purchaseDate: item.purchaseDate ? new Date(item.purchaseDate).toISOString().split('T')[0] : '',
+      purchaseCost: item.purchaseCost || '',
+      location: item.location || '',
+      notes: item.notes || ''
+    });
+    setEditEquipmentImage(null);
+    setEditEquipmentImagePreview(item.imageUrl || null);
+    setSelectedEquipment(item);
+    setShowEditModal(true);
+  };
+
+  const handleViewClick = (item) => {
+    setSelectedEquipment(item);
+    setShowViewModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const fd = new FormData();
+      Object.entries(editFormData).forEach(([k, v]) => fd.append(k, v));
+      if (editEquipmentImage) fd.append('image', editEquipmentImage);
+      await axios.put(`${BaseUrl}v1/equipment/update/${selectedEquipment.id}`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      setShowEditModal(false);
+      setEditEquipmentImage(null);
+      fetchData();
+      alert("Equipment updated successfully");
+    } catch (err) {
+      console.error("Equipment update error:", err.response?.data || err);
+      alert("Error updating item");
     }
   };
 
@@ -353,10 +401,10 @@ const InventoryManagement = () => {
                       <td className="py-3 text-muted">{item.nextMaintenanceDate ? new Date(item.nextMaintenanceDate).toLocaleDateString() : 'N/A'}</td>
                       {isAdminOrManager && (
                         <td className="py-3 text-end px-4">
-                          <button className="btn btn-sm btn-light me-2 text-primary border shadow-sm" title="View Details">
+                          <button className="btn btn-sm btn-light me-2 text-primary border shadow-sm" title="View Details" onClick={() => handleViewClick(item)}>
                             <FontAwesomeIcon icon={faEye} />
                           </button>
-                          <button className="btn btn-sm btn-light me-2 text-secondary border shadow-sm" title="Edit Item">
+                          <button className="btn btn-sm btn-light me-2 text-secondary border shadow-sm" title="Edit Item" onClick={() => handleEditClick(item)}>
                             <FontAwesomeIcon icon={faEdit} />
                           </button>
                           <button className="btn btn-sm btn-light text-danger border shadow-sm" title="Delete" onClick={() => handleDelete(item.id)}>
@@ -569,6 +617,175 @@ const InventoryManagement = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* EDIT EQUIPMENT MODAL */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title><FontAwesomeIcon icon={faEdit} className="me-2 text-primary" /> Edit Equipment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleEditSubmit}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <Form.Group>
+                  <Form.Label>Equipment Name <span className="text-danger">*</span></Form.Label>
+                  <Form.Control type="text" required value={editFormData.name || ''} onChange={e => setEditFormData({...editFormData, name: e.target.value})} />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group>
+                  <Form.Label>Category</Form.Label>
+                  <Form.Select value={editFormData.category || ''} onChange={e => setEditFormData({...editFormData, category: e.target.value})}>
+                    <option value="Cardio">Cardio</option>
+                    <option value="Strength">Strength</option>
+                    <option value="Free Weights">Free Weights</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Cleaning Supplies">Cleaning Supplies</option>
+                    <option value="Other">Other</option>
+                  </Form.Select>
+                </Form.Group>
+              </div>
+              <div className="col-md-4">
+                <Form.Group>
+                  <Form.Label>Quantity <span className="text-danger">*</span></Form.Label>
+                  <Form.Control type="number" min="1" required value={editFormData.quantity || 1} onChange={e => setEditFormData({...editFormData, quantity: e.target.value})} />
+                </Form.Group>
+              </div>
+              <div className="col-md-4">
+                <Form.Group>
+                  <Form.Label>Condition</Form.Label>
+                  <Form.Select value={editFormData.condition || ''} onChange={e => setEditFormData({...editFormData, condition: e.target.value})}>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Under Repair">Under Repair</option>
+                  </Form.Select>
+                </Form.Group>
+              </div>
+              <div className="col-md-4">
+                <Form.Group>
+                  <Form.Label>Location in Gym</Form.Label>
+                  <Form.Control type="text" value={editFormData.location || ''} onChange={e => setEditFormData({...editFormData, location: e.target.value})} />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group>
+                  <Form.Label>Purchase Date</Form.Label>
+                  <Form.Control type="date" value={editFormData.purchaseDate || ''} onChange={e => setEditFormData({...editFormData, purchaseDate: e.target.value})} />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group>
+                  <Form.Label>Purchase Cost</Form.Label>
+                  <Form.Control type="number" step="0.01" value={editFormData.purchaseCost || ''} onChange={e => setEditFormData({...editFormData, purchaseCost: e.target.value})} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label>Notes</Form.Label>
+                  <Form.Control as="textarea" rows={3} value={editFormData.notes || ''} onChange={e => setEditFormData({...editFormData, notes: e.target.value})} />
+                </Form.Group>
+              </div>
+              {/* Image Upload */}
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label className="fw-semibold">Equipment Photo <span className="text-muted fw-normal">(Optional)</span></Form.Label>
+                  <div className="border rounded-3 p-3" style={{ background: '#f8f9fa' }}>
+                    {editEquipmentImagePreview ? (
+                      <div className="d-flex align-items-center gap-3">
+                        <img src={editEquipmentImagePreview} alt="Preview" className="rounded-3 shadow-sm" style={{ width: '90px', height: '70px', objectFit: 'cover' }} />
+                        <div>
+                          <p className="mb-1 fw-semibold text-dark" style={{fontSize: '13px'}}>{editEquipmentImage?.name || 'Existing Image'}</p>
+                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => { setEditEquipmentImage(null); setEditEquipmentImagePreview(null); }}>
+                            Remove/Change
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="d-flex flex-column align-items-center justify-content-center py-3" style={{ cursor: 'pointer' }}>
+                        <span style={{ fontSize: '2rem' }}>📷</span>
+                        <span className="text-muted mt-1" style={{ fontSize: '13px' }}>Click to upload equipment photo</span>
+                        <input type="file" accept="image/*" className="d-none" onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setEditEquipmentImage(file);
+                            setEditEquipmentImagePreview(URL.createObjectURL(file));
+                          }
+                        }} />
+                      </label>
+                    )}
+                  </div>
+                </Form.Group>
+              </div>
+            </div>
+            <div className="d-flex justify-content-end mt-4">
+              <Button variant="secondary" onClick={() => setShowEditModal(false)} className="me-2">Cancel</Button>
+              <Button variant="primary" type="submit">Update Equipment</Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* VIEW EQUIPMENT MODAL */}
+      <Modal show={showViewModal} onHide={() => setShowViewModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title><FontAwesomeIcon icon={faEye} className="me-2 text-primary" /> View Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedEquipment && (
+            <div className="row g-3">
+              {selectedEquipment.imageUrl && (
+                <div className="col-12 text-center mb-3">
+                  <img src={selectedEquipment.imageUrl} alt={selectedEquipment.name} className="img-fluid rounded shadow-sm" style={{ maxHeight: '200px', objectFit: 'cover' }} />
+                </div>
+              )}
+              <div className="col-md-6">
+                <p className="mb-1 text-muted small">Equipment Name</p>
+                <h6 className="fw-semibold">{selectedEquipment.name}</h6>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-1 text-muted small">Category</p>
+                <h6 className="fw-semibold">{selectedEquipment.category || 'N/A'}</h6>
+              </div>
+              <div className="col-md-4">
+                <p className="mb-1 text-muted small">Quantity</p>
+                <h6 className="fw-semibold">{selectedEquipment.quantity}</h6>
+              </div>
+              <div className="col-md-4">
+                <p className="mb-1 text-muted small">Condition</p>
+                <h6 className="fw-semibold">{selectedEquipment.condition || 'N/A'}</h6>
+              </div>
+              <div className="col-md-4">
+                <p className="mb-1 text-muted small">Status</p>
+                <h6 className="fw-semibold">{selectedEquipment.status || 'N/A'}</h6>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-1 text-muted small">Location in Gym</p>
+                <h6 className="fw-semibold">{selectedEquipment.location || 'N/A'}</h6>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-1 text-muted small">Purchase Date</p>
+                <h6 className="fw-semibold">{selectedEquipment.purchaseDate ? new Date(selectedEquipment.purchaseDate).toLocaleDateString() : 'N/A'}</h6>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-1 text-muted small">Purchase Cost</p>
+                <h6 className="fw-semibold">{selectedEquipment.purchaseCost ? `₹${selectedEquipment.purchaseCost}` : 'N/A'}</h6>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-1 text-muted small">Next Maintenance</p>
+                <h6 className="fw-semibold">{selectedEquipment.nextMaintenanceDate ? new Date(selectedEquipment.nextMaintenanceDate).toLocaleDateString() : 'N/A'}</h6>
+              </div>
+              <div className="col-12">
+                <p className="mb-1 text-muted small">Notes</p>
+                <h6 className="fw-semibold">{selectedEquipment.notes || 'No additional notes.'}</h6>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowViewModal(false)}>Close</Button>
+        </Modal.Footer>
       </Modal>
 
       {/* REQUEST ITEM MODAL */}

@@ -446,6 +446,7 @@ model purchase {
   visiblePassword String?
   paymentMethod   String?
   paymentDetails  String?  @db.Text
+  transactionId   String?  @db.VarChar(255)
 }
 
 model role {

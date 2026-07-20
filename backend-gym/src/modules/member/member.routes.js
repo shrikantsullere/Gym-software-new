@@ -67,8 +67,8 @@ router.delete(
   deleteMember
 );
 
-router.get("/admin/:adminId", verifyToken(["Superadmin", "Admin", "Staff"]), getMembersByAdminId);
-router.get("/admin/:adminId/plan", verifyToken(["Superadmin", "Admin", "Staff"]), getMembersByAdminAndPlanController);
+router.get("/admin/:adminId", verifyToken(["Superadmin", "Admin", "Staff", "generaltrainer", "receptionist", "sales_agent"]), getMembersByAdminId);
+router.get("/admin/:adminId/plan", verifyToken(["Superadmin", "Admin", "Staff", "generaltrainer", "receptionist"]), getMembersByAdminAndPlanController);
 router.get(
   "/group-plan/:adminId/admin/:planId",
   verifyToken(["Superadmin", "Admin", "Staff"]),

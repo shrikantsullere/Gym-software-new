@@ -126,13 +126,25 @@ const ReceptionistPaymentCollection = () => {
   const [memberType, setMemberType] = useState('existing');
   const [selectedMemberDetails, setSelectedMemberDetails] = useState(null);
 
-  const handleAddPayment = () => {
+  const handleAddPayment = async () => {
     setPaymentModalType('add');
     setSelectedPayment(null);
-    setNewPayment({ memberId: "", planId: "", amount: "", paymentMode: "Razorpay", status: "Paid" });
+    setNewPayment({ memberId: "", planId: "", amount: "", paymentMode: "Cash", status: "Paid" });
     setSelectedMemberDetails(null);
     setMemberType('existing');
     setIsPaymentModalOpen(true);
+
+    if (adminId) {
+      try {
+        const memRes = await axiosInstance.get(`/members/admin/${adminId}`);
+        if (memRes.data.success) setMembers(memRes.data.data || memRes.data.members || []);
+
+        const planRes = await axiosInstance.get(`MemberPlan?adminId=${adminId}`);
+        if (planRes.data.success) setPlans(planRes.data.data || planRes.data.plans || []);
+      } catch (err) {
+        console.error("Error fetching modal dropdown data:", err);
+      }
+    }
   };
 
   const handleViewPayment = (payment) => {
@@ -144,12 +156,17 @@ const ReceptionistPaymentCollection = () => {
   const submitNewPayment = async (e) => {
     e.preventDefault();
     try {
+      const userStr = localStorage.getItem("user");
+      const userObj = userStr ? JSON.parse(userStr) : {};
+
       const payload = {
         memberId: newPayment.memberId,
         planId: newPayment.planId,
         amount: newPayment.amount,
         paymentMode: newPayment.paymentMode,
-        trainerName: newPayment.trainerName
+        trainerName: newPayment.trainerName,
+        collectedByName: userObj?.fullName || "Sales Agent",
+        collectedByRole: userObj?.role || "SALES_AGENT"
       };
       const res = await axiosInstance.post("/payments/create", payload);
       if(res.data.success) {
@@ -161,7 +178,7 @@ const ReceptionistPaymentCollection = () => {
       }
     } catch (error) {
       console.error("Payment submission failed:", error);
-      alert("Failed to add payment. Please check details.");
+      alert(error.response?.data?.message || "Failed to add payment. Please check details.");
     }
   };
 

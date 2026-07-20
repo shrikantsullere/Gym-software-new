@@ -18,12 +18,13 @@ const PersonalAttendance = () => {
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
   const memberId = userData.id;
+  const adminId = userData.adminId || userData.id;
   const branchId = userData.branchId || 1;
 
   // Fetch attendance data
   useEffect(() => {
     fetchAttendanceData();
-  }, [memberId, branchId]);
+  }, [adminId, memberId, branchId]);
 
   // Function to fetch attendance data
   const fetchAttendanceData = async () => {
@@ -31,8 +32,8 @@ const PersonalAttendance = () => {
       setLoading(true);
       setError(null);
       
-      // Using API endpoint for member attendance
-      const response = await fetch(`${BaseUrl}memberattendence/${memberId}`, {
+      // Using API endpoint for gym members attendance under this admin
+      const response = await fetch(`${BaseUrl}memberattendence/admin?adminId=${adminId}&category=member`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -47,21 +48,20 @@ const PersonalAttendance = () => {
         // Transform API response to match expected format
         const transformedAttendance = data.attendance.map(entry => ({
           attendance_id: entry.id,
-          member_id: entry.memberId,
-          name: entry.fullName || `Member ID: ${entry.memberId}`,
-          status: entry.computedStatus === 'Active' ? 'Present' : 
-                  entry.computedStatus === 'Completed' ? 'Present' : 'Absent',
-          checkin_time: entry.checkIn ? new Date(entry.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
-          checkout_time: entry.checkOut ? new Date(entry.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
-          mode: entry.mode,
-          notes: entry.notes,
-          computedStatus: entry.computedStatus,
-          checkedOut: entry.checkOut ? true : false // Add checkedOut status
+          member_id: entry.memberId || entry.staffId,
+          name: entry.name || entry.fullName || `Member ID: ${entry.memberId}`,
+          status: entry.status || (entry.computedStatus === 'Active' ? 'Present' : 
+                  entry.computedStatus === 'Completed' ? 'Present' : 'Absent'),
+          checkin_time: entry.checkIn ? new Date(entry.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-",
+          checkout_time: entry.checkOut ? new Date(entry.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-",
+          mode: entry.mode || "-",
+          notes: entry.notes || "-",
+          computedStatus: entry.computedStatus || entry.status,
+          checkedOut: entry.checkOut ? true : false
         }));
         
         setAttendance(transformedAttendance);
       } else {
-        // If there's no data or an error, set empty array
         setAttendance([]);
       }
     } catch (err) {

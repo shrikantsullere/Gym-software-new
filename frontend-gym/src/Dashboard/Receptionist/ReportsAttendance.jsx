@@ -160,17 +160,17 @@ const ReportsAttendance = () => {
   const allStatuses = ['All', 'Present', 'Late', 'Absent', 'Overtime', 'In Gym'];
   const allBranches = ['All', ...new Set(branches.map(b => b.name))];
 
-  // 🔁 Removed restrictive role filter (was blocking receptionist/personal trainer)
   const filteredRecords = records.filter(record => {
     if (!record) return false;
     const staffName = (record.staff_name || '').toLowerCase();
     const role = (record.role || '').toLowerCase();
     const status = (record.status || '').toLowerCase();
-    const term = searchTerm.toLowerCase();
+    const shift = (record.shift_name || '').toLowerCase();
+    const term = (searchTerm || '').trim().toLowerCase();
 
-    const matchesSearch = staffName.includes(term) || role.includes(term) || status.includes(term);
-    const matchesRole = roleFilter === 'All' || record.role === roleFilter;
-    const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
+    const matchesSearch = !term || staffName.includes(term) || role.includes(term) || status.includes(term) || shift.includes(term);
+    const matchesRole = roleFilter === 'All' || role === roleFilter.toLowerCase().trim();
+    const matchesStatus = statusFilter === 'All' || status === statusFilter.toLowerCase().trim();
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -316,6 +316,7 @@ const ReportsAttendance = () => {
   };
 
   const clearFilters = () => {
+    setSearchTerm('');
     setRoleFilter('All');
     setStatusFilter('All');
     setBranchFilter('All');
@@ -408,7 +409,7 @@ const ReportsAttendance = () => {
             </button>
           </div>
           <div className={`row g-2 ${showMobileFilters ? 'd-block' : 'd-none d-md-flex'}`}>
-            <div className="col-12 col-md-5">
+            <div className="col-12 col-md-4">
               <div className="input-group input-group-sm">
                 <span className="input-group-text bg-light border">
                   <FaSearch className="text-muted" style={{ fontSize: '0.875rem' }} />
@@ -447,13 +448,13 @@ const ReportsAttendance = () => {
                 ))}
               </select>
             </div>
-            <div className="col-12 col-md-1">
+            <div className="col-12 col-md-2">
               <button
-                className="btn btn-outline-secondary btn-sm w-100"
+                className="btn btn-outline-secondary btn-sm w-100 fw-medium"
                 onClick={clearFilters}
                 style={{ fontSize: '0.875rem' }}
               >
-                Clear
+                Clear Filters
               </button>
             </div>
           </div>

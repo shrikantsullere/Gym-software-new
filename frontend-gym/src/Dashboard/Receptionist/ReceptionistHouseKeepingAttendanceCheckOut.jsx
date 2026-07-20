@@ -200,18 +200,12 @@ const ReceptionistHouseKeepingAttendanceCheckOut = () => {
         const staffName = (record.staff_name || '').toLowerCase();
         const role = (record.role || '').toLowerCase();
         const status = (record.status || '').toLowerCase();
-        const term = searchTerm.toLowerCase();
+        const term = (searchTerm || '').trim().toLowerCase();
 
-        // 🔒 ONLY show Housekeeping and Member in the list (as per your earlier filter)
-        // if (!(role === 'member' || role === 'housekeeping')) return false;
         if (!(role === 'housekeeping')) return false;
 
-        const matchesSearch =
-            staffName.includes(term) ||
-            role.includes(term) ||
-            status.includes(term);
-
-        const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
+        const matchesSearch = !term || staffName.includes(term) || role.includes(term) || status.includes(term);
+        const matchesStatus = statusFilter === 'All' || status === statusFilter.toLowerCase().trim();
 
         return matchesSearch && matchesStatus;
     });
@@ -317,6 +311,7 @@ const ReceptionistHouseKeepingAttendanceCheckOut = () => {
     };
 
     const clearFilters = () => {
+        setSearchTerm('');
         setRoleFilter('All');
         setStatusFilter('All');
         setBranchFilter('All');
@@ -439,13 +434,13 @@ const ReceptionistHouseKeepingAttendanceCheckOut = () => {
                                 ))}
                             </select>
                         </div>
-                        <div className="col-12 col-md-1">
+                        <div className="col-12 col-md-2">
                             <button
-                                className="btn btn-outline-secondary btn-sm w-100"
+                                className="btn btn-outline-secondary btn-sm w-100 fw-medium"
                                 onClick={clearFilters}
                                 style={{ fontSize: '0.875rem' }}
                             >
-                                Clear
+                                Clear Filters
                             </button>
                         </div>
                     </div>

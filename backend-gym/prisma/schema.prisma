@@ -230,6 +230,8 @@ model member {
   password                    String?
   status                      String                        @default("ACTIVE")
   planId                      Int?
+  trainerId                   Int?
+  trainerType                 String?
   discount                    Decimal?                      @default(0.00) @db.Decimal(10, 2)
   goal                        String?
   profileImage                String?                       @db.Text
@@ -350,6 +352,7 @@ model notificationlog {
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
   memberId  Int?
+  error     String?  @db.Text
   member    member?  @relation(fields: [memberId], references: [id], map: "NotificationLog_memberId_fkey")
 
   @@index([memberId], map: "NotificationLog_memberId_idx")

@@ -2251,8 +2251,8 @@ export const getPTBookingsByAdminId = async (req, res) => {
         0 AS price,
         'PT Assigned from Profile' AS notes,
         m.branchId AS branchId,
-        m.createdAt AS createdAt,
-        m.updatedAt AS updatedAt,
+        m.joinDate AS createdAt,
+        m.joinDate AS updatedAt,
         m.fullName AS memberName,
         t.fullName AS trainerName,
         'Assigned PT' AS sessionName

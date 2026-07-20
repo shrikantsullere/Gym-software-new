@@ -1033,10 +1033,10 @@ export const getMembersByTrainerIdService = async (trainerId) => {
     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
     LEFT JOIN memberplan p1 ON mpa.planId = p1.id
     LEFT JOIN memberplan p2 ON m.planId = p2.id
-    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
+    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
     ORDER BY m.fullName
     `,
-    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
+    [realStaffId, realUserId, realStaffId, realUserId]
   );
 
   if (rows.length > 0) {

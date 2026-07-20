@@ -345,7 +345,7 @@ const Navbar = ({ toggleSidebar }) => {
               <div 
                 className="dropdown-menu show shadow p-0"
                 style={{
-                  position: "absolute", right: 0, top: "100%", width: "min(420px, calc(100vw - 20px))", zIndex: 1050,
+                  position: "absolute", right: 0, top: "100%", width: "min(350px, calc(100vw - 20px))", zIndex: 1050,
                   maxHeight: "450px", overflowY: "auto", borderRadius: "10px", border: "1px solid #e0e0e0"
                 }}
               >

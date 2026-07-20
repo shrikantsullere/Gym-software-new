@@ -7,6 +7,18 @@ import MemberPlansDisplay from "../../Components/MemberPlansDisplay";
 
 const Account = () => {
   const adminId = GetAdminId();
+  
+  const getUserFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (err) {
+      return null;
+    }
+  };
+  const userObj = getUserFromStorage();
+  const userId = userObj?.id || null;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
@@ -57,6 +69,16 @@ const Account = () => {
     confirm: "",
   });
 
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  const togglePasswordVisibility = (field) => {
+    setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
+  };
+
   const [passwordErrors, setPasswordErrors] = useState({
     newMatch: "",
     minLength: "",
@@ -78,7 +100,7 @@ const Account = () => {
 
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`member-self/profile/${adminId}`);
+      const response = await axiosInstance.get(`member-self/profile/${userId}`);
 
       if (response.data.success && response.data.profile) {
         const profile = response.data.profile;
@@ -245,7 +267,7 @@ const Account = () => {
           formData.append("profileImage", personal.profile_picture);
         }
 
-        const response = await axiosInstance.put(`member-self/profile/${adminId}`, formData, {
+        const response = await axiosInstance.put(`member-self/profile/${userId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -290,7 +312,7 @@ const Account = () => {
         new: password.new,
       };
 
-      const response = await axiosInstance.put(`member-self/password/${adminId}`, payload);
+      const response = await axiosInstance.put(`member-self/password/${userId}`, payload);
 
       if (response.data.success) {
         alert("Password updated successfully!");
@@ -658,51 +680,78 @@ const Account = () => {
                   <label className="form-label">
                     Current Password <span className="text-danger">*</span>
                   </label>
-                  <input
-                    type="password"
-                    name="current"
-                    className="form-control"
-                    value={password.current}
-                    onChange={handlePasswordChange}
-                    required
-                  />
+                  <div className="input-group">
+                    <input
+                      type={showPassword.current ? "text" : "password"}
+                      name="current"
+                      className="form-control"
+                      value={password.current}
+                      onChange={handlePasswordChange}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => togglePasswordVisibility("current")}
+                    >
+                      <i className={`bi bi-eye${showPassword.current ? "-slash" : ""}`}></i>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="col-12 col-md-4">
                   <label className="form-label">
                     New Password <span className="text-danger">*</span>
                   </label>
-                  <input
-                    type="password"
-                    name="new"
-                    className={`form-control ${passwordErrors.minLength || passwordErrors.newMatch ? 'is-invalid' : ''}`}
-                    value={password.new}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  {passwordErrors.minLength && (
-                    <div className="invalid-feedback">{passwordErrors.minLength}</div>
-                  )}
-                  {passwordErrors.newMatch && (
-                    <div className="invalid-feedback">{passwordErrors.newMatch}</div>
-                  )}
+                  <div className="input-group">
+                    <input
+                      type={showPassword.new ? "text" : "password"}
+                      name="new"
+                      className={`form-control ${passwordErrors.minLength || passwordErrors.newMatch ? 'is-invalid' : ''}`}
+                      value={password.new}
+                      onChange={handlePasswordChange}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => togglePasswordVisibility("new")}
+                    >
+                      <i className={`bi bi-eye${showPassword.new ? "-slash" : ""}`}></i>
+                    </button>
+                    {passwordErrors.minLength && (
+                      <div className="invalid-feedback">{passwordErrors.minLength}</div>
+                    )}
+                    {passwordErrors.newMatch && (
+                      <div className="invalid-feedback">{passwordErrors.newMatch}</div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="col-12 col-md-4">
                   <label className="form-label">
                     Confirm New Password <span className="text-danger">*</span>
                   </label>
-                  <input
-                    type="password"
-                    name="confirm"
-                    className={`form-control ${passwordErrors.newMatch ? 'is-invalid' : ''}`}
-                    value={password.confirm}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  {passwordErrors.newMatch && (
-                    <div className="invalid-feedback">{passwordErrors.newMatch}</div>
-                  )}
+                  <div className="input-group">
+                    <input
+                      type={showPassword.confirm ? "text" : "password"}
+                      name="confirm"
+                      className={`form-control ${passwordErrors.newMatch ? 'is-invalid' : ''}`}
+                      value={password.confirm}
+                      onChange={handlePasswordChange}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => togglePasswordVisibility("confirm")}
+                    >
+                      <i className={`bi bi-eye${showPassword.confirm ? "-slash" : ""}`}></i>
+                    </button>
+                    {passwordErrors.newMatch && (
+                      <div className="invalid-feedback">{passwordErrors.newMatch}</div>
+                    )}
+                  </div>
                 </div>
               </div>
 

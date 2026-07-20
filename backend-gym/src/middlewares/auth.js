@@ -4,7 +4,7 @@ import { ENV } from "../config/env.js";
 export const verifyToken = (roles = []) => {
   return (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization;
+      const authHeader = req.headers.authorization || req.headers['Authorization'];
       if (!authHeader) throw { status: 401, message: "Token required" };
 
       const token = authHeader.split(" ")[1];

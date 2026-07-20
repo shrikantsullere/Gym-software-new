@@ -55,7 +55,8 @@ app.use(
       "https://gym-kiaan.netlify.app",
       "https://gymsoftware.space"
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
   })
 );

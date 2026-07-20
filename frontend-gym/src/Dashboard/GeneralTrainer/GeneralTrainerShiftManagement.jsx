@@ -3,7 +3,7 @@ import BaseUrl from '../../Api/BaseUrl';
 import GetAdminId from '../../Api/GetAdminId';
 
 const GeneralTrainerShiftManagement = () => {
-  const [shift, setShift] = useState(null); // Single shift object
+  const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,7 +23,7 @@ const GeneralTrainerShiftManagement = () => {
   console.log("Staff ID:", staffId);
 
   useEffect(() => {
-    const fetchShift = async () => {
+    const fetchShifts = async () => {
       if (!staffId) {
         setError('Staff ID not found in user data');
         setLoading(false);
@@ -36,20 +36,20 @@ const GeneralTrainerShiftManagement = () => {
         const data = await response.json();
 
         if (data.success && data.data) {
-          // API returns a single shift object under `data`
-          setShift(data.data);
+          const list = Array.isArray(data.data) ? data.data : [data.data];
+          setShifts(list);
         } else {
-          setShift(null); // No shift assigned
+          setShifts([]);
         }
       } catch (err) {
-        console.error('Error fetching shift:', err);
+        console.error('Error fetching shifts:', err);
         setError('Failed to load shift data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchShift();
+    fetchShifts();
   }, [staffId]);
 
   const getShiftColor = (type) => {
@@ -124,23 +124,25 @@ const GeneralTrainerShiftManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {shift ? (
-              <tr key={shift.id}>
-                <td>{shift.staffIds}</td>
-                <td>{formatDate(shift.shiftDate)}</td>
-                <td>{shift.startTime}</td>
-                <td>{shift.endTime}</td>
-                <td>
-                  <span className={`badge bg-${getShiftColor(shift.shiftType)}`}>
-                    {shift.shiftType || 'Custom'}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge bg-${getStatusClass(shift.status)}`}>
-                    {shift.status || 'Unknown'}
-                  </span>
-                </td>
-              </tr>
+            {shifts.length > 0 ? (
+              shifts.map((shiftItem) => (
+                <tr key={shiftItem.id}>
+                  <td>{shiftItem.staffIds || staffId}</td>
+                  <td>{formatDate(shiftItem.shiftDate)}</td>
+                  <td>{shiftItem.startTime}</td>
+                  <td>{shiftItem.endTime}</td>
+                  <td>
+                    <span className={`badge bg-${getShiftColor(shiftItem.shiftType)}`}>
+                      {shiftItem.shiftType || 'Custom'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge bg-${getStatusClass(shiftItem.status)}`}>
+                      {shiftItem.status || 'Pending'}
+                    </span>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td colSpan="6" className="text-center text-muted">

@@ -1,9 +1,0 @@
-PORT=4000
-DATABASE_URL="mysql://root:@localhost:3306/gym_db"
-DB_HOST="localhost"
-DB_USER="root"
-DB_PASS=""
-DB_NAME="gym_db"
-DB_PORT="3306"
-JWT_SECRET="changeme"
-NODE_ENV="development"

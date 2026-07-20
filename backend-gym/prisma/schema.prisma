@@ -794,6 +794,9 @@ model announcement {
   channels    String   @db.VarChar(255)
   targetRoles String   @db.VarChar(255)
   sentBy      Int?
+  branchId    Int?
+  adminId     Int?
+  imageUrl    String?  @db.Text
   createdAt   DateTime @default(now()) @db.Timestamp(0)
 }
 

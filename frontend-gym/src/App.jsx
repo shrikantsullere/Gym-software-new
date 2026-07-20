@@ -162,6 +162,7 @@ import MemberWorkoutLog from "./Dashboard/Member/MemberWorkoutLog";
 import AnnouncementsList from "./Components/AnnouncementsList";
 import AutomationSettings from "./Dashboard/SuperAdmin/AutomationSettings";
 import NotificationCredits from "./Dashboard/Admin/NotificationCredits";
+import Notifications from "./Pages/Notifications";
 
 // Wrapper to extract memberId from URL params
 const MemberAssessmentWrapper = () => {
@@ -503,6 +504,8 @@ function App() {
                   <Route path="/test-assessment-form" element={<TrainerAssessmentForm />} />
                   <Route path="/test-assessment-dashboard" element={<MemberAssessmentDashboard memberId={146} />} />
 
+                  {/* Global Notifications Page */}
+                  <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 </Routes>
               </ErrorBoundary>
             </div>

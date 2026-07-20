@@ -3,6 +3,7 @@ import { verifyToken } from "../../middlewares/auth.js";
 import { 
   sendNotification, 
   getUserNotifications, 
+  getAllUserNotifications,
   markAsRead,
   broadcastAnnouncement,
   getBroadcastHistory,
@@ -25,6 +26,11 @@ router.post(
 router.get(
   "/user/:userId",
   getUserNotifications
+);
+
+router.get(
+  "/user/:userId/all",
+  getAllUserNotifications
 );
 
 router.put(

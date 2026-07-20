@@ -1,6 +1,7 @@
 import { 
   sendNotificationService, 
   getUserNotificationsService, 
+  getAllUserNotificationsService,
   markAsReadService,
   broadcastAnnouncementService,
   getBroadcastHistoryService,
@@ -26,6 +27,16 @@ export const getUserNotifications = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const notifications = await getUserNotificationsService(userId);
+    res.json({ success: true, notifications });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllUserNotifications = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const notifications = await getAllUserNotificationsService(userId);
     res.json({ success: true, notifications });
   } catch (err) {
     next(err);

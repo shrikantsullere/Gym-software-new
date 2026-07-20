@@ -261,6 +261,8 @@ const AdminMember = () => {
               : member.membershipTo
                 ? Math.ceil((new Date(member.membershipTo) - new Date()) / (1000 * 60 * 60 * 24))
                 : null,
+          trainerId: member.trainerId,
+          trainerName: member.trainerName,
         }));
 
         setMembers(formattedMembers);
@@ -1597,11 +1599,11 @@ const handleDownloadReceipt = async (member) => {
                             <div>
                               {member.assignedPlans
                                 .filter(p => p.computedStatus === 'Active')
-                                .map(p => p.trainerName || 'None')
+                                .map(p => p.trainerName || member.trainerName || 'None')
                                 .join(', ')}
                             </div>
                           ) : (
-                            <span>None</span>
+                            <span>{member.trainerName || 'None'}</span>
                           )}
                         </td>
                         {/* <td>

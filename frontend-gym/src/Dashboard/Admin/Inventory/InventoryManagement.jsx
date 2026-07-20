@@ -41,8 +41,8 @@ const InventoryManagement = () => {
   const token = localStorage.getItem('authToken');
   
   const isAdminOrManager = ['ADMIN', 'SUPERADMIN', 'MANAGER'].includes(userRole);
-  // Use admin-level routes for admin/manager/sales_agent who don't have a single branchId
-  const useAdminRoutes = isAdminOrManager || userRole === 'SALES_AGENT';
+  // Use admin-level routes for roles without a fixed branchId
+  const useAdminRoutes = isAdminOrManager || ['SALES_AGENT', 'PERSONALTRAINER', 'GENERALTRAINER'].includes(userRole);
 
   const axiosConfig = { headers: { Authorization: `Bearer ${token}` } };
 

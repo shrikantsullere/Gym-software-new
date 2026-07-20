@@ -82,6 +82,12 @@ const AdminMember = () => {
   const name = user?.fullName || null;
   const staffId = user?.staffId || null;
   const adminId = GetAdminId();
+
+  // For staff roles (PT, GT, Receptionist, etc.), use their gym owner's adminId
+  // instead of their own userId so plans/trainers load correctly
+  const isStaffRole = user && [5, 6, 7, 8, 9, 10].includes(Number(user.roleId));
+  const effectiveAdminId = isStaffRole && user.adminId ? user.adminId : adminId;
+
   const location = useLocation();
   const [convertedLeadId, setConvertedLeadId] = useState(null);
 
@@ -389,7 +395,7 @@ const AdminMember = () => {
 
     try {
       const response = await axiosInstance.get(
-        `${BaseUrl}MemberPlan?adminId=${adminId}`
+        `${BaseUrl}MemberPlan?adminId=${effectiveAdminId}`
       );
 
       if (response.data && response.data.success) {
@@ -450,7 +456,7 @@ const AdminMember = () => {
   // Fetch personal trainers for admin
   const fetchPersonalTrainers = async () => {
     try {
-      const response = await axiosInstance.get(`${BaseUrl}staff/admin/${adminId}`);
+      const response = await axiosInstance.get(`${BaseUrl}staff/admin/${effectiveAdminId}`);
       if (response.data && response.data.success) {
         const pts = (response.data.data || response.data.staff || []).filter(
           (s) => (s.roleId === 5 || (s.roleName || "").toLowerCase() === "personaltrainer")

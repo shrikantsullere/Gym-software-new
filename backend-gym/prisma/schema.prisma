@@ -611,7 +611,9 @@ model user {
   permissions                  String?         @db.LongText
   visiblePassword              String?         @db.VarChar(255)
   whatsappCredits              Int             @default(0)
+  emailCredits                 Int             @default(0)
   isTrial                      Boolean         @default(false)
+
   trialStartDate               DateTime?       @db.DateTime(0)
   trialEndDate                 DateTime?       @db.DateTime(0)
   gracePeriodEndDate           DateTime?       @db.DateTime(0)
@@ -667,6 +669,35 @@ model workoutplanassignment {
   @@index([memberId], map: "WorkoutPlanAssignment_memberId_idx")
   @@index([workoutPlanId], map: "WorkoutPlanAssignment_workoutPlanId_idx")
 }
+
+model automation_settings {
+  id                  Int     @id @default(autoincrement())
+  trialDurationDays   Int     @default(7)
+  gracePeriodDays     Int     @default(3)
+  enableEmailNotif    Boolean @default(true)
+  enableWhatsappNotif Boolean @default(false)
+  lowCreditThreshold  Int     @default(50)
+  quarterlyDiscount   Decimal @default(5.00) @db.Decimal(5, 2)
+  yearlyDiscount      Decimal @default(15.00) @db.Decimal(5, 2)
+}
+
+model message_templates {
+  id           Int     @id @default(autoincrement())
+  templateType String? @unique @db.VarChar(100)
+  subject      String? @db.VarChar(255)
+  messageBody  String? @db.Text
+}
+
+model credit_packages {
+  id          Int       @id @default(autoincrement())
+  packageName String    @db.VarChar(255)
+  credits     Int
+  price       Decimal   @db.Decimal(10, 2)
+  isActive    Boolean?  @default(true)
+  packageType String?   @default("WHATSAPP") @db.VarChar(50)
+  createdAt   DateTime? @default(now()) @db.DateTime(0)
+}
+
 
 model leads {
   id                Int       @id @default(autoincrement())
@@ -863,6 +894,7 @@ model member_bodybuilding_logs {
 enum plan_duration {
   Monthly
   Yearly
+  SevenDays @map("7 Days")
 }
 
 enum housekeepingattendance_status {

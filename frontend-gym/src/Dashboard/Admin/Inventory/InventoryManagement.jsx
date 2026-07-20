@@ -35,28 +35,47 @@ const InventoryManagement = () => {
 
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const userRole = (localStorage.getItem('userRole') || user.role || '').toUpperCase();
-  // Trainers have adminId, Admins have id; use branchId from user or default to adminId-based lookup
-  const branchId = user.branchId || user.branch?.id || 1;
+  // adminId for Admin/Manager/SalesAgent; branchId for trainers/receptionist
+  const adminId = user.adminId || user.id;
+  const branchId = user.branchId || user.branch?.id || null;
   const token = localStorage.getItem('authToken');
   
   const isAdminOrManager = ['ADMIN', 'SUPERADMIN', 'MANAGER'].includes(userRole);
+  // Use admin-level routes for admin/manager/sales_agent who don't have a single branchId
+  const useAdminRoutes = isAdminOrManager || userRole === 'SALES_AGENT';
 
   const axiosConfig = { headers: { Authorization: `Bearer ${token}` } };
 
   const fetchData = async () => {
     setLoading(true);
 
-    // Fetch equipment list — separate try so stats failure doesn't block this
+    // Fetch equipment list
     try {
-      const equipRes = await axios.get(`${BaseUrl}v1/equipment/branch/${branchId}?search=${searchTerm}&category=${filterCategory === 'All' ? '' : filterCategory}`, axiosConfig);
+      let equipRes;
+      if (useAdminRoutes) {
+        // Admin/Manager/SalesAgent: get all equipment across their branches
+        const searchQ = searchTerm ? `?search=${searchTerm}` : '?';
+        const catQ = filterCategory !== 'All' ? `&category=${filterCategory}` : '';
+        equipRes = await axios.get(`${BaseUrl}v1/equipment/admin/${adminId}/list${searchQ}${catQ}`, axiosConfig);
+      } else {
+        // Staff with a specific branchId (trainers, receptionist)
+        const effectiveBranch = branchId || 1;
+        equipRes = await axios.get(`${BaseUrl}v1/equipment/branch/${effectiveBranch}?search=${searchTerm}&category=${filterCategory === 'All' ? '' : filterCategory}`, axiosConfig);
+      }
       setInventory(equipRes.data.equipment || []);
     } catch (err) {
       console.error("Error fetching equipment list:", err.response?.data || err.message);
     }
 
-    // Fetch stats — separate try so equipment list shows even if this fails
+    // Fetch stats
     try {
-      const statsRes = await axios.get(`${BaseUrl}v1/equipment/stats/${branchId}`, axiosConfig);
+      let statsRes;
+      if (useAdminRoutes) {
+        statsRes = await axios.get(`${BaseUrl}v1/equipment/admin/${adminId}/stats`, axiosConfig);
+      } else {
+        const effectiveBranch = branchId || 1;
+        statsRes = await axios.get(`${BaseUrl}v1/equipment/stats/${effectiveBranch}`, axiosConfig);
+      }
       if (statsRes.data.stats) {
         setStats(statsRes.data.stats);
       }
@@ -64,7 +83,7 @@ const InventoryManagement = () => {
       console.error("Error fetching equipment stats:", err.response?.data || err.message);
     }
 
-    // Fetch requests — admins see all requests, trainers see their own
+    // Fetch requests
     fetchRequests();
 
     setLoading(false);
@@ -72,7 +91,7 @@ const InventoryManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [branchId, searchTerm, filterCategory]);
+  }, [adminId, branchId, searchTerm, filterCategory]);
 
   const fetchRequests = async () => {
     setRequestsLoading(true);
@@ -95,7 +114,9 @@ const InventoryManagement = () => {
     e.preventDefault();
     try {
       const fd = new FormData();
-      Object.entries({ ...formData, branchId }).forEach(([k, v]) => fd.append(k, v));
+      // Use formData.branchId if set (for multi-branch admin), or user's branchId
+      const targetBranch = formData.branchId || branchId || (user.branchId) || 1;
+      Object.entries({ ...formData, branchId: targetBranch }).forEach(([k, v]) => fd.append(k, v));
       if (equipmentImage) fd.append('image', equipmentImage);
       await axios.post(`${BaseUrl}v1/equipment/create`, fd, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }

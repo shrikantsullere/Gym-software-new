@@ -35,11 +35,12 @@ const TrainerAssessmentForm = () => {
           const userObj = JSON.parse(userStr);
           const adminId = userObj.adminId || userObj.id;
           const roleId = Number(userObj.roleId);
-          const roleName = (userObj.roleName || "").toLowerCase();
+          const roleName = (userObj.roleName || userObj.role || localStorage.getItem('userRole') || "").toLowerCase().replace(/\s+/g, '');
           
           let endpoint = `/members/admin/${adminId}`;
-          // If Personal Trainer, fetch only assigned members
-          if (roleId === 5 || roleName === 'personaltrainer') {
+          // If Personal Trainer, fetch only their assigned members
+          const isPersonalTrainer = roleId === 5 || roleName.includes('personaltrainer');
+          if (isPersonalTrainer) {
             const staffId = getCurrentStaffId(userObj);
             endpoint = `/members/trainer/${staffId}`;
           }
@@ -47,7 +48,10 @@ const TrainerAssessmentForm = () => {
           if (adminId) {
             const res = await axiosInstance.get(endpoint);
             if (res.data && res.data.success) {
-              setMembers(res.data.data || []);
+              const memberList = Array.isArray(res.data.data) ? res.data.data : (res.data.members || []);
+              setMembers(memberList);
+            } else if (Array.isArray(res.data)) {
+              setMembers(res.data);
             }
           }
         }

@@ -23,7 +23,7 @@ import { verifyToken } from "../../middlewares/auth.js";
 
 const router = Router();
 
-router.get("/trainer/:trainerId", verifyToken(["Superadmin", "Admin", "Staff"]), getMembersByTrainerIdController);
+router.get("/trainer/:trainerId", verifyToken(["Superadmin", "Admin", "Staff", "PERSONALTRAINER", "GENERALTRAINER", "personal trainer", "general trainer"]), getMembersByTrainerIdController);
 router.post("/assign-trainer", verifyToken(["Superadmin", "Admin"]), assignTrainerToMemberController);
 router.get("/search", verifyToken(["Superadmin", "Admin", "Staff"]), searchMembersController);
 

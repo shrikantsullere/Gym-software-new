@@ -14,9 +14,9 @@ export const createWorkoutPlanService = async ({ title, notes, branchId, created
 
   // Insert exercises
   if (exercises && exercises.length) {
-    const exerciseValues = exercises.map(e => [workoutPlanId, e.name, e.reps || null, e.sets || null, e.notes || ""]);
+    const exerciseValues = exercises.map(e => [workoutPlanId, e.name, e.reps || null, e.sets || null, e.duration || null]);
     await pool.query(
-      "INSERT INTO workoutexercise (workoutPlanId, name, reps, sets, notes) VALUES ?",
+      "INSERT INTO workoutexercise (workoutPlanId, name, reps, sets, duration) VALUES ?",
       [exerciseValues]
     );
   }
@@ -50,7 +50,7 @@ export const assignWorkoutPlanService = async (memberId, workoutPlanId) => {
 
   // Return assigned plan with exercises
   const [assignedPlan] = await pool.query(
-    `SELECT w.*, e.id AS exerciseId, e.name AS exerciseName, e.reps, e.sets, e.notes AS exerciseNotes
+    `SELECT w.*, e.id AS exerciseId, e.name AS exerciseName, e.reps, e.sets, e.duration
      FROM workoutplan w
      LEFT JOIN workoutexercise e ON w.id = e.workoutPlanId
      WHERE w.id = ?`,
@@ -64,9 +64,9 @@ export const assignWorkoutPlanService = async (memberId, workoutPlanId) => {
 export const getMemberWorkoutPlanService = async (memberId) => {
   const [assignments] = await pool.query(
     `SELECT a.id AS assignmentId, w.id AS workoutPlanId, w.title, w.notes,
-            e.id AS exerciseId, e.name AS exerciseName, e.reps, e.sets, e.notes AS exerciseNotes
+            e.id AS exerciseId, e.name AS exerciseName, e.reps, e.sets, e.duration
      FROM workoutplanassignment a
-     JOIN workoutPlan w ON a.workoutPlanId = w.id
+     JOIN workoutplan w ON a.workoutPlanId = w.id
      LEFT JOIN workoutexercise e ON w.id = e.workoutPlanId
      WHERE a.memberId = ?
      ORDER BY a.id DESC`,
@@ -85,7 +85,7 @@ export const getMemberWorkoutPlanService = async (memberId) => {
         name: a.exerciseName,
         reps: a.reps,
         sets: a.sets,
-        notes: a.exerciseNotes
+        duration: a.duration
       });
     }
   });

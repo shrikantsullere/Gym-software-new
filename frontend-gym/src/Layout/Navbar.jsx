@@ -54,37 +54,33 @@ const Navbar = ({ toggleSidebar }) => {
   const fetchAppSettings = async () => {
     try {
       const userData = getUserFromLocalStorage();
-      if (!userData || !userData.id) {
-        console.error("Admin ID not found in localStorage. Cannot fetch logo.");
+      if (!userData) {
         setAppLogo(Logo);
         setLoading(false);
         return;
       }
 
-      const adminId = userData.id; // Use user.id instead of userData.id
-      // The endpoint path is relative to the baseURL in your axiosInstance
+      // Use adminId for staff/trainers (e.g. Admin 90), or fallback to user.id for admin
+      const adminId = userData.adminId || userData.id;
+      if (!adminId) {
+        setAppLogo(Logo);
+        setLoading(false);
+        return;
+      }
+
       const endpoint = `/adminSettings/app-settings/admin/${adminId}`;
-
-      // Use axiosInstance.get() instead of fetch()
       const response = await axiosInstance.get(endpoint);
-
-      // Axios automatically throws an error for non-2xx responses, so no need for response.ok check.
-      // The data from the server is available in response.data
       const result = response.data;
 
       if (result.success && result.data && result.data.logo) {
         setAppLogo(result.data.logo);
-        console.log("Logo successfully fetched from API.");
       } else {
-        console.log("No logo found in API response. Using default.");
         setAppLogo(Logo);
       }
     } catch (error) {
-      // Axios provides a more detailed error object
-      console.error("Error fetching app settings with axios:", error.response ? error.response.data : error.message);
-      setAppLogo(Logo); // Fallback to default on any error
+      setAppLogo(Logo);
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 

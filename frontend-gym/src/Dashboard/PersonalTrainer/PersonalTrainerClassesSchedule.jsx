@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaEdit, FaTrashAlt, FaUserPlus, FaTimes } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrashAlt, FaUserPlus, FaTimes, FaPlus } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../Api/axiosInstance";
 import CustomTimePicker from "../../Components/CustomTimePicker";
@@ -53,16 +53,21 @@ const PersonalTrainerClassesSchedule = () => {
         allClasses = classesRes.data.data || [];
       }
 
-      // 🔥 FILTER: Keep only classes that match current trainer's ID
-      const trainerClasses = allClasses.filter(
-        (cls) => cls.trainerId === parseInt(trainerId)
-      );
+      // FILTER: Match current trainer's ID (user.id or staffId) or trainer name
+      const trainerClasses = allClasses.filter((cls) => {
+        const tid = parseInt(cls.trainerId);
+        const matchesId = tid === parseInt(trainerId) || (staffId && tid === parseInt(staffId));
+        const matchesName = name && (cls.trainerName === name || cls.trainer === name);
+        return matchesId || matchesName;
+      });
+
+      const displayClasses = trainerClasses.length > 0 ? trainerClasses : allClasses;
 
       // Transform data to match the new API response structure
-      const transformedClasses = trainerClasses.map(classItem => ({
+      const transformedClasses = displayClasses.map(classItem => ({
         id: classItem.id,
         className: classItem.className,
-        trainer: classItem.trainer,
+        trainer: classItem.trainer || classItem.trainerName || name || "—",
         date: classItem.date,
         time: classItem.time,
         day: classItem.day || '', // Handle empty day field
@@ -74,9 +79,9 @@ const PersonalTrainerClassesSchedule = () => {
 
       // Fetch trainers data
       try {
-        const trainersRes = await axiosInstance.get(`trainers/all`);
+        const trainersRes = await axiosInstance.get(`class/trainers/personal-general?adminId=${adminId}`);
         if (trainersRes.data.success) {
-          setTrainers(trainersRes.data.data || []);
+          setTrainers(trainersRes.data.trainers || []);
         }
       } catch (trainerErr) {
         console.error("Error fetching trainers:", trainerErr);
@@ -85,7 +90,7 @@ const PersonalTrainerClassesSchedule = () => {
 
       // Fetch members data
       try {
-        const membersRes = await axiosInstance.get(`members/all`);
+        const membersRes = await axiosInstance.get(`members/admin/${adminId}`);
         if (membersRes.data.success) {
           setMembers(membersRes.data.data || []);
         }
@@ -130,6 +135,22 @@ const PersonalTrainerClassesSchedule = () => {
       ...selectedClass,
       members: selectedClass.members.filter((m) => m.id !== memberToRemove.id),
     });
+  };
+
+  const handleAddClick = () => {
+    setSelectedClass({
+      className: "",
+      trainerId: trainerId,
+      trainerName: name || "",
+      date: "",
+      startTime: "",
+      endTime: "",
+      capacity: 20,
+      status: "Active",
+      members: []
+    });
+    setModalType("add");
+    setIsModalOpen(true);
   };
 
   const handleView = (gymClass) => {
@@ -247,23 +268,32 @@ const PersonalTrainerClassesSchedule = () => {
     } = selectedClass;
 
     if (!className || !trainerName || !date || !startTime || !endTime) {
-      // Using trainerName instead of trainerId for validation
       alert("Please fill all required fields.");
       return;
     }
 
     setLoading(true);
     try {
+      let finalTrainerId = trainerId;
+      const foundTrainer = trainers.find(t => t.fullName === trainerName);
+      if (foundTrainer) {
+        finalTrainerId = foundTrainer.id;
+      } else if (!finalTrainerId) {
+        finalTrainerId = user?.id || parseInt(localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).id : 0);
+      }
+
       const payload = {
+        adminId: parseInt(adminId),
+        trainerId: parseInt(finalTrainerId),
         className,
-        trainer: trainerName, // Send trainer name instead of ID
-        // branchId: Number(branchId), // Commented out branch field
+        trainer: trainerName,
         date,
         day,
         startTime,
         endTime,
         capacity: Number(capacity),
         status,
+        members: selectedClass.members || []
       };
 
       if (modalType === "add") {
@@ -384,6 +414,11 @@ const PersonalTrainerClassesSchedule = () => {
               </span>
             </div>
           )}
+        </div>
+        <div className="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+          <button className="btn btn-primary shadow-sm" onClick={handleAddClick}>
+            <FaPlus className="me-2" /> Schedule Class
+          </button>
         </div>
       </div>
 
@@ -774,8 +809,8 @@ const PersonalTrainerClassesSchedule = () => {
                           >
                             <option value="">Select a member</option>
                             {members.map((m) => (
-                              <option key={m.id} value={m.name}>
-                                {m.name}
+                              <option key={m.id} value={m.fullName || m.name}>
+                                {m.fullName || m.name}
                               </option>
                             ))}
                           </select>

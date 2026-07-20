@@ -112,18 +112,23 @@ export default function SalesReport() {
       let url = "";
 
       if (isMember) {
-        url = `reports/members?adminId=${adminId}`;
+        url = `reports/members?adminId=${adminId}&fromDate=${dateFrom}&toDate=${dateTo}`;
+        if (bookingStatus !== 'All') url += `&status=${bookingStatus}`;
       } else if (isPersonalTrainer) {
         if (selectedStaffId) {
           url = `reports/personal-trainer/staff/${adminId}/${selectedStaffId}?fromDate=${dateFrom}&toDate=${dateTo}`;
+          if (bookingStatus !== 'All') url += `&status=${bookingStatus}`;
         } else {
-          url = `reports/personal-trainer?adminId=${adminId}`;
+          url = `reports/personal-trainer?adminId=${adminId}&fromDate=${dateFrom}&toDate=${dateTo}`;
+          if (bookingStatus !== 'All') url += `&status=${bookingStatus}`;
         }
       } else if (isGeneralTrainer) {
         if (selectedStaffId) {
           url = `reports/general-trainer/staff/${adminId}/${selectedStaffId}?fromDate=${dateFrom}&toDate=${dateTo}`;
+          if (bookingStatus !== 'All') url += `&status=${bookingStatus}`;
         } else {
-          url = `reports/general-trainer?adminId=${adminId}`;
+          url = `reports/general-trainer?adminId=${adminId}&fromDate=${dateFrom}&toDate=${dateTo}`;
+          if (bookingStatus !== 'All') url += `&status=${bookingStatus}`;
         }
       } else if (isHousekeeping) {
         if (selectedStaffId) {

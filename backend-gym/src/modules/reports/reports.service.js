@@ -1,109 +1,105 @@
 import { pool } from "../../config/db.js";
 
 // Generate Member Report Service
-export const generateMemberReportService = async (adminId) => {
+export const generateMemberReportService = async (adminId, fromDate, toDate, status) => {
   try {
-    // Get booking statistics from bookingrequest table
+    // Build date filter clause
+    const dateClause = fromDate && toDate
+      ? `AND DATE(ub.createdAt) BETWEEN '${fromDate}' AND '${toDate}'`
+      : '';
+    const statusClause = status && status !== 'All'
+      ? `AND ub.bookingStatus = '${status}'`
+      : '';
+
+    // Get booking statistics from unified_bookings table
     const [bookingStats] = await pool.query(
       `SELECT 
         COUNT(*) AS totalBookings,
         SUM(ub.price) AS totalRevenue,
         AVG(ub.price) AS avgTicket,
         SUM(CASE WHEN ub.bookingStatus = 'Completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ub.bookingStatus = 'Confirmed' THEN 1 ELSE 0 END) as confirmed,
         SUM(CASE WHEN ub.bookingStatus = 'Cancelled' THEN 1 ELSE 0 END) as cancelled,
         SUM(CASE WHEN ub.bookingStatus = 'Booked' THEN 1 ELSE 0 END) as booked
       FROM unified_bookings ub
-      INNER JOIN member m ON ub.memberId=m.id
-      WHERE adminId = ?`,
+      INNER JOIN member m ON ub.memberId = m.id
+      WHERE m.adminId = ? ${dateClause} ${statusClause}`,
       [adminId]
     );
 
-    // Get bookings by day from bookingrequest table
+    // Get bookings by day
     const [bookingsByDay] = await pool.query(
       `SELECT 
         DATE(ub.createdAt) AS date,
         COUNT(*) AS count,
         SUM(ub.price) AS revenue
       FROM unified_bookings ub
-      INNER JOIN member m ON ub.memberId=m.id
-      WHERE m.adminId = ?
+      INNER JOIN member m ON ub.memberId = m.id
+      WHERE m.adminId = ? ${dateClause} ${statusClause}
       GROUP BY DATE(ub.createdAt)
       ORDER BY date ASC`,
       [adminId]
     );
 
-    // Get booking status distribution from bookingrequest table
-    const [bookingStatus] = await pool.query(
+    // Get booking status distribution
+    const [bookingStatusRows] = await pool.query(
       `SELECT 
         ub.bookingStatus,
         COUNT(*) AS count
       FROM unified_bookings ub
       INNER JOIN member m ON ub.memberId = m.id
-      WHERE m.adminId = ?
+      WHERE m.adminId = ? ${dateClause}
       GROUP BY ub.bookingStatus`,
       [adminId]
     );
 
-    // Get transactions from pt_bookings table
-    // const [transactions] = await pool.query(
-    //   `SELECT
-    //     ptb.date,
-    //     u.fullName as trainer,
-    //     m.fullName as username,
-    //     'Personal Training' as type,
-    //     ptb.startTime as time,
-    //     ptb.bookingStatus as status
-    //   FROM pt_bookings ptb
-    //   LEFT JOIN member m ON ptb.memberId = m.id
-    //   LEFT JOIN staff s ON ptb.trainerId = s.id
-    //   LEFT JOIN user u ON s.userId = u.id
-    //   WHERE m.adminId = ?
-    //   ORDER BY ptb.date DESC`,
-    //   [adminId]
-    // );
+    // Get recent transactions
     const [transactions] = await pool.query(
       `SELECT 
-    ptb.date,
-    u.fullName as trainer,
-    m.fullName as username,
-    CASE 
-      WHEN ptb.bookingType = 'PT' THEN 'Personal Training' 
-      WHEN ptb.bookingType = 'GROUP' THEN 'Group Class' 
-      ELSE ptb.bookingType 
-    END as type,
-    ptb.startTime as time,
-    ptb.bookingStatus as status
-  FROM unified_bookings ptb
-  LEFT JOIN member m ON ptb.memberId = m.id
-  LEFT JOIN user u ON ptb.trainerId = u.id
-  WHERE m.adminId = ?
-  ORDER BY ptb.date DESC`,
+        ub.date,
+        u.fullName as trainer,
+        m.fullName as username,
+        CASE 
+          WHEN ub.bookingType = 'PT' THEN 'Personal Training' 
+          WHEN ub.bookingType = 'GROUP' THEN 'Group Class' 
+          ELSE COALESCE(ub.bookingType, 'Booking')
+        END as type,
+        ub.startTime as time,
+        ub.bookingStatus as status,
+        ub.price
+      FROM unified_bookings ub
+      LEFT JOIN member m ON ub.memberId = m.id
+      LEFT JOIN user u ON ub.trainerId = u.id
+      WHERE m.adminId = ? ${dateClause} ${statusClause}
+      ORDER BY ub.createdAt DESC
+      LIMIT 100`,
       [adminId]
     );
-    // Format the data for the UI
+
     const formattedStats = {
       totalBookings: bookingStats[0].totalBookings || 0,
       totalRevenue: bookingStats[0].totalRevenue || 0,
       avgTicket: bookingStats[0].avgTicket || 0,
       completed: bookingStats[0].completed || 0,
+      confirmed: bookingStats[0].confirmed || 0,
       cancelled: bookingStats[0].cancelled || 0,
       booked: bookingStats[0].booked || 0,
     };
 
-    // Format transactions data
-    const formattedTransactions = transactions.map((transaction) => ({
-      date: transaction.date,
-      trainer: transaction.trainer || "N/A",
-      username: transaction.username || "N/A",
-      type: transaction.type,
-      time: transaction.time,
-      status: transaction.status,
+    const formattedTransactions = transactions.map((t) => ({
+      date: t.date,
+      trainer: t.trainer || 'N/A',
+      username: t.username || 'N/A',
+      type: t.type,
+      time: t.time,
+      status: t.status,
+      price: t.price || 0,
     }));
 
     return {
       stats: formattedStats,
       bookingsByDay,
-      bookingStatus,
+      bookingStatus: bookingStatusRows,
       transactions: formattedTransactions,
     };
   } catch (error) {
@@ -111,8 +107,15 @@ export const generateMemberReportService = async (adminId) => {
   }
 };
 
-export const generateGeneralTrainerReportService = async (adminId) => {
+export const generateGeneralTrainerReportService = async (adminId, fromDate, toDate, status) => {
   try {
+    const dateClause = fromDate && toDate
+      ? `AND DATE(ub.createdAt) BETWEEN '${fromDate}' AND '${toDate}'`
+      : '';
+    const statusClause = status && status !== 'All'
+      ? `AND ub.bookingStatus = '${status}'`
+      : '';
+
     // 2️⃣ Get member userIds related to this admin
     const [members] = await pool.query(
       `SELECT userId FROM member WHERE adminId = ?`,
@@ -149,7 +152,7 @@ export const generateGeneralTrainerReportService = async (adminId) => {
     SUM(CASE WHEN bookingStatus = 'Booked' THEN 1 ELSE 0 END) AS booked
   FROM unified_bookings ub
   LEFT JOIN member m ON ub.memberId = m.id  -- This join ensures we link the correct member.id from unified_bookings
-  WHERE m.adminId = ?  -- Filtering by adminId to ensure we're only pulling bookings for this admin
+  WHERE m.adminId = ? ${dateClause} ${statusClause} -- Filtering by adminId to ensure we're only pulling bookings for this admin
     AND ub.bookingType = 'GROUP'`, // Only group bookings
       [adminId]
     );
@@ -161,7 +164,7 @@ export const generateGeneralTrainerReportService = async (adminId) => {
     COUNT(*) AS count
   FROM unified_bookings ub
   LEFT JOIN member m ON ub.memberId = m.id  -- Ensuring the correct join for memberId
-  WHERE m.adminId = ? 
+  WHERE m.adminId = ? ${dateClause} ${statusClause}
     AND ub.bookingType = 'GROUP'  -- Only group bookings
   GROUP BY DATE(ub.createdAt)
   ORDER BY date ASC`,
@@ -175,7 +178,7 @@ export const generateGeneralTrainerReportService = async (adminId) => {
     COUNT(*) AS count
   FROM unified_bookings ub
   LEFT JOIN member m ON ub.memberId = m.id  -- Correctly joining with member.id
-  WHERE m.adminId = ?
+  WHERE m.adminId = ? ${dateClause}
     AND ub.bookingType = 'GROUP'  -- Only group bookings
   GROUP BY ub.bookingStatus`,
       [adminId]
@@ -194,7 +197,7 @@ export const generateGeneralTrainerReportService = async (adminId) => {
   LEFT JOIN user AS trainerUser ON ub.trainerId = trainerUser.id
   LEFT JOIN member AS m ON ub.memberId = m.id  -- Linking unified_bookings with member using member.id
   LEFT JOIN user AS memberUser ON m.userId = memberUser.id  -- Linking member to user via userId
-  WHERE m.adminId = ?
+  WHERE m.adminId = ? ${dateClause} ${statusClause}
     AND ub.bookingType = 'GROUP'  -- Only group bookings
   ORDER BY ub.date DESC`,
       [adminId]

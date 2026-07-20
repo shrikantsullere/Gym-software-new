@@ -15,7 +15,7 @@ import {
 // Generate Member Report Controller
 export const generateMemberReportController = async (req, res) => {
   try {
-    const { adminId } = req.query;
+    const { adminId, fromDate, toDate, status } = req.query;
 
     if (!adminId) {
       return res.status(400).json({
@@ -24,7 +24,7 @@ export const generateMemberReportController = async (req, res) => {
       });
     }
 
-    const reportData = await generateMemberReportService(adminId);
+    const reportData = await generateMemberReportService(adminId, fromDate, toDate, status);
 
     res.status(200).json({
       success: true,
@@ -43,7 +43,7 @@ export const generateMemberReportController = async (req, res) => {
 
 export const generatePersonalTrainerReportController = async (req, res) => {
   try {
-    const { adminId } = req.query;
+    const { adminId, fromDate, toDate, status } = req.query;
 
     if (!adminId) {
       return res.status(400).json({
@@ -52,7 +52,7 @@ export const generatePersonalTrainerReportController = async (req, res) => {
       });
     }
 
-    const reportData = await generatePersonalTrainerReportService(adminId);
+    const reportData = await generatePersonalTrainerReportService(adminId, fromDate, toDate, status);
 
     res.status(200).json({
       success: true,
@@ -71,7 +71,7 @@ export const generatePersonalTrainerReportController = async (req, res) => {
 
 export const generateGeneralTrainerReportController = async (req, res) => {
   try {
-    const { adminId } = req.query;
+    const { adminId, fromDate, toDate, status } = req.query;
 
     if (!adminId) {
       return res.status(400).json({
@@ -80,7 +80,7 @@ export const generateGeneralTrainerReportController = async (req, res) => {
       });
     }
 
-    const reportData = await generateGeneralTrainerReportService(adminId);
+    const reportData = await generateGeneralTrainerReportService(adminId, fromDate, toDate, status);
 
     res.status(200).json({
       success: true,

@@ -396,38 +396,34 @@ export const getClassPerformanceReportService = async (adminId) => {
 
   try {
     /* ------------------------------------------------
-       1️⃣ TOTAL ACTIVE STUDENTS
+       1️⃣ TOTAL STUDENTS
     ------------------------------------------------ */
     const [totalStudentsResult] = await pool.query(
       `
       SELECT COUNT(*) AS count
       FROM member
       WHERE adminId = ?
-        AND status = 'ACTIVE'
       `,
       [adminId]
     );
 
-    const totalStudents = totalStudentsResult[0].count;
+    const totalStudents = totalStudentsResult[0]?.count || 0;
 
     /* ------------------------------------------------
-       2️⃣ PRESENT STUDENTS TODAY (🔥 FIXED)
+       2️⃣ PRESENT STUDENTS TODAY
     ------------------------------------------------ */
     const [presentStudentsResult] = await pool.query(
       `
       SELECT COUNT(DISTINCT ma.memberId) AS count
       FROM memberattendance ma
       JOIN member m ON ma.memberId = m.id
-
-      WHERE 
-        m.adminId = ?
+      WHERE m.adminId = ?
         AND DATE(ma.checkIn) = CURDATE()
-        AND m.status = 'ACTIVE'
       `,
       [adminId]
     );
 
-    const presentStudents = presentStudentsResult[0].count;
+    const presentStudents = presentStudentsResult[0]?.count || 0;
 
     /* ------------------------------------------------
        3️⃣ AVERAGE ATTENDANCE %
@@ -438,69 +434,38 @@ export const getClassPerformanceReportService = async (adminId) => {
         : 0;
 
     /* ------------------------------------------------
-       4️⃣ CLASS PERFORMANCE (LAST 7 DAYS)
+       4️⃣ CLASS PERFORMANCE
     ------------------------------------------------ */
-    // const [studentAttendanceByClass] = await pool.query(
-    //   `
-    //   SELECT
-    //     cs.className,
-    //     cs.date,
-    //     cs.capacity,
-    //     COUNT(DISTINCT b.memberId) AS bookedCount
-    //   FROM classschedule cs
-    //   JOIN branch br ON cs.branchId = br.id
-    //   LEFT JOIN booking b ON cs.id = b.scheduleId
-    //   WHERE
-    //     br.adminId = ?
-    //     AND DATE(cs.date) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()
-    //   GROUP BY cs.id, cs.className, cs.date, cs.capacity
-    //   ORDER BY cs.date DESC
-    //   LIMIT 10
-    //   `,
-    //   [adminId]
-    // );
-
     const [studentAttendanceByClass] = await pool.query(
       `
-  SELECT
-    cs.id AS scheduleId,
-    cs.className,
-    cs.date,
-    cs.capacity,
-
-    cs.trainerId,
-    u.fullName AS trainerName,
-    r.name AS trainerRole,
-
-    COUNT(DISTINCT b.memberId) AS bookedCount
-  FROM classschedule cs
-  LEFT JOIN booking b 
-    ON cs.id = b.scheduleId
-
-  LEFT JOIN user u 
-    ON cs.trainerId = u.id
-
-  LEFT JOIN role r 
-    ON u.roleId = r.id
-
-  WHERE
-    cs.adminId = ?
-    AND DATE(cs.date) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()
-
-  GROUP BY
-    cs.id,
-    cs.className,
-    cs.date,
-    cs.capacity,
-    cs.trainerId,
-    u.fullName,
-    r.name
-
-  ORDER BY cs.date DESC
-  LIMIT 10
-  `,
-      [adminId]
+      SELECT
+        cs.id AS scheduleId,
+        cs.className,
+        cs.date,
+        cs.capacity,
+        cs.trainerId,
+        u.fullName AS trainerName,
+        r.name AS trainerRole,
+        COUNT(DISTINCT b.memberId) AS bookedCount
+      FROM classschedule cs
+      LEFT JOIN booking b ON cs.id = b.scheduleId
+      LEFT JOIN user u ON cs.trainerId = u.id
+      LEFT JOIN role r ON u.roleId = r.id
+      WHERE cs.adminId = ? OR u.adminId = ?
+      GROUP BY
+        cs.id,
+        cs.className,
+        cs.date,
+        cs.capacity,
+        cs.trainerId,
+        u.fullName,
+        r.name
+      ORDER BY cs.date DESC
+      LIMIT 10
+      `,
+      [adminId, adminId]
     );
+
     /* ------------------------------------------------
        5️⃣ FORMAT RESPONSE
     ------------------------------------------------ */
@@ -510,13 +475,22 @@ export const getClassPerformanceReportService = async (adminId) => {
           ? Math.round((item.bookedCount / item.capacity) * 100 * 10) / 10
           : 0;
 
+      let formattedDate = "";
+      if (item.date) {
+        try {
+          formattedDate = new Date(item.date).toISOString().split("T")[0];
+        } catch (e) {
+          formattedDate = String(item.date);
+        }
+      }
+
       return {
-        className: item.className,
-        date: new Date(item.date).toISOString().split("T")[0],
+        className: item.className || "General Class",
+        date: formattedDate,
         trainerId: item.trainerId,
-        trainerName: item.trainerName,
-        trainerRole: item.trainerRole,
-        attendance: `${item.bookedCount}/${item.capacity}`,
+        trainerName: item.trainerName || "Trainer",
+        trainerRole: item.trainerRole || "Trainer",
+        attendance: `${item.bookedCount}/${item.capacity || 0}`,
         attendancePercentage,
       };
     });
@@ -533,11 +507,8 @@ export const getClassPerformanceReportService = async (adminId) => {
       studentAttendanceByClass: formattedAttendanceData,
     };
   } catch (error) {
-    console.error("Error fetching class performance report:", error);
-    throw {
-      status: 500,
-      message: error.message || "Failed to fetch class performance report",
-    };
+    console.error("Error in getClassPerformanceReportService:", error);
+    throw error;
   }
 };
 

@@ -20,13 +20,8 @@ export const recordPaymentService = async (data) => {
   );
   if (!member) throw { status: 404, message: "Member not found" };
 
-<<<<<<< HEAD
   // Verify plan exists (check memberplan first, then plan)
   let [[plan]] = await pool.query(
-=======
-  // Verify plan exists
-  const [[plan]] = await pool.query(
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
     "SELECT * FROM memberplan WHERE id = ?",
     [planId]
   );
@@ -109,12 +104,8 @@ export const paymentHistoryService = async (memberId) => {
   const [rows] = await pool.query(
     `SELECT p.*, COALESCE(mp.name, pl.name) AS planName, COALESCE(mp.price, pl.price) AS planPrice
      FROM payment p
-<<<<<<< HEAD
      LEFT JOIN memberplan mp ON p.planId = mp.id
      LEFT JOIN plan pl ON p.planId = pl.id
-=======
-     LEFT JOIN memberplan pl ON p.planId = pl.id
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
      WHERE p.memberId = ?
      ORDER BY p.id DESC`,
     [memberId]
@@ -124,7 +115,6 @@ export const paymentHistoryService = async (memberId) => {
 
 // --- ALL PAYMENTS BY ADMIN/BRANCH ---
 export const allPaymentsService = async (adminId, branchId) => {
-<<<<<<< HEAD
   const hasBranchFilter = branchId && branchId !== 'all' && branchId !== '' && branchId !== 'null' && branchId !== 'undefined';
 
   let query = `
@@ -171,22 +161,6 @@ export const allPaymentsService = async (adminId, branchId) => {
   const params = hasBranchFilter 
     ? [adminId, branchId, adminId, branchId] 
     : [adminId, adminId];
-=======
-  let query = `SELECT p.*, m.fullName AS memberName, pl.name AS planName, pl.price AS planPrice
-     FROM payment p
-     LEFT JOIN member m ON p.memberId = m.id
-     LEFT JOIN memberplan pl ON p.planId = pl.id
-     WHERE m.adminId = ?`;
-     
-  const params = [adminId];
-  
-  if (branchId && branchId !== 'all' && branchId !== '') {
-    query += ` AND (m.branchId = ? OR m.branchId IS NULL)`;
-    params.push(branchId);
-  }
-  
-  query += ` ORDER BY p.id DESC`;
->>>>>>> b0eb771e77566e5baf179039fe5861656aa19dce
 
   const [rows] = await pool.query(query, params);
   return rows;

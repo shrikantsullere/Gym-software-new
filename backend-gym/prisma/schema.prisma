@@ -232,7 +232,7 @@ model member {
   planId                      Int?
   discount                    Decimal?                      @default(0.00) @db.Decimal(10, 2)
   goal                        String?
-  profileImage                String?                       @db.VarChar(255)
+  profileImage                String?                       @db.Text
   alert                       alert[]
   booking                     booking[]
   dietplanassignment          dietplanassignment[]
@@ -601,7 +601,7 @@ model user {
   address_city                 String?
   address_state                String?
   address_zip                  String?         @db.VarChar(50)
-  profileImage                 String?         @db.VarChar(255)
+  profileImage                 String?         @db.Text
   gstNumber                    String?         @db.VarChar(50)
   tax                          Decimal?        @db.Decimal(10, 2)
   gymAddress                   String?         @db.Text
@@ -614,7 +614,9 @@ model user {
   isTrial                      Boolean         @default(false)
   trialStartDate               DateTime?       @db.DateTime(0)
   trialEndDate                 DateTime?       @db.DateTime(0)
+  gracePeriodEndDate           DateTime?       @db.DateTime(0)
   subscriptionPlan             String?         @default("Basic") @db.VarChar(50)
+  trialStatus                  String?         @default("None") @db.VarChar(50)
   razorpayKeyId                String?         @db.VarChar(255)
   razorpayKeySecret            String?         @db.VarChar(255)
   alert                        alert[]
@@ -668,7 +670,7 @@ model workoutplanassignment {
 
 model leads {
   id                Int       @id @default(autoincrement())
-  adminId           Int
+  adminId           Int?
   fullName          String
   email             String?
   phone             String
@@ -681,7 +683,7 @@ model leads {
   updatedAt         DateTime  @updatedAt
   branchId          Int?
   followUpDate      DateTime?
-  admin             user      @relation(fields: [adminId], references: [id])
+  admin             user?     @relation(fields: [adminId], references: [id])
   staff             staff?    @relation(fields: [assignedToStaffId], references: [id])
 
   @@index([adminId], map: "leads_adminId_fkey")

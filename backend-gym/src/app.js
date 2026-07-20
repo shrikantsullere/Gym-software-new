@@ -17,6 +17,8 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 import { ENV } from "./config/env.js";
 import router from "./routes/index.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -24,6 +26,9 @@ import fileUpload from "express-fileupload";
 import { startMemberExpiryCron, startPTAutoCompleteCron } from "./config/startMemberExpiry.js";
 import { startWhatsAppCronJobs } from "./utils/cronJobs.js";
 import os from "os";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(
@@ -58,6 +63,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan("dev"));
+
+// ✅ Serve uploaded images as static files → http://localhost:4000/uploads/filename.jpg
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // main routes
 app.use("/api", router);

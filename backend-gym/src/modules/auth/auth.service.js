@@ -3,6 +3,7 @@ import { pool } from "../../config/db.js";  // ✅ named import
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env.js";
+import { notifySuperAdmin } from "../notifications/notif.service.js";
 import { uploadToCloudinary } from "../../config/cloudinary.js";
 
 /**************************************
@@ -138,7 +139,7 @@ export const registerUser = async (data,payload) => {
   }
 
   // Return full user object
-  return {
+  const newUser = {
     id: result.insertId,
     fullName,
     email,
@@ -160,6 +161,12 @@ export const registerUser = async (data,payload) => {
     subscriptionPlan,
     licenseExpiryDate
   };
+
+  if (roleId === 2 || roleId === '2') {
+    notifySuperAdmin(`New Admin created: ${fullName} (${email}) for Gym: ${gymName || 'N/A'}`, 'IN-APP');
+  }
+
+  return newUser;
 };
 
 

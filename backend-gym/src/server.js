@@ -3,6 +3,7 @@ import { ENV } from "./config/env.js";
 import "./modules/alert/alert.corn.js";
 import "./modules/notifications/notif.corn.js";
 import { initTrialCronJobs } from "./cron/trial.cron.js";
+import { initSocket } from "./config/socket.js";
 
 import { pool } from "./config/db.js";
 
@@ -26,7 +27,10 @@ initTrialCronJobs();
     }
   }
 
-  app.listen(ENV.port, () => {
+  const server = app.listen(ENV.port, () => {
     console.log(`Server running on http://localhost:${ENV.port}`);
   });
-})();
+  
+  // Initialize Socket.io
+  initSocket(server);
+})();

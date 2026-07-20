@@ -1,6 +1,7 @@
 import { pool } from "../../config/db.js"; // make sure it's a mysql2/promise pool
 import nodemailer from "nodemailer";
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
+import { emitToUser } from "../../config/socket.js";
 
 /**
  * Send notification using MySQL pool
@@ -367,4 +368,41 @@ export const deleteAnnouncementService = async (id, adminId) => {
 
   await pool.query("DELETE FROM announcement WHERE id = ?", [id]);
   return true;
+};
+
+// ─────────────────────────────────────────────────────────
+// Real-time Notification for Super Admin
+// ─────────────────────────────────────────────────────────
+export const notifySuperAdmin = async (message, type = "SYSTEM_ALERT") => {
+  try {
+    // Find superadmin (assuming roleId = 1)
+    const [superAdmins] = await pool.query(`SELECT id FROM user WHERE roleId = 1`);
+    
+    if (superAdmins.length === 0) return; // No superadmin found
+
+    for (const sa of superAdmins) {
+      const superAdminId = sa.id;
+      
+      // Save in notificationlog
+      const [logResult] = await pool.query(
+        `INSERT INTO notificationlog (type, \`to\`, message, status, createdAt)
+         VALUES (?, ?, ?, ?, NOW())`,
+        [type, superAdminId.toString(), message, "UNREAD"]
+      );
+
+      const notifData = {
+        id: logResult.insertId,
+        type,
+        to: superAdminId.toString(),
+        message,
+        status: "UNREAD",
+        createdAt: new Date().toISOString()
+      };
+
+      // Emit real-time via Socket.io
+      emitToUser(superAdminId, "new_notification", notifData);
+    }
+  } catch (err) {
+    console.error("❌ Failed to notify SuperAdmin:", err.message);
+  }
 };

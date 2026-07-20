@@ -7,6 +7,18 @@ import MemberPlansDisplay from "../../Components/MemberPlansDisplay";
 
 const Account = () => {
   const adminId = GetAdminId();
+  
+  const getUserFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (err) {
+      return null;
+    }
+  };
+  const userObj = getUserFromStorage();
+  const userId = userObj?.id || null;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
@@ -78,7 +90,7 @@ const Account = () => {
 
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`member-self/profile/${adminId}`);
+      const response = await axiosInstance.get(`member-self/profile/${userId}`);
 
       if (response.data.success && response.data.profile) {
         const profile = response.data.profile;
@@ -245,7 +257,7 @@ const Account = () => {
           formData.append("profileImage", personal.profile_picture);
         }
 
-        const response = await axiosInstance.put(`member-self/profile/${adminId}`, formData, {
+        const response = await axiosInstance.put(`member-self/profile/${userId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -290,7 +302,7 @@ const Account = () => {
         new: password.new,
       };
 
-      const response = await axiosInstance.put(`member-self/password/${adminId}`, payload);
+      const response = await axiosInstance.put(`member-self/password/${userId}`, payload);
 
       if (response.data.success) {
         alert("Password updated successfully!");

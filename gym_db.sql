@@ -2,9 +2,9 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: tokaido.proxy.rlwy.net:35928
--- Generation Time: Jul 17, 2026 at 10:51 AM
--- Server version: 9.4.0
+-- Host: 127.0.0.1
+-- Generation Time: Jul 20, 2026 at 10:45 AM
+-- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `railway`
+-- Database: `gym_db`
 --
 
 -- --------------------------------------------------------
@@ -28,13 +28,13 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `alert` (
-  `id` int NOT NULL,
-  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `memberId` int DEFAULT NULL,
-  `staffId` int DEFAULT NULL,
-  `branchId` int NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `message` varchar(191) NOT NULL,
+  `memberId` int(11) DEFAULT NULL,
+  `staffId` int(11) DEFAULT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -44,16 +44,16 @@ CREATE TABLE `alert` (
 --
 
 CREATE TABLE `announcement` (
-  `id` int NOT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `message` text COLLATE utf8mb4_general_ci NOT NULL,
-  `channels` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `targetRoles` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `sentBy` int DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `adminId` int DEFAULT NULL,
-  `imageUrl` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
+  `id` int(11) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `channels` varchar(255) NOT NULL,
+  `targetRoles` varchar(255) NOT NULL,
+  `sentBy` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `adminId` int(11) DEFAULT NULL,
+  `imageUrl` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -70,35 +70,32 @@ INSERT INTO `announcement` (`id`, `subject`, `message`, `channels`, `targetRoles
 --
 
 CREATE TABLE `app_settings` (
-  `id` int NOT NULL,
-  `logo` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `gym_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
-  `url` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `memberPlanId` int DEFAULT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `adminId` int DEFAULT NULL,
-  `hero_banner` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `hero_subtitle` text COLLATE utf8mb4_general_ci,
-  `hero_title` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `services_json` text COLLATE utf8mb4_general_ci,
-  `testimonials_json` text COLLATE utf8mb4_general_ci,
-  `welcome_notification_channels` varchar(255) COLLATE utf8mb4_general_ci DEFAULT '["EMAIL", "WHATSAPP", "APP_PUSH"]',
-  `invoice_notification_channels` varchar(255) COLLATE utf8mb4_general_ci DEFAULT '["EMAIL", "WHATSAPP", "APP_PUSH"]',
-  `marketing_notification_channels` varchar(255) COLLATE utf8mb4_general_ci DEFAULT '["EMAIL", "WHATSAPP", "APP_PUSH"]'
+  `id` int(11) NOT NULL,
+  `logo` varchar(500) DEFAULT NULL,
+  `gym_name` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `memberPlanId` int(11) DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `adminId` int(11) DEFAULT NULL,
+  `hero_banner` varchar(500) DEFAULT NULL,
+  `hero_subtitle` text DEFAULT NULL,
+  `hero_title` varchar(255) DEFAULT NULL,
+  `services_json` text DEFAULT NULL,
+  `testimonials_json` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `app_settings`
 --
 
-INSERT INTO `app_settings` (`id`, `logo`, `gym_name`, `description`, `url`, `memberPlanId`, `createdAt`, `updatedAt`, `adminId`, `hero_banner`, `hero_subtitle`, `hero_title`, `services_json`, `testimonials_json`, `welcome_notification_channels`, `invoice_notification_channels`, `marketing_notification_channels`) VALUES
-(9, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767009449/gym/app-logo/ft1ddb2v3qpzfsmyfxtz.jpg', 'Power Gym', 'Best fitness gym in the city', 'localhost:5173', 35, '2025-12-13 02:11:43', '2026-01-06 14:58:03', 90, NULL, NULL, NULL, NULL, NULL, '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]'),
-(10, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765806552/gym/app-logo/vpeahm6mvq7ageoiluxv.jpg', NULL, 'Welcome to GYM – Where Fitness Meets Lifestyle\r\n\r\nGYM ek modern, fully-equipped fitness destination hai jo aapke health aur lifestyle goals ko dhyaan me rakh kar design kiya gaya hai. Yahan sirf workout nahi hota, balki complete fitness transformation hota hai – body, mind aur confidence ka.\r\n\r\nHum provide karte hain state-of-the-art gym equipment, certified trainers, aur scientifically designed workout programs jo beginners se leke advanced athletes tak sabke liye suitable hain. Chahe aap weight loss chahte ho, muscle gain, strength training, ya overall fitness – GYM aapke har goal ke liye ready hai.', 'fitgym', 22, '2025-12-13 02:18:29', '2025-12-15 05:49:08', 90, NULL, NULL, NULL, NULL, NULL, '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]'),
-(11, NULL, 'Power Gym', 'Best fitness gym in the city', 'powergym.com', 35, '2025-12-29 17:37:48', '2025-12-30 13:05:17', 164, NULL, NULL, NULL, NULL, NULL, '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]'),
-(12, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767010798/gym/app-logo/ekgmegsemkxrlqs4tnfe.jpg', NULL, 'Testing', 'fitgym', NULL, '2025-12-29 17:49:57', '2025-12-29 17:49:57', 170, NULL, NULL, NULL, NULL, NULL, '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]'),
-(13, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783584241/gym/app-logo/omec1wwvpa7c7jfnckeh.png', NULL, '', '', NULL, '2026-07-09 13:34:02', '2026-07-09 13:34:02', 260, NULL, NULL, NULL, NULL, NULL, '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]', '[\"EMAIL\", \"WHATSAPP\", \"APP_PUSH\"]');
+INSERT INTO `app_settings` (`id`, `logo`, `gym_name`, `description`, `url`, `memberPlanId`, `createdAt`, `updatedAt`, `adminId`, `hero_banner`, `hero_subtitle`, `hero_title`, `services_json`, `testimonials_json`) VALUES
+(9, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767009449/gym/app-logo/ft1ddb2v3qpzfsmyfxtz.jpg', 'Power Gym', 'Best fitness gym in the city', 'localhost:5173', 35, '2025-12-13 02:11:43', '2026-01-06 14:58:03', 90, NULL, NULL, NULL, NULL, NULL),
+(10, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765806552/gym/app-logo/vpeahm6mvq7ageoiluxv.jpg', NULL, 'Welcome to GYM – Where Fitness Meets Lifestyle\r\n\r\nGYM ek modern, fully-equipped fitness destination hai jo aapke health aur lifestyle goals ko dhyaan me rakh kar design kiya gaya hai. Yahan sirf workout nahi hota, balki complete fitness transformation hota hai – body, mind aur confidence ka.\r\n\r\nHum provide karte hain state-of-the-art gym equipment, certified trainers, aur scientifically designed workout programs jo beginners se leke advanced athletes tak sabke liye suitable hain. Chahe aap weight loss chahte ho, muscle gain, strength training, ya overall fitness – GYM aapke har goal ke liye ready hai.', 'fitgym', 22, '2025-12-13 02:18:29', '2025-12-15 05:49:08', 90, NULL, NULL, NULL, NULL, NULL),
+(11, NULL, 'Power Gym', 'Best fitness gym in the city', 'powergym.com', 35, '2025-12-29 17:37:48', '2025-12-30 13:05:17', 164, NULL, NULL, NULL, NULL, NULL),
+(12, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767010798/gym/app-logo/ekgmegsemkxrlqs4tnfe.jpg', NULL, 'Testing', 'fitgym', NULL, '2025-12-29 17:49:57', '2025-12-29 17:49:57', 170, NULL, NULL, NULL, NULL, NULL),
+(13, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783584241/gym/app-logo/omec1wwvpa7c7jfnckeh.png', NULL, '', '', NULL, '2026-07-09 13:34:02', '2026-07-09 13:34:02', 260, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -107,23 +104,22 @@ INSERT INTO `app_settings` (`id`, `logo`, `gym_name`, `description`, `url`, `mem
 --
 
 CREATE TABLE `automation_settings` (
-  `id` int NOT NULL,
-  `trialDurationDays` int DEFAULT '7',
-  `gracePeriodDays` int DEFAULT '3',
-  `enableEmailNotif` tinyint(1) DEFAULT '0',
-  `enableWhatsappNotif` tinyint(1) DEFAULT '0',
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lowCreditThreshold` int DEFAULT '50',
-  `quarterlyDiscount` decimal(5,2) DEFAULT '5.00',
-  `yearlyDiscount` decimal(5,2) DEFAULT '15.00'
+  `id` int(11) NOT NULL,
+  `trialDurationDays` int(11) NOT NULL DEFAULT 7,
+  `gracePeriodDays` int(11) NOT NULL DEFAULT 3,
+  `enableEmailNotif` tinyint(1) NOT NULL DEFAULT 1,
+  `enableWhatsappNotif` tinyint(1) NOT NULL DEFAULT 0,
+  `lowCreditThreshold` int(11) NOT NULL DEFAULT 50,
+  `quarterlyDiscount` decimal(5,2) NOT NULL DEFAULT 5.00,
+  `yearlyDiscount` decimal(5,2) NOT NULL DEFAULT 15.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `automation_settings`
 --
 
-INSERT INTO `automation_settings` (`id`, `trialDurationDays`, `gracePeriodDays`, `enableEmailNotif`, `enableWhatsappNotif`, `updatedAt`, `lowCreditThreshold`, `quarterlyDiscount`, `yearlyDiscount`) VALUES
-(1, 7, 3, 1, 1, '2026-06-20 16:03:40', 50, 5.00, 15.00);
+INSERT INTO `automation_settings` (`id`, `trialDurationDays`, `gracePeriodDays`, `enableEmailNotif`, `enableWhatsappNotif`, `lowCreditThreshold`, `quarterlyDiscount`, `yearlyDiscount`) VALUES
+(1, 7, 3, 1, 1, 50, 5.00, 15.00);
 
 -- --------------------------------------------------------
 
@@ -132,9 +128,9 @@ INSERT INTO `automation_settings` (`id`, `trialDurationDays`, `gracePeriodDays`,
 --
 
 CREATE TABLE `booking` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `scheduleId` int NOT NULL
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `scheduleId` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -144,18 +140,18 @@ CREATE TABLE `booking` (
 --
 
 CREATE TABLE `booking_requests` (
-  `id` int NOT NULL,
-  `memberId` int DEFAULT NULL,
-  `planId` int DEFAULT NULL,
-  `classId` int DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
-  `adminId` int DEFAULT NULL,
-  `userId` int DEFAULT NULL,
-  `status` enum('pending','approved','rejected') COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `price` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `upiId` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL
+  `id` int(11) NOT NULL,
+  `memberId` int(11) DEFAULT NULL,
+  `planId` int(11) DEFAULT NULL,
+  `classId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `userId` int(11) DEFAULT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `upiId` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -165,14 +161,14 @@ CREATE TABLE `booking_requests` (
 --
 
 CREATE TABLE `branch` (
-  `id` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `address` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` enum('ACTIVE','INACTIVE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
-  `adminId` int DEFAULT NULL,
-  `attendanceRadiusMeters` int NOT NULL DEFAULT '50'
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `phone` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `address` varchar(191) DEFAULT NULL,
+  `status` enum('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  `adminId` int(11) DEFAULT NULL,
+  `attendanceRadiusMeters` int(11) NOT NULL DEFAULT 50
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -191,18 +187,18 @@ INSERT INTO `branch` (`id`, `name`, `phone`, `createdAt`, `address`, `status`, `
 --
 
 CREATE TABLE `classschedule` (
-  `id` int NOT NULL,
-  `adminId` int DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
   `className` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `trainerId` int NOT NULL,
+  `trainerId` int(11) NOT NULL,
   `date` datetime(3) NOT NULL,
   `startTime` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `endTime` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `capacity` int NOT NULL,
-  `members` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `capacity` int(11) NOT NULL,
+  `members` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
   `day` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `price` decimal(10,2) DEFAULT '0.00'
+  `price` decimal(10,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -213,7 +209,8 @@ INSERT INTO `classschedule` (`id`, `adminId`, `className`, `trainerId`, `date`, 
 (18, NULL, 'new', 166, '2025-12-29 00:00:00.000', '22:18', '23:18', 20, '[]', 'Active', 'Monday', 0.00),
 (19, 33, 'one', 165, '2025-12-30 00:00:00.000', '13:21', '14:22', 20, '[]', 'Active', 'Monday', 0.00),
 (22, NULL, 'Old Class', 166, '2025-12-30 00:00:00.000', '20:22', '22:22', 20, '[]', 'Active', 'Wednesday', 0.00),
-(27, 164, 'yoga', 182, '2026-01-02 00:00:00.000', '19:53', '20:53', 20, '[]', 'Active', '', 0.00);
+(27, 164, 'yoga', 182, '2026-01-02 00:00:00.000', '19:53', '20:53', 20, '[]', 'Active', '', 0.00),
+(29, 90, 'yoga classes', 280, '2026-07-17 00:00:00.000', '11:30', '12:30', 25, '[{\"id\":1784528951222,\"name\":\"riya\"},{\"id\":1784529333132,\"name\":\"Demo Aayush\"},{\"id\":1784529338004,\"name\":\"Demo girl\"},{\"id\":1784529341988,\"name\":\"Dummy Lead 1\"}]', 'Active', 'Thursday', 0.00);
 
 -- --------------------------------------------------------
 
@@ -222,9 +219,9 @@ INSERT INTO `classschedule` (`id`, `adminId`, `className`, `trainerId`, `date`, 
 --
 
 CREATE TABLE `classtype` (
-  `id` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -234,25 +231,24 @@ CREATE TABLE `classtype` (
 --
 
 CREATE TABLE `credit_packages` (
-  `id` int NOT NULL,
-  `packageName` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `credits` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `packageName` varchar(255) NOT NULL,
+  `credits` int(11) NOT NULL,
   `price` decimal(10,2) NOT NULL,
-  `isActive` tinyint(1) DEFAULT '1',
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `packageType` varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'WHATSAPP'
+  `isActive` tinyint(1) DEFAULT 1,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `packageType` varchar(50) DEFAULT 'WHATSAPP'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `credit_packages`
 --
 
-INSERT INTO `credit_packages` (`id`, `packageName`, `credits`, `price`, `isActive`, `createdAt`, `updatedAt`, `packageType`) VALUES
-(1, 'Bronze Package', 500, 1000.00, 1, '2026-06-20 15:03:16', '2026-06-20 16:03:20', 'WHATSAPP'),
-(2, 'Silver Package', 5000, 4500.00, 1, '2026-06-20 15:03:16', '2026-06-20 15:03:16', 'WHATSAPP'),
-(3, 'Gold Package', 10000, 8000.00, 1, '2026-06-20 15:03:16', '2026-06-20 15:03:16', 'WHATSAPP'),
-(4, 'bronze package', 8, 200.00, 1, '2026-07-08 12:16:27', '2026-07-08 12:16:27', 'EMAIL');
+INSERT INTO `credit_packages` (`id`, `packageName`, `credits`, `price`, `isActive`, `createdAt`, `packageType`) VALUES
+(1, 'Bronze Package', 500, 1000.00, 1, '2026-06-20 15:03:16', 'WHATSAPP'),
+(2, 'Silver Package', 5000, 4500.00, 1, '2026-06-20 15:03:16', 'WHATSAPP'),
+(3, 'Gold Package', 10000, 8000.00, 1, '2026-06-20 15:03:16', 'WHATSAPP'),
+(4, 'bronze package', 8, 200.00, 1, '2026-07-08 12:16:27', 'EMAIL');
 
 -- --------------------------------------------------------
 
@@ -261,11 +257,11 @@ INSERT INTO `credit_packages` (`id`, `packageName`, `credits`, `price`, `isActiv
 --
 
 CREATE TABLE `demo_requests` (
-  `id` int NOT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `email` varchar(191) NOT NULL,
+  `phone` varchar(191) NOT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'pending',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -275,10 +271,10 @@ CREATE TABLE `demo_requests` (
 --
 
 CREATE TABLE `dietmeal` (
-  `id` int NOT NULL,
-  `dietPlanId` int NOT NULL,
-  `time` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `food` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
+  `id` int(11) NOT NULL,
+  `dietPlanId` int(11) NOT NULL,
+  `time` varchar(191) NOT NULL,
+  `food` varchar(191) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -286,16 +282,17 @@ CREATE TABLE `dietmeal` (
 --
 
 INSERT INTO `dietmeal` (`id`, `dietPlanId`, `time`, `food`) VALUES
-(12, 2, 'Breakfast', '4 Egg whites, 1 whole egg + Spinach'),
-(13, 2, 'Lunch', 'Grilled Chicken Breast with Steamed Broccoli'),
-(14, 2, 'Pre-Workout', 'One Apple or 100g Berries'),
-(15, 2, 'Post-Workout', 'Whey Protein Shake + 1 Rice Cake'),
-(16, 2, 'Dinner', 'Baked White Fish (Tilapia/Cod) with Asparagus'),
 (17, 3, 'Breakfast', 'Greek Yogurt (0%) with Chia Seeds & Blueberries'),
 (18, 3, 'Lunch', 'Chickpea & Quinoa Salad with Cucumber'),
 (19, 3, 'Pre-Workout', 'Handful of Almonds'),
 (20, 3, 'Post-Workout', 'Plant-based Protein Shake'),
-(21, 3, 'Dinner', 'Tofu Stir-fry with Bell Peppers and Soy Sauce');
+(21, 3, 'Dinner', 'Tofu Stir-fry with Bell Peppers and Soy Sauce'),
+(22, 2, 'Breakfast', '4 Egg whites, 1 whole egg + Spinach'),
+(23, 2, 'Lunch', 'Grilled Chicken Breast with Steamed Broccoli'),
+(24, 2, 'Pre-Workout', 'One Apple or 100g Berries'),
+(25, 2, 'Post-Workout', 'Whey Protein Shake + 1 Rice Cake'),
+(26, 2, 'Dinner', 'Baked White Fish (Tilapia/Cod) with Asparagus'),
+(27, 4, 'Evening Snack', '2 boiled eggs ');
 
 -- --------------------------------------------------------
 
@@ -304,13 +301,13 @@ INSERT INTO `dietmeal` (`id`, `dietPlanId`, `time`, `food`) VALUES
 --
 
 CREATE TABLE `dietplan` (
-  `id` int NOT NULL,
-  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `notes` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdBy` int NOT NULL,
-  `branchId` int NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `dietType` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Any'
+  `id` int(11) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `notes` varchar(191) DEFAULT NULL,
+  `createdBy` int(11) NOT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `dietType` varchar(20) DEFAULT 'Any'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -319,7 +316,8 @@ CREATE TABLE `dietplan` (
 
 INSERT INTO `dietplan` (`id`, `title`, `notes`, `createdBy`, `branchId`, `createdAt`, `dietType`) VALUES
 (2, 'Extreme weight loss', 'Drink 3L daily', 102, 48, '2026-06-15 15:23:24.373', 'Non-Veg'),
-(3, 'Extreme weight loss', 'Drink 3L daily', 102, 48, '2026-06-15 15:33:16.337', 'Veg');
+(3, 'Extreme weight loss', 'Drink 3L daily', 102, 48, '2026-06-15 15:33:16.337', 'Veg'),
+(4, 'Extreme weight gain', 'eggs,healthy diet', 279, 48, '2026-07-20 11:34:20.985', 'Any');
 
 -- --------------------------------------------------------
 
@@ -328,10 +326,10 @@ INSERT INTO `dietplan` (`id`, `title`, `notes`, `createdBy`, `branchId`, `create
 --
 
 CREATE TABLE `dietplanassignment` (
-  `id` int NOT NULL,
-  `dietPlanId` int NOT NULL,
-  `memberId` int NOT NULL,
-  `assignedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `dietPlanId` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -341,37 +339,8 @@ CREATE TABLE `dietplanassignment` (
 INSERT INTO `dietplanassignment` (`id`, `dietPlanId`, `memberId`, `assignedAt`) VALUES
 (2, 3, 152, '2026-06-15 15:33:26.322'),
 (3, 2, 153, '2026-06-15 15:33:35.576'),
-(4, 3, 161, '2026-07-13 13:15:24.079');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `equipment_requests`
---
-
-CREATE TABLE `equipment_requests` (
-  `id` int NOT NULL,
-  `requestedBy` int NOT NULL,
-  `role` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `itemName` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `category` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `quantity` int DEFAULT '1',
-  `reason` text COLLATE utf8mb4_general_ci,
-  `status` enum('PENDING','APPROVED','REJECTED','COMPLETED') COLLATE utf8mb4_general_ci DEFAULT 'PENDING',
-  `adminRemarks` text COLLATE utf8mb4_general_ci,
-  `branchId` int NOT NULL,
-  `adminId` int DEFAULT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `imageUrl` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `equipment_requests`
---
-
-INSERT INTO `equipment_requests` (`id`, `requestedBy`, `role`, `itemName`, `category`, `quantity`, `reason`, `status`, `adminRemarks`, `branchId`, `adminId`, `createdAt`, `updatedAt`, `imageUrl`) VALUES
-(1, 93, 'generaltrainer', 'Yoga Mats (High Density)', 'Other', 10, 'Increasing number of members in morning yoga sessions. Existing mats are fully occupied.', 'PENDING', NULL, 33, 90, '2026-06-22 09:12:37', '2026-06-22 09:12:37', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1782119556/equipment_requests/e9mgm6r6llcehw4pfy4l.png');
+(4, 3, 161, '2026-07-13 13:15:24.079'),
+(5, 3, 160, '2026-07-20 11:32:32.472');
 
 -- --------------------------------------------------------
 
@@ -380,16 +349,14 @@ INSERT INTO `equipment_requests` (`id`, `requestedBy`, `role`, `itemName`, `cate
 --
 
 CREATE TABLE `expense` (
-  `id` int NOT NULL,
-  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int(11) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `category` varchar(191) NOT NULL,
   `amount` double NOT NULL,
-  `date` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `branchId` int NOT NULL,
-  `notes` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `paymentMode` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Cash'
+  `date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `branchId` int(11) NOT NULL,
+  `notes` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -399,9 +366,9 @@ CREATE TABLE `expense` (
 --
 
 CREATE TABLE `global_settings` (
-  `key_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `value_data` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `key_name` varchar(191) NOT NULL,
+  `value_data` text NOT NULL,
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -422,56 +389,19 @@ INSERT INTO `global_settings` (`key_name`, `value_data`, `updatedAt`) VALUES
 --
 
 CREATE TABLE `group_class_bookings` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `classId` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `classId` int(11) NOT NULL,
   `date` date NOT NULL,
   `startTime` time NOT NULL,
   `endTime` time NOT NULL,
-  `bookingStatus` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'Booked',
-  `paymentStatus` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'Pending',
-  `notes` text COLLATE utf8mb4_general_ci,
-  `branchId` int NOT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `bookingStatus` varchar(20) DEFAULT 'Booked',
+  `paymentStatus` varchar(20) DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `gym_equipment`
---
-
-CREATE TABLE `gym_equipment` (
-  `id` int NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `category` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `quantity` int DEFAULT '1',
-  `condition` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'Good',
-  `purchaseDate` date DEFAULT NULL,
-  `purchaseCost` decimal(10,2) DEFAULT NULL,
-  `location` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `nextMaintenanceDate` date DEFAULT NULL,
-  `branchId` int NOT NULL,
-  `notes` text COLLATE utf8mb4_general_ci,
-  `isActive` tinyint(1) DEFAULT '1',
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `imageUrl` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `gym_equipment`
---
-
-INSERT INTO `gym_equipment` (`id`, `name`, `category`, `quantity`, `condition`, `purchaseDate`, `purchaseCost`, `location`, `nextMaintenanceDate`, `branchId`, `notes`, `isActive`, `createdAt`, `updatedAt`, `imageUrl`) VALUES
-(1, 'Commercial Treadmill X7', 'Cardio', 3, 'Good', '2026-06-23', 120000.00, 'Ground Floor - Cardio Zone', '2026-12-20', 48, '2-year warranty included. Free servicing till 2028.', 1, '2026-06-22 08:54:49', '2026-06-22 08:54:49', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1782118489/gym_equipment/vbhuifevquyj4pqo8zsy.png'),
-(2, 'Commercial Treadmill X7', 'Cardio', 3, 'Good', '2026-06-23', 120000.00, 'Ground Floor - Cardio Zone', '2026-12-20', 48, '2-year warranty included. Free servicing till 2028.', 0, '2026-06-22 08:54:50', '2026-06-22 09:07:22', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1782118489/gym_equipment/jccztrcfqwxzbflancap.png'),
-(3, 'Commercial Treadmill X7', 'Cardio', 3, 'Good', '2026-06-23', 120000.00, 'Ground Floor - Cardio Zone', '2026-12-20', 48, '2-year warranty included. Free servicing till 2028.', 0, '2026-06-22 08:54:51', '2026-06-22 09:07:20', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1782118490/gym_equipment/otate8tt7kyppj4qackb.png'),
-(4, 'Commercial Treadmill X7', 'Cardio', 3, 'Good', '2026-06-23', 120000.00, 'Ground', '2026-12-20', 1, 'Warranty', 1, '2026-06-22 08:55:00', '2026-06-22 08:55:00', NULL),
-(5, 'Commercial Treadmill X7', NULL, 1, 'Good', NULL, NULL, NULL, NULL, 1, NULL, 1, '2026-06-22 08:55:36', '2026-06-22 08:55:36', NULL),
-(6, 'Commercial Treadmill X7', 'Cardio', 3, 'Good', '2026-06-24', 120000.00, 'Ground Floor - Cardio Zone', '2026-12-21', 48, '2-year warranty included. Free servicing till 2028.', 0, '2026-06-22 09:07:04', '2026-06-22 09:07:17', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1782119223/gym_equipment/eimu5bxxg3tsvuifu74s.png'),
-(7, 'Olympic Barbell 20kg', 'Strength', 5, 'Good', '2026-06-23', 25000.00, 'Weightlifting Area', '2026-12-20', 48, 'Heavy duty chrome finish.', 1, '2026-06-22 09:08:31', '2026-06-22 09:08:31', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1782119311/gym_equipment/fqtd4s9ngbf4g8ad6cs9.png');
 
 -- --------------------------------------------------------
 
@@ -480,17 +410,17 @@ INSERT INTO `gym_equipment` (`id`, `name`, `category`, `quantity`, `condition`, 
 --
 
 CREATE TABLE `housekeepingattendance` (
-  `id` int NOT NULL,
-  `staffId` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `staffId` int(11) NOT NULL,
   `attendanceDate` date NOT NULL,
-  `status` enum('Present','Absent','Late') COLLATE utf8mb4_general_ci NOT NULL,
+  `status` enum('Present','Absent','Late') NOT NULL,
   `checkIn` time DEFAULT NULL,
   `checkOut` time DEFAULT NULL,
-  `workHours` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_general_ci,
-  `createdById` int NOT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `workHours` varchar(20) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `createdById` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -500,16 +430,16 @@ CREATE TABLE `housekeepingattendance` (
 --
 
 CREATE TABLE `housekeepingschedule` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `dutyDate` date NOT NULL,
   `startTime` time NOT NULL,
   `endTime` time NOT NULL,
-  `location` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` enum('In Progress','Completed','Pending') COLLATE utf8mb4_general_ci DEFAULT 'Pending',
-  `staffId` int NOT NULL,
-  `createdById` int NOT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `location` varchar(100) DEFAULT NULL,
+  `status` enum('In Progress','Completed','Pending') DEFAULT 'Pending',
+  `staffId` int(11) NOT NULL,
+  `createdById` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -519,15 +449,15 @@ CREATE TABLE `housekeepingschedule` (
 --
 
 CREATE TABLE `landing_page_cms` (
-  `id` int NOT NULL,
-  `adminId` int NOT NULL,
-  `heroTitle` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `heroSubtitle` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bannerUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `featuresJson` text COLLATE utf8mb4_unicode_ci,
-  `testimonialsJson` text COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `heroTitle` varchar(255) DEFAULT NULL,
+  `heroSubtitle` varchar(255) DEFAULT NULL,
+  `bannerUrl` varchar(500) DEFAULT NULL,
+  `featuresJson` text DEFAULT NULL,
+  `testimonialsJson` text DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -537,22 +467,22 @@ CREATE TABLE `landing_page_cms` (
 --
 
 CREATE TABLE `leads` (
-  `id` int NOT NULL,
-  `adminId` int DEFAULT NULL,
-  `fullName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `gender` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `source` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Landing Page',
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'New',
-  `assignedToStaffId` int DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `fullName` varchar(191) NOT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `phone` varchar(191) NOT NULL,
+  `gender` varchar(191) DEFAULT NULL,
+  `source` varchar(191) NOT NULL DEFAULT 'Landing Page',
+  `status` varchar(191) NOT NULL DEFAULT 'New',
+  `assignedToStaffId` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL,
-  `branchId` int DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
   `followUpDate` datetime(3) DEFAULT NULL,
-  `leadType` enum('GYM','SAAS') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'GYM',
-  `interestedPlan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `leadType` varchar(50) DEFAULT 'GYM',
+  `interestedPlan` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -584,7 +514,8 @@ INSERT INTO `leads` (`id`, `adminId`, `fullName`, `email`, `phone`, `gender`, `s
 (83, NULL, 'raj_gym', 'raj_gym@gmail.com', '4565656666', NULL, 'Schedule Demo', 'New', NULL, 'City: N/A | Gym: N/A', '2026-07-14 12:24:58.000', '2026-07-14 12:24:58.000', NULL, NULL, 'SAAS', NULL),
 (84, NULL, 'nalinigym Owner', 'naliniparas228@gmail.com', '5566223148', NULL, 'Complete Purchase', 'New', NULL, 'City: pipli | Gym: nalinigym | GST Number: 74AS741851528', '2026-07-14 15:01:50.000', '2026-07-14 15:01:50.000', NULL, NULL, 'SAAS', 'Pro'),
 (85, NULL, 'rah_shekar', 'raj23@gmail.com', '101010101010', NULL, 'Schedule Demo', 'New', NULL, 'City: noida | Gym: ra_gym', '2026-07-14 15:40:20.000', '2026-07-14 15:40:20.000', NULL, NULL, 'SAAS', 'Basic'),
-(86, NULL, 'raj_shekar sir Owner', 'rsld2012@gmail.com', '5566442563', NULL, 'Start Free Trial', 'New', NULL, 'City: delhi | Gym: raj_shekar sir | GST Number: 74AS741851527', '2026-07-14 15:45:46.000', '2026-07-14 15:45:46.000', NULL, NULL, 'SAAS', '7-Day Free Trial');
+(86, NULL, 'raj_shekar sir Owner', 'rsld2012@gmail.com', '5566442563', NULL, 'Start Free Trial', 'New', NULL, 'City: delhi | Gym: raj_shekar sir | GST Number: 74AS741851527', '2026-07-14 15:45:46.000', '2026-07-14 15:45:46.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(87, 90, 'xyz', 'xyz@gmail.com', '98765432345', 'Male', 'Walk-in', 'In Progress', 71, NULL, '2026-07-20 12:55:28.000', '2026-07-20 12:55:28.000', 48, '2026-07-15 00:00:00.000', 'GYM', NULL);
 
 -- --------------------------------------------------------
 
@@ -593,15 +524,15 @@ INSERT INTO `leads` (`id`, `adminId`, `fullName`, `email`, `phone`, `gender`, `s
 --
 
 CREATE TABLE `marketing_campaigns` (
-  `id` int NOT NULL,
-  `adminId` int NOT NULL,
-  `campaignName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `templateMessage` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `channel` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `recipientCount` int NOT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `campaignName` varchar(191) NOT NULL,
+  `templateMessage` text NOT NULL,
+  `channel` varchar(50) NOT NULL,
+  `recipientCount` int(11) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'pending',
   `scheduledAt` datetime DEFAULT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP
+  `createdAt` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -611,47 +542,48 @@ CREATE TABLE `marketing_campaigns` (
 --
 
 CREATE TABLE `member` (
-  `id` int NOT NULL,
-  `userId` int DEFAULT NULL,
-  `adminId` int NOT NULL,
-  `fullName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `gender` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `joinDate` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `branchId` int DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `userId` int(11) DEFAULT NULL,
+  `adminId` int(11) NOT NULL,
+  `fullName` varchar(191) NOT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `phone` varchar(191) NOT NULL,
+  `gender` varchar(191) DEFAULT NULL,
+  `address` varchar(191) DEFAULT NULL,
+  `joinDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `branchId` int(11) DEFAULT NULL,
   `membershipFrom` datetime(3) DEFAULT NULL,
   `membershipTo` datetime(3) DEFAULT NULL,
-  `paymentMode` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `interestedIn` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `paymentMode` varchar(191) DEFAULT NULL,
+  `interestedIn` varchar(191) DEFAULT NULL,
   `amountPaid` double DEFAULT NULL,
   `dateOfBirth` datetime(3) DEFAULT NULL,
-  `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
-  `planId` int DEFAULT NULL,
-  `discount` decimal(10,2) DEFAULT '0.00',
-  `goal` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `profileImage` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `trainerId` int DEFAULT NULL
+  `password` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'ACTIVE',
+  `planId` int(11) DEFAULT NULL,
+  `discount` decimal(10,2) DEFAULT 0.00,
+  `goal` varchar(191) DEFAULT NULL,
+  `profileImage` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `member`
 --
 
-INSERT INTO `member` (`id`, `userId`, `adminId`, `fullName`, `email`, `phone`, `gender`, `address`, `joinDate`, `branchId`, `membershipFrom`, `membershipTo`, `paymentMode`, `interestedIn`, `amountPaid`, `dateOfBirth`, `password`, `status`, `planId`, `discount`, `goal`, `profileImage`, `trainerId`) VALUES
-(152, 224, 90, 'demo boy', 'demoboy@gmail.com', '7894561234', 'Male', 'demo street, demo city ', '2026-06-15 14:21:59.007', NULL, '2026-06-15 05:30:00.000', '2026-08-14 05:30:00.000', 'Cash', 'Personal Training', 0, '1998-12-28 05:30:00.000', '$2b$10$xMgLjnERgs3JU4toOTxGV.W9l0L1bUE39v5/Pi7fTJ24EqhNoRDYK', 'Active', 22, 0.00, 'Weight Loss', NULL, NULL),
-(153, 225, 90, 'Demo girl', 'demogirl@gmail.com', '457869123', 'Female', 'demo street', '2026-06-15 15:11:44.762', NULL, '2026-06-15 05:30:00.000', '2026-07-15 05:30:00.000', 'Cash', 'General Trainer', 0, '1999-08-21 05:30:00.000', '$2b$10$oQ/0HcuOdFAY/.NkIooRee2HS.XGtlw7.6DI3xwi3AGeN1T6Gsdjq', 'Inactive', 39, 0.00, 'Weight Gain', NULL, NULL),
-(154, 227, 90, 'Demo Aayush', 'demoaayu@gmail.com', '1234567890', 'Male', 'demo street', '2026-06-17 13:28:37.726', NULL, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 'General Trainer', 0, '2002-01-01 05:30:00.000', '$2b$10$/qC8JqA2Yq6IxtKKEGJey.btosdudsAV5IQCuoRnb05v0nUyFXd.q', 'Inactive', 39, 0.00, 'Weight Gain', NULL, NULL),
-(155, 228, 90, 'Dummy Lead 1', 'dummy.lead1@example.com', '9000000001', 'Male', 'xyz', '2026-06-17 14:33:22.872', NULL, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 'General Trainer', 0, '2000-08-07 05:30:00.000', '$2b$10$XOroeua9HURQPyWvfQx9ROfv/x.MSxuEGc4ySVMZh0IiNSpreELbG', 'Inactive', 39, 0.00, 'Weight Loss', NULL, NULL),
-(156, 163, 90, 'Mamber', 'member@gmail.com', '1234567890', 'Male', NULL, '2025-01-01 00:00:00.000', 48, NULL, NULL, NULL, NULL, 0, '1990-01-01 00:00:00.000', '123456', 'ACTIVE', NULL, 0.00, NULL, NULL, NULL),
-(157, 230, 90, 'pia b', 'pia@gmail.com', '78945455421', 'Female', 'null', '2026-06-26 15:29:00.425', NULL, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 'Personal Training', 0, '1997-02-28 05:30:00.000', '$2b$10$XM0CxnvFkK3w5zRHZbiw6enP8NceBqljEJr1JLwP2h5whr4b7i.T.', 'Active', 22, 0.00, 'Weight Gain', NULL, 25),
-(158, 231, 90, 'riya ', 'riya@gmail.com', '7849615654', 'Female', 'null', '2026-06-26 16:06:29.393', NULL, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 'Personal Training', 0, '0000-00-00 00:00:00.000', '$2b$10$ZQdCgNH7I//MSIeXYyDz2OvdI.wChFkj0IHFksLeDkrdSNYpV2.Ne', 'Active', 22, 0.00, 'Weight Loss', NULL, 25),
-(159, 254, 252, 'sarah', 'sarahh@gmail.com', '7067955583', 'Female', 'greater indore', '2026-07-08 17:18:13.811', NULL, '2026-07-08 05:30:00.000', NULL, 'Cash', 'Personal Training', 513, '2003-02-12 05:30:00.000', '$2b$10$cnQm.vPQgyYu3QAAl6FcN.oZwXSYtGWpbMtodbvVfppsUm9NOVHZ.', 'Active', NULL, 0.00, 'Weight Loss', NULL, NULL),
-(160, 255, 90, 'sanni', 'sanni@gmail.com', '582548666', 'Female', 'greater indore', '2026-07-08 17:43:25.620', NULL, '2026-07-08 05:30:00.000', '2026-09-06 05:30:00.000', 'Cash', 'Personal Training', 200, '2003-02-05 05:30:00.000', '$2b$10$DccN17.PS57wQCRIMIHXAuUwhe4a4GMj61C2fl3G3Ubp1pUYFxwUm', 'Active', 22, 0.00, 'Weight Gain', NULL, NULL),
-(161, 275, 90, 'barodjia', 'barodjia@gmail.com', '456563365', 'Female', 'greater indore', '2026-07-13 13:07:51.842', 48, '2026-07-13 05:30:00.000', '2026-09-11 05:30:00.000', 'Cash', 'Personal Training', 0, '2002-05-02 05:30:00.000', '$2b$10$pBoeBCXkBtpOzAXg3PfoyOA0e5Vqw0RujdkOD.QAdsmsZMlnVkf16', 'Active', 22, 0.00, 'Weight Gain', NULL, 65),
-(162, 285, 90, 'rahshekar2', 'rajshekkar12@gmai.com', '545656656', 'Male', 'greater indore', '2026-07-14 16:38:52.203', NULL, '2026-07-14 05:30:00.000', '2026-09-12 05:30:00.000', 'Cash', 'Personal Training', 200, '2000-01-02 05:30:00.000', '$2b$10$wcBrPIxJ3L.OPiH2C4b5Yeb5Azsil/sXqdyiMOPvhgM3MVycd9b96', 'Active', 22, 0.00, 'Weight Loss', NULL, NULL);
+INSERT INTO `member` (`id`, `userId`, `adminId`, `fullName`, `email`, `phone`, `gender`, `address`, `joinDate`, `branchId`, `membershipFrom`, `membershipTo`, `paymentMode`, `interestedIn`, `amountPaid`, `dateOfBirth`, `password`, `status`, `planId`, `discount`, `goal`, `profileImage`) VALUES
+(152, 224, 90, 'demo boy', 'demoboy@gmail.com', '7894561234', 'Male', 'demo street, demo city ', '2026-06-15 14:21:59.007', NULL, '2026-06-15 05:30:00.000', '2026-08-14 05:30:00.000', 'Cash', 'Personal Training', 0, '1998-12-28 05:30:00.000', '$2b$10$xMgLjnERgs3JU4toOTxGV.W9l0L1bUE39v5/Pi7fTJ24EqhNoRDYK', 'Active', 22, 0.00, 'Weight Loss', NULL),
+(153, 225, 90, 'Demo girl', 'demogirl@gmail.com', '457869123', 'Female', 'demo street', '2026-06-15 15:11:44.762', NULL, '2026-06-15 05:30:00.000', '2026-07-15 05:30:00.000', 'Cash', 'General Trainer', 0, '1999-08-21 05:30:00.000', '$2b$10$oQ/0HcuOdFAY/.NkIooRee2HS.XGtlw7.6DI3xwi3AGeN1T6Gsdjq', 'Inactive', 39, 0.00, 'Weight Gain', NULL),
+(154, 227, 90, 'Demo Aayush', 'demoaayu@gmail.com', '1234567890', 'Male', 'demo street', '2026-06-17 13:28:37.726', NULL, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 'General Trainer', 0, '2002-01-01 05:30:00.000', '$2b$10$/qC8JqA2Yq6IxtKKEGJey.btosdudsAV5IQCuoRnb05v0nUyFXd.q', 'Inactive', 39, 0.00, 'Weight Gain', NULL),
+(155, 228, 90, 'Dummy Lead 1', 'dummy.lead1@example.com', '9000000001', 'Male', 'xyz', '2026-06-17 14:33:22.872', NULL, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 'General Trainer', 0, '2000-08-07 05:30:00.000', '$2b$10$XOroeua9HURQPyWvfQx9ROfv/x.MSxuEGc4ySVMZh0IiNSpreELbG', 'Inactive', 39, 0.00, 'Weight Loss', NULL),
+(156, 163, 90, 'Mamber', 'member@gmail.com', '1234567890', 'Male', NULL, '2025-01-01 00:00:00.000', 48, NULL, NULL, NULL, NULL, 0, '1990-01-01 00:00:00.000', '123456', 'ACTIVE', NULL, 0.00, NULL, NULL),
+(157, 230, 90, 'pia b', 'pia@gmail.com', '78945455421', 'Female', 'null', '2026-06-26 15:29:00.425', NULL, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 'Personal Training', 0, '1997-02-28 05:30:00.000', '$2b$10$XM0CxnvFkK3w5zRHZbiw6enP8NceBqljEJr1JLwP2h5whr4b7i.T.', 'Active', 22, 0.00, 'Weight Gain', NULL),
+(158, 231, 90, 'riya ', 'riya@gmail.com', '7849615654', 'Female', 'null', '2026-06-26 16:06:29.393', NULL, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 'Personal Training', 0, '0000-00-00 00:00:00.000', '$2b$10$ZQdCgNH7I//MSIeXYyDz2OvdI.wChFkj0IHFksLeDkrdSNYpV2.Ne', 'Active', 22, 0.00, 'Weight Loss', NULL),
+(159, 254, 252, 'sarah', 'sarahh@gmail.com', '7067955583', 'Female', 'greater indore', '2026-07-08 17:18:13.811', NULL, '2026-07-08 05:30:00.000', NULL, 'Cash', 'Personal Training', 513, '2003-02-12 05:30:00.000', '$2b$10$cnQm.vPQgyYu3QAAl6FcN.oZwXSYtGWpbMtodbvVfppsUm9NOVHZ.', 'Active', NULL, 0.00, 'Weight Loss', NULL),
+(160, 255, 90, 'sanni', 'sanni@gmail.com', '582548666', 'Female', 'greater indore', '2026-07-08 17:43:25.620', NULL, '2026-07-08 05:30:00.000', '2026-09-06 05:30:00.000', 'Cash', 'Personal Training', 200, '2003-02-05 05:30:00.000', '$2b$10$DccN17.PS57wQCRIMIHXAuUwhe4a4GMj61C2fl3G3Ubp1pUYFxwUm', 'Active', 22, 0.00, 'Weight Gain', NULL),
+(161, 275, 90, 'barodjia', 'barodjia@gmail.com', '456563365', 'Female', 'greater indore', '2026-07-13 13:07:51.842', 48, '2026-07-13 05:30:00.000', '2026-09-11 05:30:00.000', 'Cash', 'Personal Training', 0, '2002-05-02 05:30:00.000', '$2b$10$pBoeBCXkBtpOzAXg3PfoyOA0e5Vqw0RujdkOD.QAdsmsZMlnVkf16', 'Active', 22, 0.00, 'Weight Gain', NULL),
+(162, 285, 90, 'rahshekar2', 'rajshekkar12@gmai.com', '545656656', 'Male', 'greater indore', '2026-07-14 16:38:52.203', NULL, '2026-07-14 05:30:00.000', '2026-09-12 05:30:00.000', 'Cash', 'Personal Training', 200, '2000-01-02 05:30:00.000', '$2b$10$wcBrPIxJ3L.OPiH2C4b5Yeb5Azsil/sXqdyiMOPvhgM3MVycd9b96', 'Active', 22, 0.00, 'Weight Loss', NULL),
+(163, 286, 90, 'john', 'johne@gmail.com', 'smith', 'Male', 'john , mira , dolly', '2026-07-20 11:13:59.750', NULL, '2026-07-20 05:30:00.000', '2026-09-18 05:30:00.000', 'Cash', 'Group Classes', 25000, '2026-07-03 05:30:00.000', '$2b$10$Fb6cOPtg6ohLQHYr8AbXXe1EyEb9VCOHsQyIyxs9GO6/HT3QCeqdW', 'Active', 46, 0.00, 'Weight Gain', NULL),
+(164, 287, 90, 'xyz', 'xyz@gmail.com', '98765432345', 'Male', NULL, '2026-07-20 12:54:32.651', NULL, '2026-07-20 05:30:00.000', '2026-08-19 05:30:00.000', 'Cash', 'General Trainer', 34000, '2026-07-09 05:30:00.000', '$2b$10$JQY0afoa2hwzT3UJyGkwsuHVCCLz/pt2Y0kntJAIl6MNg5/9v9ojq', 'Active', 39, 0.00, 'Body Building', NULL);
 
 -- --------------------------------------------------------
 
@@ -660,19 +592,19 @@ INSERT INTO `member` (`id`, `userId`, `adminId`, `fullName`, `email`, `phone`, `
 --
 
 CREATE TABLE `memberattendance` (
-  `id` int NOT NULL,
-  `staffId` int DEFAULT NULL,
-  `memberId` int DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
-  `checkIn` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` int(11) NOT NULL,
+  `staffId` int(11) DEFAULT NULL,
+  `memberId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `checkIn` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `checkOut` datetime(3) DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `mode` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `shiftId` int DEFAULT NULL,
-  `deviceId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ipAddress` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `notes` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT NULL,
+  `mode` varchar(20) DEFAULT NULL,
+  `shiftId` int(11) DEFAULT NULL,
+  `deviceId` varchar(191) DEFAULT NULL,
+  `ipAddress` varchar(45) DEFAULT NULL,
   `latitude` decimal(10,8) DEFAULT NULL,
   `longitude` decimal(11,8) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -704,7 +636,8 @@ INSERT INTO `memberattendance` (`id`, `staffId`, `memberId`, `branchId`, `checkI
 (101, NULL, 102, 48, '2026-01-07 13:13:43.962', '2026-01-07 14:14:15.413', '2026-01-07 13:13:43.968', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
 (105, NULL, 101, 48, '2026-06-05 15:26:01.119', NULL, '2026-06-05 15:26:01.132', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1780653120782_wa7vjrwlh', '::1', NULL, NULL),
 (106, NULL, 152, 1, '2026-06-15 14:22:31.168', NULL, '2026-06-15 14:22:31.171', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1781513551162_t50kp7u8w', '::1', NULL, NULL),
-(107, NULL, 93, 48, '2026-06-22 17:14:59.824', NULL, '2026-06-22 17:14:59.826', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1781513551162_t50kp7u8w', '::1', NULL, NULL);
+(107, NULL, 93, 48, '2026-06-22 17:14:59.824', NULL, '2026-06-22 17:14:59.826', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1781513551162_t50kp7u8w', '::1', NULL, NULL),
+(108, NULL, 156, 48, '2026-07-20 10:43:53.359', NULL, '2026-07-20 10:43:53.369', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1784524433290_31btfbpr2', '::1', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -713,20 +646,20 @@ INSERT INTO `memberattendance` (`id`, `staffId`, `memberId`, `branchId`, `checkI
 --
 
 CREATE TABLE `memberplan` (
-  `id` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sessions` int NOT NULL,
-  `validityDays` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `sessions` int(11) NOT NULL,
+  `validityDays` int(11) NOT NULL,
   `price` double NOT NULL,
-  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'GROUP',
-  `adminId` int NOT NULL,
-  `branchId` int DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updatedAt` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  `trainerId` int DEFAULT NULL,
-  `trainerType` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `taxRate` decimal(5,2) DEFAULT '0.00'
+  `type` varchar(191) NOT NULL DEFAULT 'GROUP',
+  `adminId` int(11) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
+  `trainerId` int(11) DEFAULT NULL,
+  `trainerType` varchar(255) DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  `taxRate` decimal(5,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -754,21 +687,21 @@ INSERT INTO `memberplan` (`id`, `name`, `sessions`, `validityDays`, `price`, `ty
 --
 
 CREATE TABLE `membership_renewal_requests` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `assignmentId` int NOT NULL COMMENT 'ID from member_plan_assignment table',
-  `planId` int NOT NULL,
-  `paymentMode` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assignmentId` int(11) NOT NULL COMMENT 'ID from member_plan_assignment table',
+  `planId` int(11) NOT NULL,
+  `paymentMode` varchar(191) DEFAULT NULL,
   `amountPaid` double DEFAULT NULL,
-  `requestedBy` int NOT NULL COMMENT 'User ID who requested (admin/receptionist)',
-  `requestedByRole` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Role: admin, receptionist',
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT 'pending, approved, rejected',
-  `approvedBy` int DEFAULT NULL COMMENT 'Admin ID who approved',
+  `requestedBy` int(11) NOT NULL COMMENT 'User ID who requested (admin/receptionist)',
+  `requestedByRole` varchar(50) DEFAULT NULL COMMENT 'Role: admin, receptionist',
+  `status` varchar(191) NOT NULL DEFAULT 'pending' COMMENT 'pending, approved, rejected',
+  `approvedBy` int(11) DEFAULT NULL COMMENT 'Admin ID who approved',
   `approvedAt` datetime(3) DEFAULT NULL,
   `rejectedAt` datetime(3) DEFAULT NULL,
-  `rejectionReason` text COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+  `rejectionReason` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -778,22 +711,22 @@ CREATE TABLE `membership_renewal_requests` (
 --
 
 CREATE TABLE `member_assessments` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `assessment_date` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `engine_version` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '1.0.0',
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assessment_date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `engine_version` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '1.0.0',
   `config_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `createdBy` int NOT NULL,
-  `age_at_assessment` int NOT NULL,
-  `gender_at_assessment` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdBy` int(11) NOT NULL,
+  `age_at_assessment` int(11) NOT NULL,
+  `gender_at_assessment` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `weight_kg` decimal(5,2) NOT NULL,
   `height_cm` decimal(5,2) NOT NULL,
   `neck_cm` decimal(4,1) NOT NULL,
   `waist_cm` decimal(4,1) NOT NULL,
   `hip_cm` decimal(4,1) DEFAULT NULL,
-  `resting_hr` int NOT NULL,
-  `activity_level` enum('sedentary','light','moderate','active') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fitness_goal` enum('fat_loss','maintenance','muscle_gain') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `resting_hr` int(11) NOT NULL,
+  `activity_level` enum('sedentary','light','moderate','active') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fitness_goal` enum('fat_loss','maintenance','muscle_gain') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `bmi` decimal(5,2) NOT NULL,
   `body_fat_percentage` decimal(5,2) NOT NULL,
   `lean_body_mass` decimal(5,2) NOT NULL,
@@ -801,18 +734,18 @@ CREATE TABLE `member_assessments` (
   `waist_to_hip_ratio` decimal(4,2) DEFAULT NULL,
   `bmr` decimal(6,2) NOT NULL,
   `tdee` decimal(6,2) NOT NULL,
-  `target_calories` int NOT NULL,
-  `protein_grams` int NOT NULL,
-  `fat_grams` int NOT NULL,
-  `carb_grams` int NOT NULL,
-  `metrics_output` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `is_baseline` tinyint(1) DEFAULT '0',
+  `target_calories` int(11) NOT NULL,
+  `protein_grams` int(11) NOT NULL,
+  `fat_grams` int(11) NOT NULL,
+  `carb_grams` int(11) NOT NULL,
+  `metrics_output` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `is_baseline` tinyint(1) DEFAULT 0,
   `baseline_bf_percent` decimal(5,2) DEFAULT NULL,
   `baseline_lbm` decimal(5,2) DEFAULT NULL,
   `demographic_multiplier` decimal(3,2) DEFAULT NULL,
   `final_leaderboard_score` decimal(8,2) DEFAULT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `member_assessments`
@@ -822,7 +755,9 @@ INSERT INTO `member_assessments` (`id`, `memberId`, `assessment_date`, `engine_v
 (4, 152, '2026-06-15 09:09:33.016', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 1, 28, 'male', 80.00, 200.00, 40.0, 85.0, NULL, 80, 'moderate', 'fat_loss', 20.00, 11.47, 70.83, 93.10, NULL, 1915.00, 2968.25, 2468, 156, 69, 307, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":147,\"fat_burn_high\":158,\"cardio_low\":158,\"cardio_high\":170}}', '2026-06-15 09:09:33.016', 0, NULL, NULL, NULL, NULL),
 (5, 152, '2026-06-15 09:34:49.053', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 1, 28, 'male', 78.00, 200.00, 38.0, 75.0, NULL, 75, 'moderate', 'fat_loss', 19.50, 4.59, 74.42, 93.10, NULL, 1895.00, 2937.25, 2437, 164, 68, 293, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":145,\"fat_burn_high\":157,\"cardio_low\":157,\"cardio_high\":169}}', '2026-06-15 09:34:49.053', 0, NULL, NULL, NULL, NULL),
 (6, 153, '2026-06-15 10:14:54.185', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 1, 35, 'female', 75.00, 160.00, 35.0, 80.0, 100.0, 68, 'moderate', 'maintenance', 29.30, 32.30, 50.78, 52.38, 0.80, 1414.00, 2191.70, 2192, 112, 61, 299, '{\"bmi_risk_label\":\"Overweight\",\"cardio_zones\":{\"fat_burn_low\":138,\"fat_burn_high\":150,\"cardio_low\":150,\"cardio_high\":162}}', '2026-06-15 10:14:54.185', 0, NULL, NULL, NULL, NULL),
-(7, 161, '2026-07-13 08:44:23.609', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 272, 24, 'female', 50.00, 165.50, 44.5, 60.9, 190.0, 30, 'moderate', 'fat_loss', 18.25, 60.00, 20.00, 57.36, 0.32, 1253.38, 1942.73, 1443, 44, 40, 227, '{\"bmi_risk_label\":\"Underweight\",\"cardio_zones\":{\"fat_burn_low\":130,\"fat_burn_high\":146,\"cardio_low\":146,\"cardio_high\":163}}', '2026-07-13 08:44:23.609', 1, 60.00, 20.00, 1.12, 0.00);
+(7, 161, '2026-07-13 08:44:23.609', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 272, 24, 'female', 50.00, 165.50, 44.5, 60.9, 190.0, 30, 'moderate', 'fat_loss', 18.25, 60.00, 20.00, 57.36, 0.32, 1253.38, 1942.73, 1443, 44, 40, 227, '{\"bmi_risk_label\":\"Underweight\",\"cardio_zones\":{\"fat_burn_low\":130,\"fat_burn_high\":146,\"cardio_low\":146,\"cardio_high\":163}}', '2026-07-13 08:44:23.609', 1, 60.00, 20.00, 1.12, 0.00),
+(8, 161, '2026-07-20 05:53:50.195', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 279, 24, 'female', 56.00, 150.00, 20.0, 76.2, 126.5, 200, 'light', 'maintenance', 24.89, 60.00, 22.40, 45.50, 0.60, 1216.50, 1672.69, 1673, 49, 46, 265, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":198,\"fat_burn_high\":197,\"cardio_low\":197,\"cardio_high\":197}}', '2026-07-20 05:53:50.195', 0, 60.00, 20.00, 1.12, 97.89),
+(9, 154, '2026-07-20 06:00:30.432', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 279, 24, 'male', 55.00, 158.00, 24.0, 75.4, NULL, 75, 'moderate', 'muscle_gain', 22.03, 29.92, 38.54, 55.07, NULL, 1422.50, 2204.88, 2555, 85, 71, 394, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":148,\"fat_burn_high\":160,\"cardio_low\":160,\"cardio_high\":172}}', '2026-07-20 06:00:30.432', 1, 29.92, 38.54, 1.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -831,9 +766,9 @@ INSERT INTO `member_assessments` (`id`, `memberId`, `assessment_date`, `engine_v
 --
 
 CREATE TABLE `member_bodybuilding_logs` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `log_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `log_date` datetime DEFAULT current_timestamp(),
   `weight_kg` decimal(5,2) DEFAULT NULL,
   `chest_cm` decimal(5,2) DEFAULT NULL,
   `shoulders_cm` decimal(5,2) DEFAULT NULL,
@@ -844,10 +779,10 @@ CREATE TABLE `member_bodybuilding_logs` (
   `waist_cm` decimal(5,2) DEFAULT NULL,
   `thighs_cm` decimal(5,2) DEFAULT NULL,
   `calves_cm` decimal(5,2) DEFAULT NULL,
-  `front_photo_url` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `back_photo_url` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `side_photo_url` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_general_ci
+  `front_photo_url` varchar(255) DEFAULT NULL,
+  `back_photo_url` varchar(255) DEFAULT NULL,
+  `side_photo_url` varchar(255) DEFAULT NULL,
+  `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -857,23 +792,23 @@ CREATE TABLE `member_bodybuilding_logs` (
 --
 
 CREATE TABLE `member_health_log` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
   `height` decimal(5,2) NOT NULL,
   `weight` decimal(5,2) NOT NULL,
   `bmi` decimal(5,2) NOT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `recordedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `trainerId` int DEFAULT NULL,
+  `status` varchar(191) NOT NULL,
+  `recordedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `trainerId` int(11) DEFAULT NULL,
   `neck_cm` decimal(4,1) DEFAULT NULL,
   `waist_cm` decimal(4,1) DEFAULT NULL,
   `hip_cm` decimal(4,1) DEFAULT NULL,
-  `resting_hr` int DEFAULT NULL,
-  `activity_level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `fitness_goal` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `dietChart` text COLLATE utf8mb4_unicode_ci,
-  `bmiStatus` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `resting_hr` int(11) DEFAULT NULL,
+  `activity_level` varchar(50) DEFAULT NULL,
+  `fitness_goal` varchar(50) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `dietChart` text DEFAULT NULL,
+  `bmiStatus` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -884,7 +819,8 @@ INSERT INTO `member_health_log` (`id`, `memberId`, `height`, `weight`, `bmi`, `s
 (2, 152, 200.00, 80.00, 20.00, '', '2026-06-15 14:27:45.000', 102, NULL, NULL, NULL, NULL, NULL, NULL, '3 Golden Rules:Hydration: Drink at least 3 to 4 liters of water daily.Avoid: Junk food, deep-fried items, and sugary drinks.Supplement: Creatine (5g) and a daily multivitamin help optimize your workouts.', 'Daily Meal Chart:Meal 1 (Breakfast): 1 bowl of Oats (with milk) OR 4-5 Egg Whites (or 1 whole egg) + 2 slices of brown bread.Meal 2 (Mid-Morning): 1 banana + handful of soaked almonds/walnuts.Meal 3 (Lunch): 150g Grilled Chicken, Fish, or Paneer + 1 cup Brown Rice or Quinoa + Veggie Salad.Meal 4 (Pre/Post-Workout): 1 scoop Whey Protein + 1 Apple or Banana + Black Coffee.Meal 5 (Dinner): 150g Grilled Chicken/Fish OR Soya/Tofu + Veggies + 1 Multigrain Roti.Meal 6 (Bedtime - Optional): 1 glass of Skim Milk or 1 scoop Casein protein', 'Normal'),
 (3, 152, 200.00, 78.00, 19.50, '', '2026-06-15 15:15:23.000', 102, NULL, NULL, NULL, NULL, NULL, NULL, 'Water Intake: Din bhar me kam se kam 3-4 litres pani zaroor piyein.\n\nAvoid: Zyada tel (oil), sugar, junk food aur cold drinks se bachein.\n\nConsistency: Isko testing ke liye baseline maan kar 2-3 weeks follow karein aur apne body response ke hisab se quantities adjust karein.', '🏋️‍♂️ Daily Routine & Diet Plan\n🌅 Morning (Pre-Workout / Empty Stomach)\n\n1 glass gunguna pani + 1 baadam/akhrot (optional).\n\nPre-Workout (30 min pehle): 1-2 kele (bananas) ya 1 cup black coffee / oats.\n\n🍳 Breakfast (Post-Workout - High Protein)\n\n4-5 egg whites (boiled/omelette) + 2 brown bread slices.\n\nVeg option: 100g Paneer bhurji ya 1 bowl Oats/Dalia (boiled with skimmed milk) + 1 scoop whey protein.\n\n🍱 Lunch (Balanced Meal)\n\n150g Chicken breast ya 150g Paneer/Tofu.\n\n1 bada bowl dal ya rajma/chole.\n\n1-2 chapati (roti) ya 1 bowl brown/white rice.\n\nSath me green salad zaroor lein.\n\n☕ Evening Snack (Energy Boost)\n\n1 cup green tea ya coffee.\n\nEk mutthi bhune chane (roasted chana) ya roasted makhane / mix nuts.\n\n1-2 boiled eggs ya 50g paneer.\n\n🍽️ Dinner (Light & High Protein)\n\n150g Fish, Chicken, ya Tofu/Paneer (grilled/boiled).\n\n1 bowl mix veg stir-fry ya sabzi.\n\n1 choti roti ya thoda sa rice (dinner me carbs thoda kam rakhein).\n\n🥛 Before Bed (Recovery)\n\n1 glass gunguna doodh (milk) thodi si haldi ke sath (muscle soreness kam karne ke liye).', 'Normal'),
 (4, 153, 160.00, 76.00, 29.69, '', '2026-06-15 15:49:32.000', 102, NULL, NULL, NULL, NULL, NULL, NULL, 'Water: Drink 3–4 liters of water daily.\n\nAvoid Whites: Strictly cut out white sugar, maida (refined flour), deep-fried food, and packaged snacks.\n\nMove: Walk briskly for 30–45 minutes or complete 8,000–10,000 steps daily.\n\nSleep: Aim for 7–8 hours of sound sleep to manage stress hormones that stall weight loss.', '🌅 1. Early Morning (7:00 AM)\nDrink: 1-2 glasses of warm water (optional: add 1/2 lemon or cumin seeds).\n\nNuts: 5 soaked almonds (peeled) + 1 walnut.\n\n🍳 2. Breakfast (8:30 AM)\nVeg Option: 1 cup of Oats porridge (with low-fat milk, no sugar, add 1/2 apple) OR 1 Besan/Oats Cheela with veggies.\n\nNon-Veg Option: 3 Egg White omelet/scramble + 1 slice of whole-wheat bread.\n\nDrink: 1 cup of Green Tea or black coffee (sugar-free).\n\n🍏 3. Mid-Morning (11:00 AM)\n1 medium fruit (Apple, Papaya, Guava, or Orange) OR 1 glass of buttermilk with a pinch of cumin powder.\n\n🥗 4. Lunch (1:30 PM)\nStarter: 1 large plate of raw salad (Cucumber, Tomato, Carrot) — Eat this first to control portions.\n\nCarbs: 1 or max 2 Multigrain Rotis (no ghee) OR 1 small bowl of boiled rice.\n\nProtein: 1 big bowl of Dal OR 100g Paneer/Tofu OR 120g Grilled Chicken.\n\nSide: 1 small bowl of low-fat curd.\n\n☕ 5. Evening Snack (5:30 PM)\n1 cup of Green Tea or Milk Tea (without sugar).\n\nWith: 1 small bowl of roasted Makhana (Fox nuts) OR roasted Chana.\n\n🍲 6. Dinner (8:00 PM) — Keep it light & early\nOption A: 1 large bowl of mixed Vegetable Soup with added paneer cubes or shredded chicken.\n\nOption B: 1 bowl of Vegetable Dalia or Oats Khichdi.\n\nOption C: 100g stir-fried veggies (Broccoli, Bell peppers, Mushrooms) with Paneer/Tofu.\n\n🥛 7. Before Bed (9:30 PM)\n1 small cup of warm turmeric milk (low-fat, no sugar).', 'Overweight'),
-(5, 161, 5.90, 50.00, 15.46, '', '2026-07-13 13:14:03.000', 272, NULL, NULL, NULL, NULL, NULL, NULL, ' hiii this is ur diet chart', 'dal roti chaval egg', 'Underweight');
+(5, 161, 5.90, 50.00, 15.46, '', '2026-07-13 13:14:03.000', 272, NULL, NULL, NULL, NULL, NULL, NULL, ' hiii this is ur diet chart', 'dal roti chaval egg', 'Underweight'),
+(6, 153, 150.00, 55.00, 24.44, '', '2026-07-20 11:41:10.000', 279, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2 boiled eggs in evening \ngreen vegetables daily in morning or evening too', 'Normal');
 
 -- --------------------------------------------------------
 
@@ -893,18 +829,18 @@ INSERT INTO `member_health_log` (`id`, `memberId`, `height`, `weight`, `bmi`, `s
 --
 
 CREATE TABLE `member_plan_assignment` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `planId` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `planId` int(11) NOT NULL,
   `membershipFrom` datetime(3) NOT NULL,
   `membershipTo` datetime(3) NOT NULL,
-  `paymentMode` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `paymentMode` varchar(191) DEFAULT NULL,
   `amountPaid` double DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
-  `assignedBy` int DEFAULT NULL COMMENT 'Admin/Receptionist who assigned this plan',
-  `assignedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+  `status` varchar(191) NOT NULL DEFAULT 'Active',
+  `assignedBy` int(11) DEFAULT NULL COMMENT 'Admin/Receptionist who assigned this plan',
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -921,7 +857,12 @@ INSERT INTO `member_plan_assignment` (`id`, `memberId`, `planId`, `membershipFro
 (66, 160, 22, '2026-07-08 05:30:00.000', '2026-09-06 05:30:00.000', 'Cash', 200, 'Active', 90, '2026-07-08 17:43:25.000', '2026-07-08 17:43:25.629', '2026-07-08 17:43:25.629'),
 (67, 161, 22, '2026-07-13 05:30:00.000', '2026-09-11 05:30:00.000', 'Cash', 1500, 'Active', 90, '2026-07-13 13:07:51.000', '2026-07-13 13:07:51.853', '2026-07-13 13:07:51.853'),
 (69, 156, 24, '2026-07-14 00:00:00.000', '2027-07-14 00:00:00.000', 'CASH', 8999, 'Active', NULL, '2026-07-14 14:55:50.000', '2026-07-14 14:55:50.000', '2026-07-14 14:55:50.187'),
-(70, 162, 22, '2026-07-14 05:30:00.000', '2026-09-12 05:30:00.000', 'Cash', 200, 'Active', 90, '2026-07-14 16:38:52.000', '2026-07-14 16:38:52.211', '2026-07-14 16:38:52.211');
+(70, 162, 22, '2026-07-14 05:30:00.000', '2026-09-12 05:30:00.000', 'Cash', 200, 'Active', 90, '2026-07-14 16:38:52.000', '2026-07-14 16:38:52.211', '2026-07-14 16:38:52.211'),
+(71, 156, 46, '2026-07-20 05:30:00.000', '2026-09-18 05:30:00.000', 'Cash', 59999, 'Active', 90, '2026-07-20 10:48:04.000', '2026-07-20 10:48:04.264', '2026-07-20 10:48:04.264'),
+(72, 156, 24, '2026-07-20 05:30:00.000', '2026-10-18 05:30:00.000', 'UPI', 1200, 'Active', 90, '2026-07-20 10:48:30.000', '2026-07-20 10:48:30.218', '2026-07-20 10:48:30.218'),
+(73, 163, 46, '2026-07-20 05:30:00.000', '2026-09-18 05:30:00.000', 'Cash', 25000, 'Active', 279, '2026-07-20 11:13:59.000', '2026-07-20 11:13:59.757', '2026-07-20 11:13:59.757'),
+(74, 164, 39, '2026-07-20 05:30:00.000', '2026-08-19 05:30:00.000', 'Cash', 34000, 'Active', 90, '2026-07-20 12:54:32.000', '2026-07-20 12:54:32.660', '2026-07-20 12:54:32.660'),
+(75, 154, 24, '2026-07-20 05:30:00.000', '2026-10-18 05:30:00.000', 'Card', 1200, 'Active', 90, '2026-07-20 13:15:53.000', '2026-07-20 13:15:53.460', '2026-07-20 13:15:53.460');
 
 -- --------------------------------------------------------
 
@@ -930,22 +871,21 @@ INSERT INTO `member_plan_assignment` (`id`, `memberId`, `planId`, `membershipFro
 --
 
 CREATE TABLE `message_templates` (
-  `id` int NOT NULL,
-  `templateType` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `messageBody` text COLLATE utf8mb4_general_ci NOT NULL,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `id` int(11) NOT NULL,
+  `templateType` varchar(100) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `messageBody` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `message_templates`
 --
 
-INSERT INTO `message_templates` (`id`, `templateType`, `subject`, `messageBody`, `updatedAt`) VALUES
-(1, 'WELCOME_TRIAL', 'Welcome to Your Gym Software Trial!', 'Hi {Name}, your {Days}-day free trial has started. Enjoy!', '2026-06-20 14:09:27'),
-(2, 'EXPIRY_REMINDER_DAILY', 'Your Trial is Expiring Soon', 'Hi {Name}, your trial expires on {Date}. Please purchase a subscription to keep access.', '2026-06-20 14:09:27'),
-(3, 'TRIAL_EXPIRED_FINAL', 'Your Trial Has Expired', 'Hi {Name}, your trial has expired. Your account is now inactive. Please upgrade.', '2026-06-20 14:09:27'),
-(4, 'SUBSCRIPTION_ACTIVATED', 'Welcome Aboard!', 'Hi {Name}, thank you for purchasing a subscription. Your account is fully active!', '2026-06-20 14:09:27');
+INSERT INTO `message_templates` (`id`, `templateType`, `subject`, `messageBody`) VALUES
+(1, 'WELCOME_TRIAL', 'Welcome to Your Gym Software Trial!', 'Hi {Name}, your {Days}-day free trial has started. Enjoy!'),
+(2, 'EXPIRY_REMINDER_DAILY', 'Your Trial is Expiring Soon', 'Hi {Name}, your trial expires on {Date}. Please purchase a subscription to keep access.'),
+(3, 'TRIAL_EXPIRED_FINAL', 'Your Trial Has Expired', 'Hi {Name}, your trial has expired. Your account is now inactive. Please upgrade.'),
+(4, 'SUBSCRIPTION_ACTIVATED', 'Welcome Aboard!', 'Hi {Name}, thank you for purchasing a subscription. Your account is fully active!');
 
 -- --------------------------------------------------------
 
@@ -954,13 +894,13 @@ INSERT INTO `message_templates` (`id`, `templateType`, `subject`, `messageBody`,
 --
 
 CREATE TABLE `notificationlog` (
-  `id` int NOT NULL,
-  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `to` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `memberId` int DEFAULT NULL
+  `id` int(11) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `to` varchar(191) NOT NULL,
+  `message` varchar(191) NOT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'PENDING',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `memberId` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -1031,35 +971,35 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (62, 'IN-APP', '233', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rajss@gmail.com\nTemporary Password: Gym@443', 'UNREAD', '2026-07-03 18:25:09.821', NULL),
 (63, 'EMAIL', 'onboard_1783144295371@test.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144295371@test.com\nTemporary Pa', 'FAILED', '2026-07-04 11:21:35.884', NULL),
 (64, 'IN-APP', '234', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144295371@test.com\nTemporary Pa', 'UNREAD', '2026-07-04 11:21:35.893', NULL),
-(65, 'EMAIL', 'onboard_1783144352701@test.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144352701@test.com\nTemporary Password: AdminCustomPassword@2026\n\nPlease log in and change your password immediately under settings.', 'FAILED', '2026-07-04 11:22:33.357', NULL),
-(66, 'IN-APP', '235', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144352701@test.com\nTemporary Password: AdminCustomPassword@2026\n\nPlease log in and change your password immediately under settings.', 'UNREAD', '2026-07-04 11:22:33.370', NULL),
-(68, 'IN-APP', '236', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144416151@test.com\nTemporary Password: AdminCustomPassword@2026\n\nPlease log in and change your password immediately under settings.', 'UNREAD', '2026-07-04 11:23:36.498', NULL),
-(69, 'EMAIL', 'fitgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitgym@gmail.com\nTemporary Password: 123456\n\nPlease log in and change your password immediately under settings.', 'FAILED', '2026-07-04 11:28:16.106', NULL),
-(70, 'IN-APP', '237', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitgym@gmail.com\nTemporary Password: 123456\n\nPlease log in and change your password immediately under settings.', 'UNREAD', '2026-07-04 11:28:16.109', NULL),
-(71, 'EMAIL', 'fitnessgym@gmil.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitnessgym@gmil.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-06 12:08:49.089', NULL),
-(72, 'IN-APP', '238', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitnessgym@gmil.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-06 12:08:49.094', NULL),
-(73, 'EMAIL', 'glowupgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: glowupgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-06 12:36:16.952', NULL),
-(74, 'IN-APP', '239', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: glowupgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-06 12:36:16.980', NULL),
+(65, 'EMAIL', 'onboard_1783144352701@test.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144352701@test.com\nTemporary Pa', 'FAILED', '2026-07-04 11:22:33.357', NULL),
+(66, 'IN-APP', '235', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144352701@test.com\nTemporary Pa', 'UNREAD', '2026-07-04 11:22:33.370', NULL),
+(68, 'IN-APP', '236', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144416151@test.com\nTemporary Pa', 'UNREAD', '2026-07-04 11:23:36.498', NULL),
+(69, 'EMAIL', 'fitgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitgym@gmail.com\nTemporary Password: 123456', 'FAILED', '2026-07-04 11:28:16.106', NULL),
+(70, 'IN-APP', '237', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitgym@gmail.com\nTemporary Password: 123456', 'UNREAD', '2026-07-04 11:28:16.109', NULL),
+(71, 'EMAIL', 'fitnessgym@gmil.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitnessgym@gmil.com\nPassword', 'FAILED', '2026-07-06 12:08:49.089', NULL),
+(72, 'IN-APP', '238', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitnessgym@gmil.com\nPassword', 'READ', '2026-07-06 12:08:49.094', NULL),
+(73, 'EMAIL', 'glowupgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: glowupgym@gmail.com\nPassword', 'FAILED', '2026-07-06 12:36:16.952', NULL),
+(74, 'IN-APP', '239', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: glowupgym@gmail.com\nPassword', 'READ', '2026-07-06 12:36:16.980', NULL),
 (75, 'EMAIL', 'superadmin@gmail.com', '🔔 New Free Trial Registration Alert!\nGym Name: glowupgym\nEmail: glowupgym@gmail.com\nPlan: Basic\nBilling Duration: Yearly\nStart Date: 06/07/2026', 'FAILED', '2026-07-06 13:13:33.654', NULL),
 (76, 'IN-APP', '67', '🔔 New Free Trial Registration Alert!\nGym Name: glowupgym\nEmail: glowupgym@gmail.com\nPlan: Basic\nBilling Duration: Yearly\nStart Date: 06/07/2026', 'READ', '2026-07-06 13:13:33.661', NULL),
 (77, 'EMAIL', 'glowupgym@gmail.com', '🎉 Subscription Approved!\nYour request to renew/upgrade your gym plan to \"Basic\" has been approved.\n\nNew Expiry Date: 14/07/2027\nThank you for staying with us!', 'FAILED', '2026-07-06 13:14:25.889', NULL),
 (78, 'IN-APP', '239', '🎉 Subscription Approved!\nYour request to renew/upgrade your gym plan to \"Basic\" has been approved.\n\nNew Expiry Date: 14/07/2027\nThank you for staying with us!', 'READ', '2026-07-06 13:14:25.903', NULL),
-(79, 'EMAIL', 'piabgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: piabgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-06 16:09:34.885', NULL),
-(80, 'IN-APP', '240', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: piabgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-06 16:09:34.898', NULL),
-(81, 'EMAIL', '7daysfreetrialgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7daysfreetrialgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-07 16:22:58.437', NULL),
-(82, 'IN-APP', '244', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7daysfreetrialgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-07 16:22:58.449', NULL),
-(83, 'EMAIL', '7dayssecondfree@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7dayssecondfree@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-07 16:51:03.468', NULL),
-(84, 'IN-APP', '245', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7dayssecondfree@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-07 16:51:03.479', NULL),
-(85, 'EMAIL', 'aaagym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: aaagym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-07 17:17:19.079', NULL),
-(86, 'IN-APP', '246', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: aaagym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-07 17:17:19.105', NULL),
+(79, 'EMAIL', 'piabgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: piabgym@gmail.com\nPassword: ', 'FAILED', '2026-07-06 16:09:34.885', NULL),
+(80, 'IN-APP', '240', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: piabgym@gmail.com\nPassword: ', 'READ', '2026-07-06 16:09:34.898', NULL),
+(81, 'EMAIL', '7daysfreetrialgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7daysfreetrialgym@gmail.com\n', 'FAILED', '2026-07-07 16:22:58.437', NULL),
+(82, 'IN-APP', '244', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7daysfreetrialgym@gmail.com\n', 'UNREAD', '2026-07-07 16:22:58.449', NULL),
+(83, 'EMAIL', '7dayssecondfree@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7dayssecondfree@gmail.com\nPa', 'FAILED', '2026-07-07 16:51:03.468', NULL),
+(84, 'IN-APP', '245', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7dayssecondfree@gmail.com\nPa', 'UNREAD', '2026-07-07 16:51:03.479', NULL),
+(85, 'EMAIL', 'aaagym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: aaagym@gmail.com\nPassword: 1', 'FAILED', '2026-07-07 17:17:19.079', NULL),
+(86, 'IN-APP', '246', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: aaagym@gmail.com\nPassword: 1', 'READ', '2026-07-07 17:17:19.105', NULL),
 (87, 'EMAIL', 'superadmin@gmail.com', '🔔 New Free Trial Registration Alert!\nGym Name: zzgym\nEmail: zzgym@gmail.com\nPlan: Pro\nBilling Duration: Yearly\nStart Date: 11/07/2026', 'FAILED', '2026-07-07 18:23:16.089', NULL),
 (88, 'IN-APP', '67', '🔔 New Free Trial Registration Alert!\nGym Name: zzgym\nEmail: zzgym@gmail.com\nPlan: Pro\nBilling Duration: Yearly\nStart Date: 11/07/2026', 'READ', '2026-07-07 18:23:16.099', NULL),
-(89, 'EMAIL', 'zzgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: zzgym@gmail.com\nTemporary Password: 123456\n\nPlease log in and change your password immediately under settings.', 'FAILED', '2026-07-07 18:33:04.603', NULL),
-(90, 'IN-APP', '247', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: zzgym@gmail.com\nTemporary Password: 123456\n\nPlease log in and change your password immediately under settings.', 'UNREAD', '2026-07-07 18:33:04.613', NULL),
-(91, 'EMAIL', 'plangym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plangym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-08 11:01:57.284', NULL),
-(92, 'IN-APP', '248', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plangym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-08 11:01:57.305', NULL),
-(93, 'EMAIL', 'planbgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planbgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-08 11:11:47.530', NULL),
-(94, 'IN-APP', '249', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planbgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-08 11:11:47.536', NULL),
+(89, 'EMAIL', 'zzgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: zzgym@gmail.com\nTemporary Password: 123456\n', 'FAILED', '2026-07-07 18:33:04.603', NULL),
+(90, 'IN-APP', '247', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: zzgym@gmail.com\nTemporary Password: 123456\n', 'UNREAD', '2026-07-07 18:33:04.613', NULL),
+(91, 'EMAIL', 'plangym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plangym@gmail.com', 'FAILED', '2026-07-08 11:01:57.284', NULL),
+(92, 'IN-APP', '248', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plangym@gmail.com', 'UNREAD', '2026-07-08 11:01:57.305', NULL),
+(93, 'EMAIL', 'planbgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planbgym@gmail.co', 'FAILED', '2026-07-08 11:11:47.530', NULL),
+(94, 'IN-APP', '249', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planbgym@gmail.co', 'UNREAD', '2026-07-08 11:11:47.536', NULL),
 (95, 'EMAIL', 'john@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.937', NULL),
 (96, 'EMAIL', 'admin@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.939', NULL),
 (97, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.943', NULL),
@@ -1077,12 +1017,12 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (109, 'IN-APP', '246', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.073', NULL),
 (110, 'IN-APP', '247', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.076', NULL),
 (111, 'IN-APP', '90', 'hello every one we want to announce somethimg\n', 'READ', '2026-07-08 11:14:07.079', NULL),
-(112, 'EMAIL', 'plancgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plancgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-08 11:27:21.261', NULL),
-(113, 'IN-APP', '250', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plancgym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-08 11:27:21.269', NULL),
-(114, 'EMAIL', 'planaagym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planaagym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-08 11:40:08.160', NULL),
-(115, 'IN-APP', '251', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planaagym@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-08 11:40:08.171', NULL),
-(116, 'EMAIL', 'planaagym@gmail.com', 'Hi palnaagym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0010\n\nRegards,\nSpeed Fitness Team', 'FAILED', '2026-07-08 11:40:08.187', NULL),
-(117, 'IN-APP', '251', 'Hi palnaagym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0010\n\nRegards,\nSpeed Fitness Team', 'UNREAD', '2026-07-08 11:40:08.194', NULL),
+(112, 'EMAIL', 'plancgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plancgym@gmail.co', 'FAILED', '2026-07-08 11:27:21.261', NULL),
+(113, 'IN-APP', '250', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plancgym@gmail.co', 'UNREAD', '2026-07-08 11:27:21.269', NULL),
+(114, 'EMAIL', 'planaagym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planaagym@gmail.c', 'FAILED', '2026-07-08 11:40:08.160', NULL),
+(115, 'IN-APP', '251', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planaagym@gmail.c', 'UNREAD', '2026-07-08 11:40:08.171', NULL),
+(116, 'EMAIL', 'planaagym@gmail.com', 'Hi palnaagym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0010\n\nRegards,\nSpeed Fitness', 'FAILED', '2026-07-08 11:40:08.187', NULL),
+(117, 'IN-APP', '251', 'Hi palnaagym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0010\n\nRegards,\nSpeed Fitness', 'UNREAD', '2026-07-08 11:40:08.194', NULL),
 (118, 'EMAIL', 'admin@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.600', NULL),
 (119, 'EMAIL', '7daysfreetrialgym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.603', NULL),
 (120, 'EMAIL', 'john@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.606', NULL),
@@ -1167,10 +1107,10 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (199, 'IN-APP', '90', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'READ', '2026-07-08 13:05:21.713', NULL),
 (200, 'IN-APP', '251', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.731', NULL),
 (201, 'IN-APP', '250', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.734', NULL),
-(202, 'EMAIL', 'Chikkuyadav125@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: Chikkuyadav125@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-08 15:51:22.550', NULL),
-(203, 'IN-APP', '252', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: Chikkuyadav125@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-08 15:51:22.563', NULL),
-(204, 'EMAIL', 'Chikkuyadav125@gmail.com', 'Hi chikkugym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0011\n\nRegards,\nSpeed Fitness Team', 'FAILED', '2026-07-08 15:51:22.578', NULL),
-(205, 'IN-APP', '252', 'Hi chikkugym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0011\n\nRegards,\nSpeed Fitness Team', 'READ', '2026-07-08 15:51:22.590', NULL),
+(202, 'EMAIL', 'Chikkuyadav125@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: Chikkuyadav125@gm', 'FAILED', '2026-07-08 15:51:22.550', NULL),
+(203, 'IN-APP', '252', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: Chikkuyadav125@gm', 'READ', '2026-07-08 15:51:22.563', NULL),
+(204, 'EMAIL', 'Chikkuyadav125@gmail.com', 'Hi chikkugym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0011\n\nRegards,\nSpeed Fitness', 'FAILED', '2026-07-08 15:51:22.578', NULL),
+(205, 'IN-APP', '252', 'Hi chikkugym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0011\n\nRegards,\nSpeed Fitness', 'READ', '2026-07-08 15:51:22.590', NULL),
 (206, 'EMAIL', 'plancgym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.839', NULL),
 (207, 'IN-APP', '250', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:40.848', NULL),
 (208, 'EMAIL', 'admin@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.892', NULL),
@@ -1194,12 +1134,11 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (226, 'IN-APP', '249', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.262', NULL),
 (227, 'EMAIL', 'Chikkuyadav125@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.298', NULL),
 (228, 'IN-APP', '252', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'READ', '2026-07-08 15:57:41.303', NULL),
-(229, 'EMAIL', 'yadavbhakti287@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: yadavbhakti287@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'SENT', '2026-07-08 17:11:51.098', NULL),
-(230, 'IN-APP', '253', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: yadavbhakti287@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-08 17:11:51.114', NULL),
-(231, 'EMAIL', 'yadavbhakti287@gmail.com', 'Hi bhaktigym, \n\nThank you for purchasing the Basic plan. We have received your payment of Rs.8999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0012\n\nRegards,\nSpeed Fitness Team', 'SENT', '2026-07-08 17:11:52.445', NULL),
-(232, 'IN-APP', '253', 'Hi bhaktigym, \n\nThank you for purchasing the Basic plan. We have received your payment of Rs.8999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0012\n\nRegards,\nSpeed Fitness Team', 'UNREAD', '2026-07-08 17:11:52.451', NULL),
-(233, 'EMAIL', 'sarahh@gmail.com', 'Hi sarah,\n\nThank you for your payment of Rs.513 for the Gym Plan plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:18:16.169', 159);
-INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
+(229, 'EMAIL', 'yadavbhakti287@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: yadavbhakti287@gm', 'SENT', '2026-07-08 17:11:51.098', NULL),
+(230, 'IN-APP', '253', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: yadavbhakti287@gm', 'UNREAD', '2026-07-08 17:11:51.114', NULL),
+(231, 'EMAIL', 'yadavbhakti287@gmail.com', 'Hi bhaktigym, \n\nThank you for purchasing the Basic plan. We have received your payment of Rs.8999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0012\n\nRegards,\nSpeed Fitnes', 'SENT', '2026-07-08 17:11:52.445', NULL),
+(232, 'IN-APP', '253', 'Hi bhaktigym, \n\nThank you for purchasing the Basic plan. We have received your payment of Rs.8999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0012\n\nRegards,\nSpeed Fitnes', 'UNREAD', '2026-07-08 17:11:52.451', NULL),
+(233, 'EMAIL', 'sarahh@gmail.com', 'Hi sarah,\n\nThank you for your payment of Rs.513 for the Gym Plan plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:18:16.169', 159),
 (234, 'EMAIL', 'sarahh@gmail.com', 'Hi sarah,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sarahh@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:18:16.232', 159),
 (235, 'WHATSAPP', '7067955583', 'Hi sarah,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sarahh@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:18:17.098', 159),
 (236, 'WHATSAPP', '7067955583', 'Hi sarah,\n\nThank you for your payment of Rs.513 for the Gym Plan plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:18:17.099', 159),
@@ -1207,7 +1146,8 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (238, 'IN-APP', '254', 'Hi sarah,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sarahh@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:18:17.100', 159),
 (239, 'EMAIL', 'sanni@gmail.com', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:43:27.528', 160),
 (240, 'EMAIL', 'sanni@gmail.com', 'Hi sanni,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:43:27.842', 160),
-(241, 'WHATSAPP', '582548666', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:43:27.966', 160),
+(241, 'WHATSAPP', '582548666', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:43:27.966', 160);
+INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
 (242, 'IN-APP', '255', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:43:27.969', 160),
 (243, 'WHATSAPP', '582548666', 'Hi sanni,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:43:28.261', 160),
 (244, 'IN-APP', '255', 'Hi sanni,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:43:28.265', 160),
@@ -1227,20 +1167,20 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (258, 'IN-APP', '154', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.569', NULL),
 (259, 'EMAIL', 'member@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.597', NULL),
 (260, 'IN-APP', '156', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.600', NULL),
-(261, 'EMAIL', 'admin@gmail.com', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitness Team', 'SENT', '2026-07-08 23:32:49.647', NULL),
-(262, 'WHATSAPP', '9876543210', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitness Team', 'FAILED', '2026-07-08 23:32:50.926', NULL),
-(263, 'IN-APP', '90', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitness Team', 'READ', '2026-07-08 23:32:50.930', NULL),
+(261, 'EMAIL', 'admin@gmail.com', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitn', 'SENT', '2026-07-08 23:32:49.647', NULL),
+(262, 'WHATSAPP', '9876543210', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitn', 'FAILED', '2026-07-08 23:32:50.926', NULL),
+(263, 'IN-APP', '90', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitn', 'READ', '2026-07-08 23:32:50.930', NULL),
 (264, 'IN-APP', '90', 'Checkup Due: 15 days have passed since demo boy\'s last BMI checkup.', 'READ', '2026-07-09 00:00:00.165', 152),
 (265, 'IN-APP', '90', 'Checkup Due: 15 days have passed since Demo girl\'s last BMI checkup.', 'READ', '2026-07-09 00:00:00.182', 153),
 (266, 'EMAIL', 'Chikkuyadav125@gmail.com', 'Hi chikkugym, your trial expires on 9/7/2026. Please purchase a subscription to keep access.', 'SENT', '2026-07-09 00:12:23.239', NULL),
-(267, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'SENT', '2026-07-09 11:25:34.769', NULL),
-(268, 'IN-APP', '256', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-09 11:25:34.778', NULL),
-(269, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'SENT', '2026-07-09 11:30:48.643', NULL),
-(270, 'IN-APP', '259', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-09 11:30:48.648', NULL),
-(271, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'SENT', '2026-07-09 11:33:53.562', NULL),
-(272, 'IN-APP', '260', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-09 11:33:53.567', NULL),
-(273, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'Hi bhgaygym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260709-0019\n\nRegards,\nSpeed Fitness Team', 'SENT', '2026-07-09 11:42:40.175', NULL),
-(274, 'IN-APP', '260', 'Hi bhgaygym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260709-0019\n\nRegards,\nSpeed Fitness Team', 'READ', '2026-07-09 11:42:40.180', NULL),
+(267, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'SENT', '2026-07-09 11:25:34.769', NULL),
+(268, 'IN-APP', '256', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'UNREAD', '2026-07-09 11:25:34.778', NULL),
+(269, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'SENT', '2026-07-09 11:30:48.643', NULL),
+(270, 'IN-APP', '259', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'UNREAD', '2026-07-09 11:30:48.648', NULL),
+(271, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'SENT', '2026-07-09 11:33:53.562', NULL),
+(272, 'IN-APP', '260', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'READ', '2026-07-09 11:33:53.567', NULL),
+(273, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'Hi bhgaygym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260709-0019\n\nRegards,\nSpeed Fitne', 'SENT', '2026-07-09 11:42:40.175', NULL),
+(274, 'IN-APP', '260', 'Hi bhgaygym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260709-0019\n\nRegards,\nSpeed Fitne', 'READ', '2026-07-09 11:42:40.180', NULL),
 (275, 'EMAIL', 'barodjia@gmail.com', 'Hi barodjia,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: barodjia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-13 13:07:53.712', 161),
 (276, 'WHATSAPP', '456563365', 'Hi barodjia,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: barodjia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-13 13:07:54.670', 161),
 (277, 'IN-APP', '275', 'Hi barodjia,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: barodjia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'READ', '2026-07-13 13:07:54.673', 161),
@@ -1281,10 +1221,10 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (312, 'IN-APP', '228', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.273', NULL),
 (313, 'EMAIL', 'demoboy@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.285', NULL),
 (314, 'IN-APP', '224', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.288', NULL),
-(315, 'EMAIL', 'barodpia280897@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: barodpia280897@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'FAILED', '2026-07-14 11:13:49.571', NULL),
-(316, 'IN-APP', '276', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: barodpia280897@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-14 11:13:49.595', NULL),
-(317, 'EMAIL', 'barodpia280897@gmail.com', 'Hi piiigym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/purchases/invoice/pdf/21\nTransaction ID: PAY-20260714-0021\n\nRegards,\nSpeed Fitness Team', 'SENT', '2026-07-14 12:16:43.741', NULL),
-(318, 'IN-APP', '276', 'Hi piiigym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/purchases/invoice/pdf/21\nTransaction ID: PAY-20260714-0021\n\nRegards,\nSpeed Fitness Team', 'UNREAD', '2026-07-14 12:16:43.758', NULL),
+(315, 'EMAIL', 'barodpia280897@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: barodpia280897@gmail.com\nPas', 'FAILED', '2026-07-14 11:13:49.571', NULL),
+(316, 'IN-APP', '276', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: barodpia280897@gmail.com\nPas', 'UNREAD', '2026-07-14 11:13:49.595', NULL),
+(317, 'EMAIL', 'barodpia280897@gmail.com', 'Hi piiigym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/p', 'SENT', '2026-07-14 12:16:43.741', NULL),
+(318, 'IN-APP', '276', 'Hi piiigym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/p', 'UNREAD', '2026-07-14 12:16:43.758', NULL),
 (319, 'EMAIL', 'plangym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.163', NULL),
 (320, 'IN-APP', '248', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.173', NULL),
 (321, 'EMAIL', 'aaagym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.260', NULL),
@@ -1421,14 +1361,14 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (452, 'EMAIL', 'admin@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:41.309', NULL),
 (453, 'WHATSAPP', '9876543210', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'FAILED', '2026-07-14 12:58:42.044', NULL),
 (454, 'IN-APP', '90', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'READ', '2026-07-14 12:58:42.065', NULL),
-(455, 'EMAIL', 'naliniparas228@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: naliniparas228@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'SENT', '2026-07-14 15:01:48.759', NULL),
-(456, 'IN-APP', '282', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: naliniparas228@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'UNREAD', '2026-07-14 15:01:48.769', NULL),
-(457, 'EMAIL', 'naliniparas228@gmail.com', 'Hi nalinigym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.2850.\n\nYour Gym Owner account is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/purchases/invoice/pdf/22\nTransaction ID: PAY-20260714-0022\n\nRegards,\nSpeed Fitness Team', 'SENT', '2026-07-14 15:01:50.784', NULL),
-(458, 'IN-APP', '282', 'Hi nalinigym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.2850.\n\nYour Gym Owner account is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/purchases/invoice/pdf/22\nTransaction ID: PAY-20260714-0022\n\nRegards,\nSpeed Fitness Team', 'UNREAD', '2026-07-14 15:01:50.790', NULL),
-(459, 'EMAIL', 'rsld2012@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rsld2012@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'SENT', '2026-07-14 15:45:45.992', NULL),
-(460, 'IN-APP', '283', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rsld2012@gmail.com\nPassword: 123456\n\nPlease log in and begin managing your gym!', 'READ', '2026-07-14 15:45:46.001', NULL),
-(461, 'EMAIL', 'rsld2012@gmail.com', 'Hi raj_shekar sir, \n\nThank you for upgrading to the Pro plan. We have received your payment of Rs.10199.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/purchases/invoice/pdf/24\nTransaction ID: PAY-20260714-0024\n\nRegards,\nSpeed Fitness Team', 'SENT', '2026-07-14 15:53:42.360', NULL),
-(462, 'IN-APP', '283', 'Hi raj_shekar sir, \n\nThank you for upgrading to the Pro plan. We have received your payment of Rs.10199.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/purchases/invoice/pdf/24\nTransaction ID: PAY-20260714-0024\n\nRegards,\nSpeed Fitness Team', 'UNREAD', '2026-07-14 15:53:42.371', NULL),
+(455, 'EMAIL', 'naliniparas228@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: naliniparas228@gm', 'SENT', '2026-07-14 15:01:48.759', NULL),
+(456, 'IN-APP', '282', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: naliniparas228@gm', 'UNREAD', '2026-07-14 15:01:48.769', NULL),
+(457, 'EMAIL', 'naliniparas228@gmail.com', 'Hi nalinigym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.2850.\n\nYour Gym Owner account is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/pur', 'SENT', '2026-07-14 15:01:50.784', NULL),
+(458, 'IN-APP', '282', 'Hi nalinigym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.2850.\n\nYour Gym Owner account is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/pur', 'UNREAD', '2026-07-14 15:01:50.790', NULL),
+(459, 'EMAIL', 'rsld2012@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rsld2012@gmail.com\nPassword:', 'SENT', '2026-07-14 15:45:45.992', NULL),
+(460, 'IN-APP', '283', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rsld2012@gmail.com\nPassword:', 'READ', '2026-07-14 15:45:46.001', NULL),
+(461, 'EMAIL', 'rsld2012@gmail.com', 'Hi raj_shekar sir, \n\nThank you for upgrading to the Pro plan. We have received your payment of Rs.10199.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api', 'SENT', '2026-07-14 15:53:42.360', NULL),
+(462, 'IN-APP', '283', 'Hi raj_shekar sir, \n\nThank you for upgrading to the Pro plan. We have received your payment of Rs.10199.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api', 'UNREAD', '2026-07-14 15:53:42.371', NULL),
 (463, 'EMAIL', 'planbgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:30.901', NULL),
 (464, 'IN-APP', '249', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:30.915', NULL),
 (465, 'EMAIL', 'admin@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:30.961', NULL),
@@ -1437,8 +1377,7 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (468, 'EMAIL', 'john@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.051', NULL),
 (469, 'EMAIL', 'barodpia280897@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.057', NULL),
 (470, 'IN-APP', '282', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.074', NULL),
-(471, 'IN-APP', '247', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.077', NULL);
-INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
+(471, 'IN-APP', '247', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.077', NULL),
 (472, 'IN-APP', '89', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.081', NULL),
 (473, 'IN-APP', '276', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.084', NULL),
 (474, 'EMAIL', 'aaagym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.088', NULL),
@@ -1453,7 +1392,8 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (483, 'IN-APP', '245', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.491', NULL),
 (484, 'IN-APP', '90', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'READ', '2026-07-14 16:05:31.496', NULL),
 (485, 'IN-APP', '283', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.505', NULL),
-(486, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.507', NULL),
+(486, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.507', NULL);
+INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
 (487, 'IN-APP', '244', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.513', NULL),
 (488, 'EMAIL', 'plancgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.541', NULL),
 (489, 'IN-APP', '250', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.552', NULL),
@@ -1535,7 +1475,22 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 (565, 'EMAIL', 'rajshekkar12@gmai.com', 'Hi rahshekar2, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:52.328', 162),
 (566, 'IN_APP', 'rajshekkar12@gmai.com', 'Hi rahshekar2, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:54.008', 162),
 (567, 'IN-APP', '90', 'Checkup Due: 15 days have passed since demo boy\'s last BMI checkup.', 'UNREAD', '2026-07-17 00:00:00.058', 152),
-(568, 'IN-APP', '90', 'Checkup Due: 15 days have passed since Demo girl\'s last BMI checkup.', 'UNREAD', '2026-07-17 00:00:00.096', 153);
+(568, 'IN-APP', '90', 'Checkup Due: 15 days have passed since Demo girl\'s last BMI checkup.', 'UNREAD', '2026-07-17 00:00:00.096', 153),
+(569, 'EMAIL', 'johne@gmail.com', 'Hi john,\n\nThank you for your payment of Rs.25000 for the Diwali Bonus plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 11:14:00.052', 163),
+(570, 'EMAIL', 'johne@gmail.com', 'Hi john,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: johne@gmail.com\nPassword: 123456789\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 11:14:00.061', 163),
+(571, 'IN-APP', '286', 'Hi john,\n\nThank you for your payment of Rs.25000 for the Diwali Bonus plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 11:14:00.072', 163),
+(572, 'IN-APP', '286', 'Hi john,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: johne@gmail.com\nPassword: 123456789\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 11:14:00.077', 163),
+(573, 'EMAIL', 'barodjia@gmail.com', 'Hi barodjia,\n\nYour new fitness assessment is ready!\n\nMetrics:\nBMI: 24.89\nBody Fat: 60%\nLean Body Mass: 22.4 kg\nTarget Calories: 1673 kcal\n\nKeep up the great work!', 'FAILED', '2026-07-20 11:23:50.243', NULL),
+(574, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush,\n\nYour new fitness assessment is ready!\n\nMetrics:\nBMI: 22.03\nBody Fat: 29.92%\nLean Body Mass: 38.54 kg\nTarget Calories: 2555 kcal\n\nKeep up the great work!', 'FAILED', '2026-07-20 11:30:30.473', NULL),
+(575, 'EMAIL', 'xyz@gmail.com', 'Hi xyz,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: xyz@gmail.com\nPassword: 1234456798\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 12:54:32.803', 164),
+(576, 'EMAIL', 'xyz@gmail.com', 'Hi xyz,\n\nThank you for your payment of Rs.34000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 12:54:32.804', 164),
+(577, 'WHATSAPP', '98765432345', 'Hi xyz,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: xyz@gmail.com\nPassword: 1234456798\n\nRegards,\nGym Management', 'SENT', '2026-07-20 12:54:32.827', 164),
+(578, 'WHATSAPP', '98765432345', 'Hi xyz,\n\nThank you for your payment of Rs.34000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-20 12:54:32.831', 164),
+(579, 'IN-APP', '287', 'Hi xyz,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: xyz@gmail.com\nPassword: 1234456798\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 12:54:32.832', 164),
+(580, 'IN-APP', '287', 'Hi xyz,\n\nThank you for your payment of Rs.34000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 12:54:32.834', 164),
+(581, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush, \n\nThank you for your payment of Rs.1200 for the Basic plan. \n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 13:15:53.497', 154),
+(582, 'WHATSAPP', '1234567890', 'Hi Demo Aayush, \n\nThank you for your payment of Rs.1200 for the Basic plan. \n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-20 13:15:53.524', 154),
+(583, 'IN-APP', '227', 'Hi Demo Aayush, \n\nThank you for your payment of Rs.1200 for the Basic plan. \n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 13:15:53.529', 154);
 
 -- --------------------------------------------------------
 
@@ -1544,33 +1499,22 @@ INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `created
 --
 
 CREATE TABLE `payment` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `planId` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `planId` int(11) NOT NULL,
   `amount` double NOT NULL,
-  `paymentDate` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `invoiceNo` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `paymentDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `invoiceNo` varchar(191) NOT NULL,
   `gstAmount` double DEFAULT NULL,
-  `gstPercent` double DEFAULT NULL,
-  `collectedByName` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `collectedByRole` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `gstPercent` double DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `personal_notification`
+-- Dumping data for table `payment`
 --
 
-CREATE TABLE `personal_notification` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `category` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `message` text COLLATE utf8mb4_general_ci NOT NULL,
-  `sentBy` int DEFAULT NULL,
-  `isRead` tinyint(1) DEFAULT '0',
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `payment` (`id`, `memberId`, `planId`, `amount`, `paymentDate`, `invoiceNo`, `gstAmount`, `gstPercent`) VALUES
+(4, 154, 24, 1200, '2026-07-20 13:15:53.404', 'INV-1784533553403-334', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1579,18 +1523,18 @@ CREATE TABLE `personal_notification` (
 --
 
 CREATE TABLE `plan` (
-  `id` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `duration` enum('Monthly','Yearly') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `duration` enum('Monthly','Yearly','7 Days') NOT NULL,
   `price` double NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `category` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
-  `branchId` int DEFAULT NULL,
-  `sessions` int NOT NULL DEFAULT '0',
-  `validityDays` int NOT NULL DEFAULT '0',
-  `taxRate` decimal(5,2) DEFAULT '0.00'
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `category` varchar(191) DEFAULT NULL,
+  `description` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'ACTIVE',
+  `branchId` int(11) DEFAULT NULL,
+  `sessions` int(11) NOT NULL DEFAULT 0,
+  `validityDays` int(11) NOT NULL DEFAULT 0,
+  `taxRate` decimal(5,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -1610,16 +1554,16 @@ INSERT INTO `plan` (`id`, `name`, `duration`, `price`, `createdAt`, `category`, 
 --
 
 CREATE TABLE `product` (
-  `id` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sku` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `category` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `sku` varchar(191) DEFAULT NULL,
+  `category` varchar(191) DEFAULT NULL,
   `sellingPrice` double NOT NULL,
   `costPrice` double DEFAULT NULL,
-  `currentStock` int NOT NULL DEFAULT '0',
-  `branchId` int NOT NULL,
-  `isActive` tinyint(1) NOT NULL DEFAULT '1',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `currentStock` int(11) NOT NULL DEFAULT 0,
+  `branchId` int(11) NOT NULL,
+  `isActive` tinyint(1) NOT NULL DEFAULT 1,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1629,19 +1573,19 @@ CREATE TABLE `product` (
 --
 
 CREATE TABLE `pt_bookings` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `trainerId` int NOT NULL,
-  `sessionId` int DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `trainerId` int(11) NOT NULL,
+  `sessionId` int(11) DEFAULT NULL,
   `date` date NOT NULL,
   `startTime` time NOT NULL,
   `endTime` time NOT NULL,
-  `bookingStatus` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'Booked',
-  `paymentStatus` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'Pending',
-  `notes` text COLLATE utf8mb4_general_ci,
-  `branchId` int NOT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `bookingStatus` varchar(20) DEFAULT 'Booked',
+  `paymentStatus` varchar(20) DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1651,26 +1595,26 @@ CREATE TABLE `pt_bookings` (
 --
 
 CREATE TABLE `purchase` (
-  `id` int NOT NULL,
-  `selectedPlan` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `companyName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `billingDuration` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int(11) NOT NULL,
+  `selectedPlan` varchar(191) NOT NULL,
+  `companyName` varchar(191) NOT NULL,
+  `email` varchar(191) NOT NULL,
+  `billingDuration` varchar(191) NOT NULL,
   `startDate` datetime(3) NOT NULL,
-  `purchaseDate` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `amount` decimal(10,2) DEFAULT '0.00',
-  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `adminName` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `branchName` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `gstNumber` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `profileImage` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `transactionId` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `visiblePassword` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `paymentMethod` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `paymentDetails` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `purchaseDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `status` varchar(191) NOT NULL DEFAULT 'pending',
+  `amount` decimal(10,2) DEFAULT 0.00,
+  `phone` varchar(20) DEFAULT NULL,
+  `adminName` varchar(191) DEFAULT NULL,
+  `branchName` varchar(191) DEFAULT NULL,
+  `gstNumber` varchar(191) DEFAULT NULL,
+  `city` varchar(191) DEFAULT NULL,
+  `profileImage` text DEFAULT NULL,
+  `transactionId` varchar(255) DEFAULT NULL,
+  `password` varchar(191) DEFAULT NULL,
+  `visiblePassword` varchar(191) DEFAULT NULL,
+  `paymentMethod` varchar(191) DEFAULT NULL,
+  `paymentDetails` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -1710,9 +1654,9 @@ INSERT INTO `purchase` (`id`, `selectedPlan`, `companyName`, `email`, `billingDu
 --
 
 CREATE TABLE `role` (
-  `id` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -1738,15 +1682,15 @@ INSERT INTO `role` (`id`, `name`, `createdAt`) VALUES
 --
 
 CREATE TABLE `saas_payments` (
-  `id` int NOT NULL,
-  `adminId` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
   `amount` double NOT NULL,
-  `planType` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `paymentStatus` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `transactionId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `paymentDate` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `planType` varchar(191) NOT NULL,
+  `paymentStatus` varchar(191) NOT NULL,
+  `transactionId` varchar(191) DEFAULT NULL,
+  `paymentDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `expiryDate` datetime(3) NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1756,22 +1700,22 @@ CREATE TABLE `saas_payments` (
 --
 
 CREATE TABLE `salary` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `salaryId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `staffId` int NOT NULL,
+  `staffId` int(11) NOT NULL,
   `role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `periodStart` datetime NOT NULL,
   `periodEnd` datetime NOT NULL,
-  `hoursWorked` int DEFAULT '0',
-  `hourlyRate` double DEFAULT '0',
-  `hourlyTotal` double DEFAULT '0',
-  `fixedSalary` double DEFAULT '0',
-  `commissionTotal` double DEFAULT '0',
-  `bonuses` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `deductions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `hoursWorked` int(11) DEFAULT 0,
+  `hourlyRate` double DEFAULT 0,
+  `hourlyTotal` double DEFAULT 0,
+  `fixedSalary` double DEFAULT 0,
+  `commissionTotal` double DEFAULT 0,
+  `bonuses` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `deductions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `netPay` double NOT NULL,
   `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Generated',
-  `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `createdAt` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1781,17 +1725,17 @@ CREATE TABLE `salary` (
 --
 
 CREATE TABLE `session` (
-  `id` int NOT NULL,
-  `adminId` int NOT NULL,
-  `sessionName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `trainerId` int NOT NULL,
-  `branchId` int DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `sessionName` varchar(191) NOT NULL,
+  `trainerId` int(11) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
   `date` datetime(3) NOT NULL,
-  `time` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `duration` int NOT NULL,
-  `description` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Upcoming',
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `time` varchar(191) NOT NULL,
+  `duration` int(11) NOT NULL,
+  `description` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'Upcoming',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -1809,17 +1753,17 @@ INSERT INTO `session` (`id`, `adminId`, `sessionName`, `trainerId`, `branchId`, 
 --
 
 CREATE TABLE `shifts` (
-  `id` int NOT NULL,
-  `staffIds` int DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `staffIds` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
   `shiftDate` date NOT NULL,
   `startTime` time NOT NULL,
   `endTime` time NOT NULL,
-  `shiftType` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
-  `status` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
-  `createdById` int NOT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `shiftType` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `createdById` int(11) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -1839,16 +1783,16 @@ INSERT INTO `shifts` (`id`, `staffIds`, `branchId`, `shiftDate`, `startTime`, `e
 --
 
 CREATE TABLE `staff` (
-  `id` int NOT NULL,
-  `userId` int NOT NULL,
-  `adminId` int DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
-  `gender` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `gender` varchar(191) NOT NULL,
   `dateOfBirth` datetime(3) NOT NULL,
   `joinDate` datetime(3) NOT NULL,
   `exitDate` datetime(3) DEFAULT NULL,
-  `profilePhoto` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active'
+  `profilePhoto` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'Active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -1881,16 +1825,16 @@ INSERT INTO `staff` (`id`, `userId`, `adminId`, `branchId`, `gender`, `dateOfBir
 --
 
 CREATE TABLE `staffattendance` (
-  `id` int NOT NULL,
-  `shiftId` int DEFAULT NULL,
-  `staffId` int NOT NULL,
-  `branchId` int NOT NULL,
-  `checkIn` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` int(11) NOT NULL,
+  `shiftId` int(11) DEFAULT NULL,
+  `staffId` int(11) NOT NULL,
+  `branchId` int(11) NOT NULL,
+  `checkIn` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `checkOut` datetime(3) DEFAULT NULL,
-  `mode` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Manual',
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Present',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `mode` varchar(20) DEFAULT 'Manual',
+  `status` varchar(20) DEFAULT 'Present',
+  `notes` text DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1900,12 +1844,12 @@ CREATE TABLE `staffattendance` (
 --
 
 CREATE TABLE `stockmovement` (
-  `id` int NOT NULL,
-  `productId` int NOT NULL,
-  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `quantity` int NOT NULL,
-  `note` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `productId` int(11) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `note` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1915,17 +1859,17 @@ CREATE TABLE `stockmovement` (
 --
 
 CREATE TABLE `tasks` (
-  `id` int NOT NULL,
-  `assignedTo` int DEFAULT NULL,
-  `roleId` int DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
-  `taskTitle` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
+  `id` int(11) NOT NULL,
+  `assignedTo` int(11) DEFAULT NULL,
+  `roleId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `taskTitle` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
   `dueDate` date NOT NULL,
-  `priority` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `status` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
-  `createdById` int NOT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `priority` varchar(50) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `createdById` int(11) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -1946,23 +1890,23 @@ INSERT INTO `tasks` (`id`, `assignedTo`, `roleId`, `branchId`, `taskTitle`, `des
 --
 
 CREATE TABLE `unified_bookings` (
-  `id` int NOT NULL,
-  `memberId` int NOT NULL,
-  `trainerId` int DEFAULT NULL,
-  `sessionId` int DEFAULT NULL,
-  `classId` int DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `trainerId` int(11) DEFAULT NULL,
+  `sessionId` int(11) DEFAULT NULL,
+  `classId` int(11) DEFAULT NULL,
   `date` date NOT NULL,
   `endDate` date DEFAULT NULL,
   `startTime` time NOT NULL,
   `endTime` time NOT NULL,
-  `bookingType` enum('PT','GROUP') COLLATE utf8mb4_general_ci NOT NULL,
-  `bookingStatus` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'Booked',
-  `paymentStatus` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'Pending',
+  `bookingType` enum('PT','GROUP') NOT NULL,
+  `bookingStatus` varchar(50) DEFAULT 'Booked',
+  `paymentStatus` varchar(50) DEFAULT 'Pending',
   `price` decimal(10,2) DEFAULT NULL,
-  `notes` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `branchId` int DEFAULT NULL,
-  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `notes` varchar(255) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT current_timestamp(),
+  `updatedAt` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -1995,10 +1939,10 @@ INSERT INTO `unified_bookings` (`id`, `memberId`, `trainerId`, `sessionId`, `cla
 --
 
 CREATE TABLE `used_qr_nonces` (
-  `id` int NOT NULL,
-  `nonce` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `memberId` int NOT NULL,
-  `usedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `nonce` varchar(191) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `usedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2008,48 +1952,48 @@ CREATE TABLE `used_qr_nonces` (
 --
 
 CREATE TABLE `user` (
-  `id` int NOT NULL,
-  `adminId` int DEFAULT NULL,
-  `fullName` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `roleId` int NOT NULL,
-  `branchId` int DEFAULT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `address` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `duration` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `gymName` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `planName` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `price` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `fullName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `roleId` int(11) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `address` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `duration` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gymName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `planName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `price` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `dateOfBirth` date DEFAULT NULL,
-  `gender` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address_street` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address_city` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address_state` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address_zip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `profileImage` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `gstNumber` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_street` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_city` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_state` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_zip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profileImage` text DEFAULT NULL,
+  `gstNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `tax` decimal(10,2) DEFAULT NULL,
-  `gymAddress` text COLLATE utf8mb4_unicode_ci,
+  `gymAddress` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `licenseExpiryDate` datetime(3) DEFAULT NULL,
-  `licenseKey` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `whatsappPlan` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Basic',
-  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `visiblePassword` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `whatsappCredits` int NOT NULL DEFAULT '0',
-  `isTrial` tinyint(1) NOT NULL DEFAULT '0',
+  `licenseKey` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `whatsappPlan` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Basic',
+  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `visiblePassword` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `whatsappCredits` int(11) NOT NULL DEFAULT 0,
+  `isTrial` tinyint(1) NOT NULL DEFAULT 0,
   `trialStartDate` datetime DEFAULT NULL,
   `trialEndDate` datetime DEFAULT NULL,
   `gracePeriodEndDate` datetime DEFAULT NULL,
-  `subscriptionPlan` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Basic',
-  `trialStatus` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'None',
-  `razorpayKeyId` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `razorpayKeySecret` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `emailCredits` int NOT NULL DEFAULT '0'
-) ;
+  `subscriptionPlan` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Basic',
+  `trialStatus` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'None',
+  `razorpayKeyId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `razorpayKeySecret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emailCredits` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user`
@@ -2060,7 +2004,7 @@ INSERT INTO `user` (`id`, `adminId`, `fullName`, `email`, `password`, `phone`, `
 (82, 68, 'John Doe', 'john.doe@example.com', '123', '1234567890', 4, 33, '2025-12-11 23:23:13.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
 (87, 68, 'Trainer Name', 'trainer@email.com', 'hashed_password_here', '9999999999', 3, 33, '2025-12-12 02:42:45.028', 'Address here', 'Trainer description', '60 mins', 'Gym Name', 'Plan Name', '1500', 'ACTIVE', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
 (89, 90, 'John Smith', 'john@gmail.com', '$2b$10$crhZxB76ZuAWo2BDk1i3AednUk5HK2zm4ApRzkyOvnsn90JPMUxPq', '0770090987', 2, 33, '2025-12-12 23:54:44.133', '123 High Street', 'Life Time', 'Yearly', 'GYM Fitness ', 'Pro', '11999', 'Active', NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765963221/users/profile/pytkcnfpl28ilkk9rpxy.png', '976856345', 10.00, 'indore', '2026-07-08 00:00:00.000', NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'Converted', NULL, NULL, 0),
-(90, 90, 'John Admin', 'admin@gmail.com', '$2b$10$crhZxB76ZuAWo2BDk1i3AednUk5HK2zm4ApRzkyOvnsn90JPMUxPq', '9876543210', 2, 48, '2025-12-13 00:01:36.965', '101 Shanti Nagar, Indore, Madhya Pradesh, 452001', 'Life Time', 'Yearly', 'Admin Gym', 'Basic', '8999', 'Active', '2005-02-28', 'Male', NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765970252/users/profile/gbtbcuht06njylbc71q8.jpg', '8963546345', 10.00, 'indore', '2027-07-22 00:00:00.000', NULL, 'Basic', NULL, NULL, 12990, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(90, 90, 'John Admin', 'admin@gmail.com', '$2b$10$crhZxB76ZuAWo2BDk1i3AednUk5HK2zm4ApRzkyOvnsn90JPMUxPq', '9876543210', 2, 48, '2025-12-13 00:01:36.965', '101 Shanti Nagar, Indore, Madhya Pradesh, 452001', 'Life Time', 'Yearly', 'Admin Gym', 'Basic', '8999', 'Active', '2005-02-28', 'Male', NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765970252/users/profile/gbtbcuht06njylbc71q8.jpg', '8963546345', 10.00, 'indore', '2027-07-22 00:00:00.000', NULL, 'Basic', NULL, NULL, 12987, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
 (91, 90, 'John Smith', 'smith1@gmail.com', '$2b$10$zO6HvteXi8KfmXtay9soce6aB0ILw3Jwpe.JznL/SthDX9bz1vHRy', '0770097890', 4, NULL, '2025-12-13 02:02:45.418', '123 High Street', NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
 (127, 90, '123', '123@gym.com', '$2b$10$PkIg/YTs4GFAWUYwnr6o1e9PlFbK7IuOFETGP28n2bTpf5py.dSQK', NULL, 6, NULL, '2025-12-17 13:14:23.306', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
 (128, NULL, 'TestSuperadmin', 'test123@gmail.com', '$2b$10$ImJP5DumtcqVUzwlTZnDwuvXMnyp6yE0H5bk/KHl25tHNRipIepBC', NULL, 1, NULL, '2025-12-17 13:20:31.038', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
@@ -2132,7 +2076,9 @@ INSERT INTO `user` (`id`, `adminId`, `fullName`, `email`, `password`, `phone`, `
 (282, NULL, 'nalinigym', 'naliniparas228@gmail.com', '$2b$10$z5IyJ1UaOFGo4tDVDK5GfeSm58zqAWb/RyKAQg0GY60nPgul9LKwO', '5566223148', 2, NULL, '2026-07-14 15:01:47.303', NULL, NULL, 'Quarterly', 'nalinigym', 'Pro', '2850', 'Active', NULL, NULL, NULL, 'pipli', NULL, NULL, 'https://res.cloudinary.com/fosnfvnp/image/upload/v1784021510/users/profile/q9lscukx_1784021504204.png.png', '74AS741851528', 18.00, NULL, '2026-08-13 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Premium', 'None', NULL, NULL, 0),
 (283, NULL, 'raj_shekar sir', 'rsld2012@gmail.com', '$2b$10$XitaBPwvNx2ialg0z1RqNON/ZsQI6B0VFec2Wv/oPzvhrZTgKPEB2', '5566442563', 2, NULL, '2026-07-14 15:45:43.774', NULL, NULL, 'Yearly', 'raj_shekar sir', 'Pro', '10199', 'Active', NULL, NULL, NULL, 'delhi', NULL, NULL, NULL, '74AS741851527', 18.00, NULL, '2027-07-21 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, '2026-07-14 05:30:00', '2026-07-21 05:30:00', NULL, 'Trial', 'None', NULL, NULL, 0),
 (284, NULL, 'raj_shekar', 'rahssshh@gmail.com', '$2b$10$D53vHk2uvhuHzvJWa26vHu7XZjvXv7k.7muXmks4Aj9JCYs45nDdm', '101010101010', 9, NULL, '2026-07-14 16:09:52.470', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', '[\"Dashboard\",\"Gym Owners\",\"Plans & Pricing\"]', '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
-(285, 90, 'rahshekar2', 'rajshekkar12@gmai.com', '$2b$10$wcBrPIxJ3L.OPiH2C4b5Yeb5Azsil/sXqdyiMOPvhgM3MVycd9b96', '545656656', 4, NULL, '2026-07-14 16:38:52.198', 'greater indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2000-01-02', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0);
+(285, 90, 'rahshekar2', 'rajshekkar12@gmai.com', '$2b$10$wcBrPIxJ3L.OPiH2C4b5Yeb5Azsil/sXqdyiMOPvhgM3MVycd9b96', '545656656', 4, NULL, '2026-07-14 16:38:52.198', 'greater indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2000-01-02', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(286, 279, 'john', 'johne@gmail.com', '$2b$10$Fb6cOPtg6ohLQHYr8AbXXe1EyEb9VCOHsQyIyxs9GO6/HT3QCeqdW', 'smith', 4, NULL, '2026-07-20 11:13:59.745', 'john , mira , dolly', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-07-03', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(287, 90, 'xyz', 'xyz@gmail.com', '$2b$10$JQY0afoa2hwzT3UJyGkwsuHVCCLz/pt2Y0kntJAIl6MNg5/9v9ojq', '98765432345', 4, NULL, '2026-07-20 12:54:32.648', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', '2026-07-09', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -2141,41 +2087,38 @@ INSERT INTO `user` (`id`, `adminId`, `fullName`, `email`, `password`, `phone`, `
 --
 
 CREATE TABLE `whatsapp_credit_transactions` (
-  `id` int NOT NULL,
-  `adminId` int NOT NULL,
-  `creditsPurchased` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `creditsPurchased` int(11) NOT NULL,
   `amountPaid` double NOT NULL,
-  `paymentStatus` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `transactionId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  `transactionType` enum('PURCHASE','USAGE','REFUND') COLLATE utf8mb4_unicode_ci DEFAULT 'USAGE',
-  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `userId` int NOT NULL,
-  `creditsAdded` int DEFAULT '0',
-  `creditsUsed` int DEFAULT '0',
-  `packageType` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'WHATSAPP'
+  `paymentStatus` varchar(50) NOT NULL,
+  `transactionId` varchar(191) DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `whatsapp_credit_transactions`
 --
 
-INSERT INTO `whatsapp_credit_transactions` (`id`, `adminId`, `creditsPurchased`, `amountPaid`, `paymentStatus`, `transactionId`, `createdAt`, `transactionType`, `description`, `userId`, `creditsAdded`, `creditsUsed`, `packageType`) VALUES
-(1, 0, 0, 1000, '', NULL, '2026-06-22 16:24:36', 'PURCHASE', 'Purchased Bronze Package via Razorpay (pay_123)', 90, 500, 0, 'WHATSAPP'),
-(2, 0, 0, 1000, '', NULL, '2026-06-22 16:24:37', 'PURCHASE', 'Purchased Bronze Package via Razorpay (pay_mock_1782125677430)', 90, 500, 0, 'WHATSAPP'),
-(3, 0, 0, 1000, '', NULL, '2026-06-22 16:24:40', 'PURCHASE', 'Purchased Bronze Package via Razorpay (pay_mock_1782125680441)', 90, 500, 0, 'WHATSAPP'),
-(4, 0, 0, 1000, '', NULL, '2026-06-22 16:26:44', 'PURCHASE', 'Purchased Bronze Package via Razorpay (pay_mock_1782125804832)', 90, 500, 0, 'WHATSAPP'),
-(5, 0, 0, 4500, '', NULL, '2026-06-22 16:27:14', 'PURCHASE', 'Purchased Silver Package via Razorpay (pay_mock_1782125834600)', 90, 5000, 0, 'WHATSAPP'),
-(6, 0, 0, 0, '', NULL, '2026-06-26 15:29:00', 'USAGE', 'Sent WhatsApp to 78945455421', 90, 0, 1, 'WHATSAPP'),
-(7, 0, 0, 0, '', NULL, '2026-06-26 15:29:00', 'USAGE', 'Sent WhatsApp to 78945455421', 90, 0, 1, 'WHATSAPP'),
-(8, 0, 0, 0, '', NULL, '2026-06-26 16:06:29', 'USAGE', 'Sent WhatsApp to 7849615654', 90, 0, 1, 'WHATSAPP'),
-(9, 0, 0, 0, '', NULL, '2026-06-26 16:06:29', 'USAGE', 'Sent WhatsApp to 7849615654', 90, 0, 1, 'WHATSAPP'),
-(10, 0, 0, 0, '', NULL, '2026-07-08 11:14:07', 'USAGE', 'Sent WhatsApp to 9876543210', 90, 0, 1, 'WHATSAPP'),
-(11, 0, 0, 0, '', NULL, '2026-07-08 12:43:45', 'USAGE', 'Sent WhatsApp to 9876543210', 90, 0, 1, 'WHATSAPP'),
-(12, 0, 0, 0, '', NULL, '2026-07-08 12:57:04', 'USAGE', 'Sent WhatsApp to 9876543210', 90, 0, 1, 'WHATSAPP'),
-(13, 0, 0, 0, '', NULL, '2026-07-08 12:58:25', 'USAGE', 'Sent WhatsApp to 9876543210', 90, 0, 1, 'WHATSAPP'),
-(14, 0, 0, 0, '', NULL, '2026-07-08 13:05:21', 'USAGE', 'Sent WhatsApp to 9876543210', 90, 0, 1, 'WHATSAPP'),
-(15, 0, 0, 0, '', NULL, '2026-07-08 15:57:40', 'USAGE', 'Sent WhatsApp to 9876543210', 90, 0, 1, 'WHATSAPP');
+INSERT INTO `whatsapp_credit_transactions` (`id`, `adminId`, `creditsPurchased`, `amountPaid`, `paymentStatus`, `transactionId`, `createdAt`) VALUES
+(1, 0, 0, 1000, '', NULL, '2026-06-22 16:24:36'),
+(2, 0, 0, 1000, '', NULL, '2026-06-22 16:24:37'),
+(3, 0, 0, 1000, '', NULL, '2026-06-22 16:24:40'),
+(4, 0, 0, 1000, '', NULL, '2026-06-22 16:26:44'),
+(5, 0, 0, 4500, '', NULL, '2026-06-22 16:27:14'),
+(6, 0, 0, 0, '', NULL, '2026-06-26 15:29:00'),
+(7, 0, 0, 0, '', NULL, '2026-06-26 15:29:00'),
+(8, 0, 0, 0, '', NULL, '2026-06-26 16:06:29'),
+(9, 0, 0, 0, '', NULL, '2026-06-26 16:06:29'),
+(10, 0, 0, 0, '', NULL, '2026-07-08 11:14:07'),
+(11, 0, 0, 0, '', NULL, '2026-07-08 12:43:45'),
+(12, 0, 0, 0, '', NULL, '2026-07-08 12:57:04'),
+(13, 0, 0, 0, '', NULL, '2026-07-08 12:58:25'),
+(14, 0, 0, 0, '', NULL, '2026-07-08 13:05:21'),
+(15, 0, 0, 0, '', NULL, '2026-07-08 15:57:40'),
+(16, 0, 0, 0, '', NULL, '2026-07-20 12:54:32'),
+(17, 0, 0, 0, '', NULL, '2026-07-20 12:54:32'),
+(18, 0, 0, 0, '', NULL, '2026-07-20 13:15:53');
 
 -- --------------------------------------------------------
 
@@ -2184,25 +2127,26 @@ INSERT INTO `whatsapp_credit_transactions` (`id`, `adminId`, `creditsPurchased`,
 --
 
 CREATE TABLE `workoutexercise` (
-  `id` int NOT NULL,
-  `workoutPlanId` int NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sets` int DEFAULT NULL,
-  `reps` int DEFAULT NULL,
-  `notes` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `id` int(11) NOT NULL,
+  `workoutPlanId` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `sets` int(11) DEFAULT NULL,
+  `reps` int(11) DEFAULT NULL,
+  `duration` varchar(191) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `workoutexercise`
 --
 
-INSERT INTO `workoutexercise` (`id`, `workoutPlanId`, `name`, `sets`, `reps`, `notes`) VALUES
-(1, 3, 'Shoulder Press', 5, 12, 'keep nexh staright'),
-(2, 4, 'Shoulder Press', 5, 12, 'keep nexh staright'),
-(3, 5, 'Shoulder Press', 5, 12, 'keep nexh staright'),
-(4, 6, 'Pushups', 5, 12, 'keep nexk staright'),
-(5, 7, 'Pushups', 5, 12, 'keep nexk staright'),
-(6, 8, 'Pushups', 5, 12, 'keep nexk staright');
+INSERT INTO `workoutexercise` (`id`, `workoutPlanId`, `name`, `sets`, `reps`, `duration`) VALUES
+(1, 3, 'Shoulder Press', 5, 12, NULL),
+(2, 4, 'Shoulder Press', 5, 12, NULL),
+(3, 5, 'Shoulder Press', 5, 12, NULL),
+(4, 6, 'Pushups', 5, 12, NULL),
+(5, 7, 'Pushups', 5, 12, NULL),
+(6, 8, 'Pushups', 5, 12, NULL),
+(7, 9, 'Bicep Curls', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2211,12 +2155,12 @@ INSERT INTO `workoutexercise` (`id`, `workoutPlanId`, `name`, `sets`, `reps`, `n
 --
 
 CREATE TABLE `workoutplan` (
-  `id` int NOT NULL,
-  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `notes` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `createdBy` int NOT NULL,
-  `branchId` int NOT NULL,
-  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `notes` varchar(191) DEFAULT NULL,
+  `createdBy` int(11) NOT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2231,7 +2175,8 @@ INSERT INTO `workoutplan` (`id`, `title`, `notes`, `createdBy`, `branchId`, `cre
 (5, 'full body  staright', 'rest  60 s', 272, 48, '2026-07-13 14:47:17.235'),
 (6, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:49:07.675'),
 (7, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:49:31.706'),
-(8, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:53:31.784');
+(8, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:53:31.784'),
+(9, 'weight gain week - 4', '', 279, 48, '2026-07-20 11:35:30.827');
 
 -- --------------------------------------------------------
 
@@ -2240,10 +2185,10 @@ INSERT INTO `workoutplan` (`id`, `title`, `notes`, `createdBy`, `branchId`, `cre
 --
 
 CREATE TABLE `workoutplanassignment` (
-  `id` int NOT NULL,
-  `workoutPlanId` int NOT NULL,
-  `memberId` int NOT NULL,
-  `assignedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` int(11) NOT NULL,
+  `workoutPlanId` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2251,7 +2196,8 @@ CREATE TABLE `workoutplanassignment` (
 --
 
 INSERT INTO `workoutplanassignment` (`id`, `workoutPlanId`, `memberId`, `assignedAt`) VALUES
-(1, 8, 161, '2026-07-13 14:53:31.843');
+(1, 8, 161, '2026-07-13 14:53:31.843'),
+(2, 9, 161, '2026-07-20 11:35:30.845');
 
 --
 -- Indexes for dumped tables
@@ -2353,12 +2299,6 @@ ALTER TABLE `dietplanassignment`
   ADD KEY `DietPlanAssignment_memberId_idx` (`memberId`);
 
 --
--- Indexes for table `equipment_requests`
---
-ALTER TABLE `equipment_requests`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `expense`
 --
 ALTER TABLE `expense`
@@ -2375,12 +2315,6 @@ ALTER TABLE `global_settings`
 -- Indexes for table `group_class_bookings`
 --
 ALTER TABLE `group_class_bookings`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `gym_equipment`
---
-ALTER TABLE `gym_equipment`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -2505,13 +2439,6 @@ ALTER TABLE `payment`
   ADD UNIQUE KEY `Payment_invoiceNo_key` (`invoiceNo`),
   ADD KEY `Payment_memberId_idx` (`memberId`),
   ADD KEY `Payment_planId_idx` (`planId`);
-
---
--- Indexes for table `personal_notification`
---
-ALTER TABLE `personal_notification`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `memberId` (`memberId`);
 
 --
 -- Indexes for table `plan`
@@ -2660,331 +2587,313 @@ ALTER TABLE `workoutplanassignment`
 -- AUTO_INCREMENT for table `alert`
 --
 ALTER TABLE `alert`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `announcement`
 --
 ALTER TABLE `announcement`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `app_settings`
 --
 ALTER TABLE `app_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `automation_settings`
 --
 ALTER TABLE `automation_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `booking`
 --
 ALTER TABLE `booking`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `booking_requests`
 --
 ALTER TABLE `booking_requests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `branch`
 --
 ALTER TABLE `branch`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `classschedule`
 --
 ALTER TABLE `classschedule`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `classtype`
 --
 ALTER TABLE `classtype`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `credit_packages`
 --
 ALTER TABLE `credit_packages`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `demo_requests`
 --
 ALTER TABLE `demo_requests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `dietmeal`
 --
 ALTER TABLE `dietmeal`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `dietplan`
 --
 ALTER TABLE `dietplan`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `dietplanassignment`
 --
 ALTER TABLE `dietplanassignment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `equipment_requests`
---
-ALTER TABLE `equipment_requests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `expense`
 --
 ALTER TABLE `expense`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `group_class_bookings`
 --
 ALTER TABLE `group_class_bookings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `gym_equipment`
---
-ALTER TABLE `gym_equipment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `housekeepingattendance`
 --
 ALTER TABLE `housekeepingattendance`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `housekeepingschedule`
 --
 ALTER TABLE `housekeepingschedule`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `landing_page_cms`
 --
 ALTER TABLE `landing_page_cms`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `leads`
 --
 ALTER TABLE `leads`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `marketing_campaigns`
 --
 ALTER TABLE `marketing_campaigns`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `member`
 --
 ALTER TABLE `member`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT for table `memberattendance`
 --
 ALTER TABLE `memberattendance`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
 
 --
 -- AUTO_INCREMENT for table `memberplan`
 --
 ALTER TABLE `memberplan`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `membership_renewal_requests`
 --
 ALTER TABLE `membership_renewal_requests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `member_assessments`
 --
 ALTER TABLE `member_assessments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `member_bodybuilding_logs`
 --
 ALTER TABLE `member_bodybuilding_logs`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `member_health_log`
 --
 ALTER TABLE `member_health_log`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `member_plan_assignment`
 --
 ALTER TABLE `member_plan_assignment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `message_templates`
 --
 ALTER TABLE `message_templates`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `notificationlog`
 --
 ALTER TABLE `notificationlog`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=569;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=584;
 
 --
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `personal_notification`
---
-ALTER TABLE `personal_notification`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `plan`
 --
 ALTER TABLE `plan`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `product`
 --
 ALTER TABLE `product`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `pt_bookings`
 --
 ALTER TABLE `pt_bookings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `purchase`
 --
 ALTER TABLE `purchase`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `role`
 --
 ALTER TABLE `role`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `saas_payments`
 --
 ALTER TABLE `saas_payments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `salary`
 --
 ALTER TABLE `salary`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `session`
 --
 ALTER TABLE `session`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `shifts`
 --
 ALTER TABLE `shifts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT for table `staffattendance`
 --
 ALTER TABLE `staffattendance`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `stockmovement`
 --
 ALTER TABLE `stockmovement`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `unified_bookings`
 --
 ALTER TABLE `unified_bookings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT for table `used_qr_nonces`
 --
 ALTER TABLE `used_qr_nonces`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=288;
 
 --
 -- AUTO_INCREMENT for table `whatsapp_credit_transactions`
 --
 ALTER TABLE `whatsapp_credit_transactions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `workoutexercise`
 --
 ALTER TABLE `workoutexercise`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `workoutplan`
 --
 ALTER TABLE `workoutplan`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `workoutplanassignment`
 --
 ALTER TABLE `workoutplanassignment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
@@ -3040,15 +2949,14 @@ ALTER TABLE `expense`
 -- Constraints for table `leads`
 --
 ALTER TABLE `leads`
-  ADD CONSTRAINT `leads_adminId_fkey` FOREIGN KEY (`adminId`) REFERENCES `user` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `leads_assignedToStaffId_fkey` FOREIGN KEY (`assignedToStaffId`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `member`
 --
 ALTER TABLE `member`
-  ADD CONSTRAINT `fk_member_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`),
-  ADD CONSTRAINT `Member_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `Member_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_member_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`);
 
 --
 -- Constraints for table `membership_renewal_requests`
@@ -3093,8 +3001,7 @@ ALTER TABLE `notificationlog`
 -- Constraints for table `payment`
 --
 ALTER TABLE `payment`
-  ADD CONSTRAINT `Payment_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `Payment_planId_fkey` FOREIGN KEY (`planId`) REFERENCES `plan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `Payment_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `plan`

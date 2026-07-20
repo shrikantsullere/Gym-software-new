@@ -950,10 +950,14 @@ export const getMembersByAdminIdService = async (adminId) => {
       m.interestedIn,
       m.amountPaid,
       m.dateOfBirth,
-      u.profileImage
+      m.trainerId,
+      m.trainerType,
+      u.profileImage,
+      trainerUser.fullName AS trainerName
 
     FROM member m
     JOIN user u ON u.id = m.userId
+    LEFT JOIN user trainerUser ON m.trainerId = trainerUser.id
     WHERE m.adminId = ?
     ORDER BY m.id DESC
     `,
@@ -1752,8 +1756,8 @@ export const importMembersService = async (adminId, branchId, fileBuffer) => {
 
 export const assignTrainerToMemberService = async ({ memberId, trainerId, trainerType }) => {
   const [result] = await pool.query(
-    "UPDATE member SET trainerId = ? WHERE id = ?",
-    [trainerId, memberId]
+    "UPDATE member SET trainerId = ?, trainerType = ? WHERE id = ?",
+    [trainerId, trainerType, memberId]
   );
   
   if (result.affectedRows === 0) {

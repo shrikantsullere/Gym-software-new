@@ -476,10 +476,10 @@ export const getAllScheduledClassesService = async (adminId) => {
       (SELECT COUNT(*) FROM booking bk WHERE bk.scheduleId = cs.id) AS membersCount
     FROM classschedule cs
     LEFT JOIN user u ON cs.trainerId = u.id
-    WHERE u.adminId = ?        -- ✅ ADMIN FILTER
+    WHERE u.adminId = ? OR cs.adminId = ? OR cs.trainerId = ?
     ORDER BY cs.id DESC
     `,
-    [adminId]
+    [adminId, adminId, adminId]
   );
 
   return rows.map((item) => ({

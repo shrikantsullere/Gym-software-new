@@ -1,5 +1,13 @@
-
 const GetAdminId = () => {
+  try {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.adminId || user.id;
+    }
+  } catch (e) {
+    console.error("Error in GetAdminId:", e);
+  }
   return localStorage.getItem("userId"); 
 };
 export default GetAdminId;

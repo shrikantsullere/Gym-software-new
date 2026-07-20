@@ -22,7 +22,7 @@ export const recordPaymentService = async (data) => {
 
   // Verify plan exists
   const [[plan]] = await pool.query(
-    "SELECT * FROM plan WHERE id = ?",
+    "SELECT * FROM memberplan WHERE id = ?",
     [planId]
   );
   if (!plan) throw { status: 404, message: "Plan not found" };
@@ -98,7 +98,7 @@ export const paymentHistoryService = async (memberId) => {
   const [rows] = await pool.query(
     `SELECT p.*, pl.name AS planName, pl.price AS planPrice
      FROM payment p
-     LEFT JOIN plan pl ON p.planId = pl.id
+     LEFT JOIN memberplan pl ON p.planId = pl.id
      WHERE p.memberId = ?
      ORDER BY p.id DESC`,
     [memberId]
@@ -111,13 +111,13 @@ export const allPaymentsService = async (adminId, branchId) => {
   let query = `SELECT p.*, m.fullName AS memberName, pl.name AS planName, pl.price AS planPrice
      FROM payment p
      LEFT JOIN member m ON p.memberId = m.id
-     LEFT JOIN plan pl ON p.planId = pl.id
+     LEFT JOIN memberplan pl ON p.planId = pl.id
      WHERE m.adminId = ?`;
      
   const params = [adminId];
   
   if (branchId && branchId !== 'all' && branchId !== '') {
-    query += ` AND m.branchId = ?`;
+    query += ` AND (m.branchId = ? OR m.branchId IS NULL)`;
     params.push(branchId);
   }
   

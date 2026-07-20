@@ -77,21 +77,32 @@ export const getShiftByIdService = async (id) => {
 };
 
 export const getShiftByStaffIdService = async (staffId) => {
-  const [shift] = await pool.query(
-    `SELECT * FROM shifts 
-     WHERE FIND_IN_SET(?, staffIds) 
-        OR staffIds = ? 
-        OR staffIds = '0' 
-        OR staffIds IS NULL
-     ORDER BY id DESC`,
+  // Resolve both staff.id and staff.userId for reliable matching
+  const [staffRows] = await pool.query(
+    "SELECT id, userId FROM staff WHERE id = ? OR userId = ?",
     [staffId, staffId]
   );
 
-  if (!shift || shift.length === 0) {
-    return null;
+  const realStaffId = staffRows.length ? staffRows[0].id : staffId;
+  const realUserId = staffRows.length ? staffRows[0].userId : staffId;
+
+  const [shifts] = await pool.query(
+    `SELECT * FROM shifts 
+     WHERE FIND_IN_SET(?, staffIds) 
+        OR FIND_IN_SET(?, staffIds)
+        OR staffIds = ? 
+        OR staffIds = ?
+        OR staffIds = '0' 
+        OR staffIds IS NULL
+     ORDER BY id DESC`,
+    [realStaffId, realUserId, realStaffId, realUserId]
+  );
+
+  if (!shifts || shifts.length === 0) {
+    return [];
   }
 
-  return shift[0];
+  return shifts;
 };
 
 

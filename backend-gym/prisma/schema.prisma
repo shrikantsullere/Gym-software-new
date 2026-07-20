@@ -722,6 +722,8 @@ model leads {
   updatedAt         DateTime  @updatedAt
   branchId          Int?
   followUpDate      DateTime?
+  leadType          String?   @default("GYM") @db.VarChar(50)
+  interestedPlan    String?   @db.VarChar(100)
   admin             user?     @relation(fields: [adminId], references: [id])
   staff             staff?    @relation(fields: [assignedToStaffId], references: [id])
 

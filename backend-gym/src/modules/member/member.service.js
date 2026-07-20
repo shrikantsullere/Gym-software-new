@@ -951,7 +951,6 @@ export const getMembersByAdminIdService = async (adminId) => {
       m.amountPaid,
       m.dateOfBirth,
       m.trainerId,
-      m.trainerType,
       u.profileImage,
       trainerUser.fullName AS trainerName
 

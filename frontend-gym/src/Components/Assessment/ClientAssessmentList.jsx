@@ -12,15 +12,29 @@ const ClientAssessmentList = () => {
     const fetchMembers = async () => {
       try {
         const userStr = localStorage.getItem("user");
-        let adminId = null;
         if (userStr) {
           const userObj = JSON.parse(userStr);
-          adminId = userObj.adminId || userObj.id;
-        }
-        if (adminId) {
-          const res = await axiosInstance.get(`/members/admin/${adminId}`);
-          if (res.data && res.data.success) {
-            setMembers(res.data.data || []);
+          const adminId = userObj.adminId || userObj.id;
+          const roleId = Number(userObj.roleId);
+          const roleName = (userObj.roleName || userObj.role || localStorage.getItem('userRole') || "").toLowerCase().replace(/\s+/g, '');
+
+          let endpoint = `/members/admin/${adminId}`;
+          // Personal Trainers fetch only their assigned clients
+          const isPersonalTrainer = roleId === 5 || roleName.includes('personaltrainer');
+          if (isPersonalTrainer) {
+            // staffId from user object (staffId field, or fallback to id)
+            const staffId = userObj.staffId || userObj.id;
+            endpoint = `/members/trainer/${staffId}`;
+          }
+
+          if (adminId) {
+            const res = await axiosInstance.get(endpoint);
+            if (res.data && res.data.success) {
+              const memberList = Array.isArray(res.data.data) ? res.data.data : (res.data.members || []);
+              setMembers(memberList);
+            } else if (Array.isArray(res.data)) {
+              setMembers(res.data);
+            }
           }
         }
       } catch (err) {

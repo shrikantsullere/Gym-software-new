@@ -2,7 +2,7 @@ import { getLeaderboardByGoal } from './leaderboard.service.js';
 
 export const getLeaderboard = async (req, res) => {
   try {
-    const { branchId, goal, fitness_goal } = req.query;
+    const { branchId, goal, fitness_goal, month } = req.query;
     const selectedGoal = (goal || fitness_goal || 'fat_loss').toLowerCase();
 
     const validGoals = ['fat_loss', 'muscle_gain', 'maintenance'];
@@ -13,14 +13,17 @@ export const getLeaderboard = async (req, res) => {
       });
     }
 
-    const leaderboard = await getLeaderboardByGoal(branchId, selectedGoal, 50);
+    const result = await getLeaderboardByGoal(branchId, selectedGoal, month, 100);
 
     return res.status(200).json({
       status: true,
       goal: selectedGoal,
+      selectedMonth: result.selectedMonth,
+      monthLabel: result.monthLabel,
+      availableMonths: result.availableMonths,
       message: "Leaderboard fetched successfully",
-      leaderboard: leaderboard,
-      data: leaderboard
+      leaderboard: result.leaderboard,
+      data: result.leaderboard
     });
   } catch (error) {
     console.error("Leaderboard Error:", error);

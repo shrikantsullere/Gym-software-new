@@ -2,12 +2,29 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../Api/axiosInstance';
 import BaseUrl from '../../Api/BaseUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMedal, faFire, faDumbbell, faBalanceScale, faTrophy, faRedo, faUserCheck } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faMedal, 
+  faFire, 
+  faDumbbell, 
+  faBalanceScale, 
+  faTrophy, 
+  faRedo, 
+  faUserCheck, 
+  faFileExcel,
+  faCalendarAlt,
+  faArrowUp,
+  faArrowDown,
+  faMinus
+} from '@fortawesome/free-solid-svg-icons';
+import * as XLSX from 'xlsx';
 import './MemberLeaderboard.css';
 
 const MemberLeaderboard = () => {
   const [activeTab, setActiveTab] = useState('fat_loss');
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedMonthLabel, setSelectedMonthLabel] = useState('');
+  const [availableMonths, setAvailableMonths] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -28,12 +45,16 @@ const MemberLeaderboard = () => {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [activeTab, selectedBranchId]);
+  }, [activeTab, selectedBranchId, selectedMonth]);
 
   const fetchBranches = async () => {
     try {
       const res = await axiosInstance.get('v1/branches');
-      let branchesData = Array.isArray(res.data) ? res.data : res.data?.branches || res.data?.branch ? (Array.isArray(res.data.branches) ? res.data.branches : [res.data.branch]) : [];
+      let branchesData = Array.isArray(res.data) 
+        ? res.data 
+        : res.data?.branches || res.data?.branch 
+        ? (Array.isArray(res.data.branches) ? res.data.branches : [res.data.branch]) 
+        : [];
       setBranches(branchesData);
     } catch (err) {
       console.error("Error fetching branches:", err);
@@ -45,17 +66,28 @@ const MemberLeaderboard = () => {
       setLoading(true);
       setError(null);
       
-      // Try both v1/leaderboard and leaderboard API endpoints
+      const monthQuery = selectedMonth ? `&month=${selectedMonth}` : '';
       let response;
       try {
-        response = await axiosInstance.get(`v1/leaderboard?branchId=${selectedBranchId}&goal=${activeTab}`);
+        response = await axiosInstance.get(`v1/leaderboard?branchId=${selectedBranchId}&goal=${activeTab}${monthQuery}`);
       } catch (err1) {
-        response = await axiosInstance.get(`leaderboard?branchId=${selectedBranchId}&goal=${activeTab}`);
+        response = await axiosInstance.get(`leaderboard?branchId=${selectedBranchId}&goal=${activeTab}${monthQuery}`);
       }
 
       if (response && response.data) {
         const list = response.data.leaderboard || response.data.data || [];
         setLeaderboardData(Array.isArray(list) ? list : []);
+
+        if (response.data.availableMonths && Array.isArray(response.data.availableMonths)) {
+          setAvailableMonths(response.data.availableMonths);
+        }
+
+        if (response.data.selectedMonth && !selectedMonth) {
+          setSelectedMonth(response.data.selectedMonth);
+        }
+        if (response.data.monthLabel) {
+          setSelectedMonthLabel(response.data.monthLabel);
+        }
       } else {
         setLeaderboardData([]);
       }
@@ -97,6 +129,44 @@ const MemberLeaderboard = () => {
     return String(mId) === String(loggedInMemberId);
   };
 
+  const handleExportExcel = () => {
+    if (!leaderboardData || leaderboardData.length === 0) return;
+
+    const exportData = leaderboardData.map(item => ({
+      "Rank": item.rank,
+      "Member ID": item.member_id || item.memberId,
+      "Member Name": item.fullName || item.member_name,
+      "Fitness Goal": item.fitness_goal ? item.fitness_goal.replace('_', ' ').toUpperCase() : '',
+      "Leaderboard Month": item.month_label || item.monthLabel || selectedMonthLabel,
+      "Age": item.age || "-",
+      "Gender": item.gender || "-",
+      "Height (cm)": item.height_cm || "-",
+      "Start Weight (kg)": item.start_weight ?? "-",
+      "Current Weight (kg)": item.current_weight ?? "-",
+      "Weight Change": item.weight_change_str || "-",
+      "Baseline Body Fat %": item.baseline_bf_percent ? `${item.baseline_bf_percent}%` : "-",
+      "Current Body Fat %": item.current_bf_percent ? `${item.current_bf_percent}%` : "-",
+      "Baseline Muscle Mass (kg)": item.baseline_lbm ? `${item.baseline_lbm} kg` : "-",
+      "Current Muscle Mass (kg)": item.current_lbm ? `${item.current_lbm} kg` : "-",
+      "Baseline BMI": item.baseline_bmi ?? "-",
+      "Current BMI": item.current_bmi ?? "-",
+      "Member Gain": item.member_gain || "-",
+      "Member Loss": item.member_loss || "-",
+      "Overall Improvement": item.overall_improvement || "-",
+      "Previous Rank": item.previous_rank ? `#${item.previous_rank}` : "-",
+      "Rank Change": item.rank_change || "NEW",
+      "Status": item.status || "Active"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Leaderboard");
+
+    const monthFileStr = (selectedMonth || 'current').replace('-', '_');
+    const fileName = `leaderboard_${activeTab}_${monthFileStr}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
   const renderPodium = () => {
     const top3 = leaderboardData.slice(0, 3);
     if (top3.length === 0) return null;
@@ -106,7 +176,7 @@ const MemberLeaderboard = () => {
     const podiumHeights = { 0: '110px', 1: '80px', 2: '60px' };
 
     return (
-      <div className="podium-container d-flex justify-content-center align-items-end mt-2 mb-4" style={{ gap: '8px' }}>
+      <div className="podium-container d-flex justify-content-center align-items-end mt-2 mb-5" style={{ gap: '8px' }}>
         {order.map((index) => {
           const member = top3[index];
           if (!member) return null;
@@ -160,54 +230,140 @@ const MemberLeaderboard = () => {
     );
   };
 
-  const renderList = () => {
-    const others = leaderboardData.slice(3);
-    if (others.length === 0 && leaderboardData.length > 0 && leaderboardData.length <= 3) return null;
-
-    const listToRender = leaderboardData.length <= 3 ? [] : others;
+  const renderDetailedTable = () => {
+    if (leaderboardData.length === 0) return null;
 
     return (
-      <div className="leaderboard-list mt-3">
-        {listToRender.length > 0 && (
-          <h6 className="mb-3 text-secondary border-bottom pb-2 fw-bold d-flex align-items-center">
-            <FontAwesomeIcon icon={faTrophy} className="me-2 text-warning" /> Qualified Members
-          </h6>
-        )}
-        <div className="list-group shadow-sm rounded-3 overflow-hidden">
-          {listToRender.map((member) => {
-            const isMe = isCurrentUser(member);
-            return (
-              <div 
-                key={member.member_id || member.memberId || member.rank} 
-                className={`list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3 px-3 transition-all ${isMe ? 'bg-primary bg-opacity-10 border-start border-4 border-primary' : 'hover-bg-light'}`}
-              >
-                <div className="d-flex align-items-center overflow-hidden me-2">
-                  <div className={`rank-circle fw-bold me-3 d-flex justify-content-center align-items-center rounded-circle flex-shrink-0 ${isMe ? 'bg-primary text-white' : 'bg-light text-secondary'}`} style={{ width: '34px', height: '34px', fontSize: '13px' }}>
-                    {member.rank}
-                  </div>
-                  <img 
-                    src={getAvatarUrl(member)} 
-                    alt={member.fullName || member.member_name} 
-                    className="rounded-circle me-3 list-avatar border border-2 border-light flex-shrink-0" 
-                    width="40" height="40"
-                    style={{ objectFit: 'cover' }}
-                  />
-                  <div className="text-truncate">
-                    <span className="fw-bold text-dark me-2">{member.fullName || member.member_name}</span>
-                    {isMe && (
-                      <span className="badge bg-primary text-white rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
-                        <FontAwesomeIcon icon={faUserCheck} className="me-1" /> You
-                      </span>
-                    )}
-                  </div>
-                </div>
+      <div className="detailed-table-container mt-4">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold text-dark mb-0 d-flex align-items-center">
+            <FontAwesomeIcon icon={faTrophy} className="me-2 text-warning" />
+            Monthly Member Details ({selectedMonthLabel || 'Current Month'})
+          </h5>
+          <span className="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-1 fs-6">
+            {leaderboardData.length} Member{leaderboardData.length > 1 ? 's' : ''} Qualified
+          </span>
+        </div>
 
-                <div className="score-badge text-primary fw-bold bg-primary bg-opacity-10 px-3 py-1 rounded-pill flex-shrink-0 ms-2" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
-                  {getMetricLabel(member.score)}
-                </div>
-              </div>
-            );
-          })}
+        <div className="table-responsive shadow-sm rounded-3 overflow-hidden border">
+          <table className="table table-hover align-middle mb-0 text-nowrap">
+            <thead className="table-light">
+              <tr style={{ fontSize: '13px', letterSpacing: '0.3px' }}>
+                <th className="px-3 py-3">Rank</th>
+                <th className="py-3">Member</th>
+                <th className="py-3">Goal</th>
+                <th className="py-3">Month</th>
+                <th className="py-3">Age / Gender</th>
+                <th className="py-3">Start Wt</th>
+                <th className="py-3">Current Wt</th>
+                <th className="py-3">Wt Change</th>
+                <th className="py-3">Body Fat %</th>
+                <th className="py-3">Muscle Mass</th>
+                <th className="py-3">Member Gain</th>
+                <th className="py-3">Member Loss</th>
+                <th className="py-3 text-center">Overall Improvement</th>
+                <th className="py-3 text-center px-3">Rank Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboardData.map((member) => {
+                const isMe = isCurrentUser(member);
+                const rankChangeStr = member.rank_change || member.rankChange || 'NEW';
+                const isRankUp = rankChangeStr.includes('↑');
+                const isRankDown = rankChangeStr.includes('↓');
+
+                return (
+                  <tr 
+                    key={member.member_id || member.memberId || member.rank}
+                    className={isMe ? 'bg-primary bg-opacity-10' : ''}
+                  >
+                    <td className="px-3 py-3 fw-bold text-dark">
+                      <span className={`badge rounded-circle p-2 ${member.rank === 1 ? 'bg-warning text-dark' : member.rank === 2 ? 'bg-secondary text-white' : member.rank === 3 ? 'bg-amber text-white' : 'bg-light text-dark'}`} style={{ width: '28px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {member.rank}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <div className="d-flex align-items-center">
+                        <img 
+                          src={getAvatarUrl(member)} 
+                          alt={member.fullName || member.member_name}
+                          className="rounded-circle me-2 border" 
+                          width="36" 
+                          height="36"
+                          style={{ objectFit: 'cover' }}
+                        />
+                        <div>
+                          <div className="fw-bold text-dark" style={{ fontSize: '14px' }}>
+                            {member.fullName || member.member_name}
+                            {isMe && (
+                              <span className="badge bg-primary text-white rounded-pill ms-2" style={{ fontSize: '10px' }}>
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <small className="text-muted" style={{ fontSize: '11px' }}>ID: {member.member_id || member.memberId}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 text-capitalize fw-semibold text-muted" style={{ fontSize: '13px' }}>
+                      {(member.fitness_goal || activeTab).replace('_', ' ')}
+                    </td>
+                    <td className="py-3 text-muted" style={{ fontSize: '13px' }}>
+                      {member.month_label || member.monthLabel || selectedMonthLabel}
+                    </td>
+                    <td className="py-3 text-muted" style={{ fontSize: '13px' }}>
+                      {member.age || '-'} / <span className="text-capitalize">{member.gender || '-'}</span>
+                    </td>
+                    <td className="py-3 fw-semibold text-dark" style={{ fontSize: '13px' }}>
+                      {member.start_weight ? `${member.start_weight} kg` : '-'}
+                    </td>
+                    <td className="py-3 fw-semibold text-dark" style={{ fontSize: '13px' }}>
+                      {member.current_weight ? `${member.current_weight} kg` : '-'}
+                    </td>
+                    <td className={`py-3 fw-bold ${member.weight_change < 0 ? 'text-success' : member.weight_change > 0 ? 'text-danger' : 'text-muted'}`} style={{ fontSize: '13px' }}>
+                      {member.weight_change_str || '-'}
+                    </td>
+                    <td className="py-3 text-muted" style={{ fontSize: '13px' }}>
+                      <span className="text-secondary">{member.baseline_bf_percent}%</span> → <span className="fw-bold text-dark">{member.current_bf_percent}%</span>
+                    </td>
+                    <td className="py-3 text-muted" style={{ fontSize: '13px' }}>
+                      <span className="text-secondary">{member.baseline_lbm} kg</span> → <span className="fw-bold text-dark">{member.current_lbm} kg</span>
+                    </td>
+                    <td className="py-3 text-success fw-bold" style={{ fontSize: '13px' }}>
+                      {member.member_gain || '-'}
+                    </td>
+                    <td className="py-3 text-primary fw-bold" style={{ fontSize: '13px' }}>
+                      {member.member_loss || '-'}
+                    </td>
+                    <td className="py-3 text-center">
+                      <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill" style={{ fontSize: '12px' }}>
+                        {member.overall_improvement || `${member.score}%`}
+                      </span>
+                    </td>
+                    <td className="py-3 text-center px-3">
+                      {isRankUp ? (
+                        <span className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill" style={{ fontSize: '11px' }}>
+                          {rankChangeStr}
+                        </span>
+                      ) : isRankDown ? (
+                        <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-pill" style={{ fontSize: '11px' }}>
+                          {rankChangeStr}
+                        </span>
+                      ) : rankChangeStr === '—' ? (
+                        <span className="badge bg-light text-secondary border px-2 py-1 rounded-pill" style={{ fontSize: '11px' }}>
+                          —
+                        </span>
+                      ) : (
+                        <span className="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1 rounded-pill" style={{ fontSize: '11px' }}>
+                          NEW
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -220,7 +376,7 @@ const MemberLeaderboard = () => {
   ];
 
   return (
-    <div className="leaderboard-wrapper pb-5" style={{ maxWidth: '750px', margin: '0 auto' }}>
+    <div className="leaderboard-wrapper pb-5" style={{ maxWidth: '1100px', margin: '0 auto' }}>
       {/* Header */}
       <div className="text-center mb-4 mt-2">
         <div className="d-inline-flex align-items-center justify-content-center bg-white rounded-pill px-3 py-1 mb-2 border shadow-sm">
@@ -273,7 +429,7 @@ const MemberLeaderboard = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`btn border-0 rounded-pill fw-bold flex-shrink-0 ${activeTab !== tab.key ? 'text-muted bg-transparent' : 'shadow-sm'}`}
             style={{ 
-              padding: '8px 18px', 
+              padding: '8px 22px', 
               fontSize: '14px', 
               transition: 'all 0.3s',
               backgroundColor: activeTab === tab.key ? '#2f6a87' : 'transparent',
@@ -283,6 +439,34 @@ const MemberLeaderboard = () => {
             <FontAwesomeIcon icon={tab.icon} className="me-2" /> {tab.label}
           </button>
         ))}
+      </div>
+
+      {/* Controls Bar: Month Selector & Export Excel */}
+      <div className="bg-white p-3 rounded-4 shadow-sm mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+        <div className="d-flex align-items-center gap-2">
+          <FontAwesomeIcon icon={faCalendarAlt} className="text-primary fs-5 me-1" />
+          <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Leaderboard Month:</span>
+          <select
+            className="form-select form-select-sm border shadow-none rounded-pill fw-bold text-dark px-3 py-2 bg-light"
+            style={{ minWidth: '160px', cursor: 'pointer' }}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          >
+            {availableMonths.map(m => (
+              <option key={m.monthKey || m.key} value={m.monthKey || m.key}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          className="btn btn-success rounded-pill px-4 py-2 fw-semibold shadow-sm text-nowrap"
+          onClick={handleExportExcel}
+          disabled={leaderboardData.length === 0}
+        >
+          <FontAwesomeIcon icon={faFileExcel} className="me-2" /> Export Excel
+        </button>
       </div>
 
       {/* Main Content Area */}
@@ -305,7 +489,9 @@ const MemberLeaderboard = () => {
           ) : leaderboardData.length === 0 ? (
             <div className="text-center text-muted py-5 my-3">
               <FontAwesomeIcon icon={faTrophy} className="mb-3 text-secondary" style={{ fontSize: '3.5rem', opacity: 0.25 }} />
-              <h5 className="fw-bold text-dark mb-2">No members have qualified for this leaderboard yet.</h5>
+              <h5 className="fw-bold text-dark mb-2">
+                No leaderboard data available for {selectedMonthLabel || 'this month'}.
+              </h5>
               <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>
                 Complete assessments to earn your rank on the {activeTab.replace('_', ' ')} leaderboard.
               </p>
@@ -313,7 +499,7 @@ const MemberLeaderboard = () => {
           ) : (
             <>
               {renderPodium()}
-              {renderList()}
+              {renderDetailedTable()}
             </>
           )}
         </div>

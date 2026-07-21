@@ -54,12 +54,7 @@ const BodybuilderAssessmentForm = () => {
             const res = await axiosInstance.get(endpoint);
             if (res.data && res.data.success) {
               const allFetchedMembers = res.data.data || [];
-              // Filter out members who are specifically enrolled for Body Building
-              const bodybuilders = allFetchedMembers.filter(m => {
-                const goalStr = (m.goal || m.interestedIn || "").toLowerCase();
-                return goalStr.includes('body building') || goalStr.includes('bodybuilding') || goalStr.includes('muscle');
-              });
-              setMembers(bodybuilders.length > 0 ? bodybuilders : allFetchedMembers);
+              setMembers(allFetchedMembers);
             }
           }
         }

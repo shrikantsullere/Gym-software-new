@@ -20,10 +20,39 @@ const MemberAssessmentDashboard = ({ memberId }) => {
       }
     } catch (err) {
       if (err.response?.status === 404) {
-        setError({
-          type: '404',
-          title: "No Assessment Recorded Yet",
-          message: "No body composition or metrics recorded for this member yet."
+        setAssessment({
+          id: null,
+          assessment_date: null,
+          fitness_goal: 'N/A',
+          metrics: {
+            bmi: '-',
+            body_fat_percentage: '-',
+            lean_body_mass: '-',
+            ideal_body_weight: '-',
+            waist_to_hip_ratio: null,
+            bmr: '-',
+            tdee: '-',
+            target_calories: '-'
+          },
+          inputs: {
+            fitness_goal: '',
+            weight_kg: '-',
+            height_cm: '-'
+          },
+          macros: {
+            protein_grams: 0,
+            fat_grams: 0,
+            carb_grams: 0
+          },
+          dashboard_data: {
+            bmi_risk_label: '-',
+            cardio_zones: {
+              fat_burn_low: '-',
+              fat_burn_high: '-',
+              cardio_low: '-',
+              cardio_high: '-'
+            }
+          }
         });
       } else {
         setError({
@@ -125,9 +154,17 @@ const MemberAssessmentDashboard = ({ memberId }) => {
                 Last Updated: {assessment.assessment_date ? new Date(assessment.assessment_date).toLocaleDateString() : 'N/A'}
               </p>
             </div>
-            <span className="badge bg-primary py-2 px-3 align-self-start align-self-sm-center">
-              Goal: {fitnessGoal}
-            </span>
+            <div className="d-flex align-items-center gap-2">
+              <span className="badge bg-primary py-2 px-3 align-self-start align-self-sm-center">
+                Goal: {fitnessGoal}
+              </span>
+              <button 
+                className="btn btn-primary btn-sm px-3 py-2 fw-semibold shadow-sm"
+                onClick={() => navigate('/personaltrainer/assessment-form', { state: { preselectMember: memberId } })}
+              >
+                + Log New Assessment
+              </button>
+            </div>
           </div>
 
           <div className="row g-4 mb-5">

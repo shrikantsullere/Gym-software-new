@@ -12,10 +12,6 @@ const PersonalAttendance = () => {
     memberId: "",
     memberName: "",
   });
-  const [activeFilters, setActiveFilters] = useState({
-    memberId: "",
-    memberName: "",
-  });
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -180,22 +176,15 @@ const PersonalAttendance = () => {
   // Filtered attendance
   const filteredAttendance = attendance.filter((m) => {
     return (
-      (activeFilters.memberId
-        ? m.member_id.toString().includes(activeFilters.memberId)
+      (filters.memberId
+        ? m.member_id.toString().includes(filters.memberId)
         : true) &&
-      (activeFilters.memberName
-        ? m.name.toLowerCase().includes(activeFilters.memberName.toLowerCase())
+      (filters.memberName
+        ? m.name.toLowerCase().includes(filters.memberName.toLowerCase())
         : true) &&
       (search ? m.name.toLowerCase().includes(search.toLowerCase()) : true)
     );
   });
-
-  const handleApplyFilter = () => {
-    setActiveFilters({
-      memberId: filters.memberId,
-      memberName: filters.memberName
-    });
-  };
 
   const handleExport = () => {
     if (filteredAttendance.length === 0) {
@@ -269,7 +258,6 @@ const PersonalAttendance = () => {
               />
             </Col>
             <Col xs={12} sm={6} md={4} className="d-flex justify-content-start justify-content-md-end">
-              <Button variant="outline-secondary me-2" onClick={handleApplyFilter}>Filter</Button>
               <Button variant="outline-secondary" onClick={handleExport}>Export</Button>
             </Col>
           </Row>

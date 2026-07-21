@@ -74,6 +74,10 @@ export const getVulnerableMembers = async (req, res, next) => {
       else if (attendancePercentage <= 75 || m.daysAbsent >= 7) {
         badge = 'Yellow';
       }
+      // Blue: < 90% attendance or absent for 3+ days
+      else if (attendancePercentage < 90 || m.daysAbsent >= 3) {
+        badge = 'Blue';
+      }
 
       return { 
         ...m, 

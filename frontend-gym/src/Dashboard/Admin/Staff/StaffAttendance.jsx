@@ -57,7 +57,9 @@ const StaffAttendance = () => {
       setLoading(true);
       const response = await axiosInstance.get(`/staff/all/${adminId}`);
       if (response.data.success) {
-        const transformedStaff = response.data.staff.map(staff => ({
+        const transformedStaff = response.data.staff
+          .filter(staff => staff.roleId !== 8)
+          .map(staff => ({
           id: staff.staffId,
           staffId: staff.staffId,
           name: staff.fullName,
@@ -209,8 +211,7 @@ const StaffAttendance = () => {
       4: 'Receptionist',
       5: 'Personal Trainer',
       6: 'General Trainer',
-      7: 'Receptionist',
-      8: 'Housekeeping'
+      7: 'Receptionist'
     };
     return roles[roleId] || 'Unknown';
   };

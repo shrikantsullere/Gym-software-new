@@ -53,7 +53,6 @@ const ManageStaff = () => {
     'generaltrainer': 6,
     'personaltrainer': 5,
     'Receptionist': 7,
-    'Housekeeping': 8,
     'sales_agent': 10
   };
 
@@ -90,10 +89,10 @@ const ManageStaff = () => {
       const response = await axiosInstance.get(`/staff/admin/${adminId}`);
       if (response.data?.success && response.data.staff) {
         const staffArr = Array.isArray(response.data.staff) ? response.data.staff : [response.data.staff];
-        const normalized = staffArr.map(normalizeStaffItem);
+        const normalized = staffArr.map(normalizeStaffItem).filter(s => s && s.roleId !== 8);
         setStaff(normalized);
       } else if (Array.isArray(response.data)) {
-        setStaff(response.data.map(normalizeStaffItem));
+        setStaff(response.data.map(normalizeStaffItem).filter(s => s && s.roleId !== 8));
       } else {
         setStaff([]);
       }

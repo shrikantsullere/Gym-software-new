@@ -13,8 +13,7 @@ const ManageRoles = () => {
   const [roles, setRoles] = useState([
     { id: 1, role_name: "Manager", role_description: "Branch operations manager", permissions_json: { dashboard: true, members: true, staff: true, finance: true, settings: false } },
     { id: 2, role_name: "Trainer", role_description: "Fitness instructor", permissions_json: { dashboard: true, members: true, staff: false, finance: false, settings: false } },
-    { id: 3, role_name: "Receptionist", role_description: "Front desk operations", permissions_json: { dashboard: true, members: true, staff: false, finance: false, settings: false } },
-    { id: 4, role_name: "Housekeeping", role_description: "Cleaning & maintenance", permissions_json: { dashboard: false, members: false, staff: false, finance: false, settings: false } }
+    { id: 3, role_name: "Receptionist", role_description: "Front desk operations", permissions_json: { dashboard: true, members: true, staff: false, finance: false, settings: false } }
   ]);
 
   // ===== HANDLERS =====
@@ -73,8 +72,7 @@ const ManageRoles = () => {
       Admin: "bg-primary-subtle text-primary-emphasis",
       Manager: "bg-info-subtle text-info-emphasis",
       Trainer: "bg-warning-subtle text-warning-emphasis",
-      Receptionist: "bg-secondary-subtle text-secondary-emphasis",
-      Housekeeping: "bg-success-subtle text-success-emphasis"
+      Receptionist: "bg-secondary-subtle text-secondary-emphasis"
     };
     return colors[roleName] || "bg-light text-dark";
   };

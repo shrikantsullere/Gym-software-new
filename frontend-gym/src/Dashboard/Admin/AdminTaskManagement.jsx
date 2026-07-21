@@ -9,7 +9,6 @@ import { FaTrash } from 'react-icons/fa';
 const AdminTaskManagement = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [staffMembers, setStaffMembers] = useState([]);
-  const [housekeepingStaff, setHousekeepingStaff] = useState([]);
   const [branches, setBranches] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +25,6 @@ const AdminTaskManagement = () => {
   });
 
   const departments = [
-    { id: 8, name: 'Housekeeping' },
     { id: 3, name: 'General Trainer' },
     { id: 5, name: 'Personal Trainer' },
     { id: 7, name: 'Sales' },
@@ -43,9 +41,7 @@ const AdminTaskManagement = () => {
         const staffResponse = await axiosInstance.get(`/staff/admin/${adminId}`);
         console.log("Staff fetched:", staffResponse.data);
         const staff = staffResponse.data.staff || [];
-        setStaffMembers(staff);
-        const housekeeping = staff.filter(s => s.roleId === 8);
-        setHousekeepingStaff(housekeeping);
+        setStaffMembers(staff.filter(s => s.roleId !== 8));
 
         // Fetch branches
         const branchesResponse = await axiosInstance.get(`/branches/by-admin/${adminId}`);

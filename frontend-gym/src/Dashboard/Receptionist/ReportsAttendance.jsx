@@ -188,6 +188,7 @@ const ReportsAttendance = () => {
     if (!record) return false;
     const staffName = (record.staff_name || '').toLowerCase();
     const role = (record.role || '').toLowerCase();
+    if (role.includes('housekeeping')) return false;
     const status = (record.status || '').toLowerCase();
     const shift = (record.shift_name || '').toLowerCase();
     const term = (searchTerm || '').trim().toLowerCase();

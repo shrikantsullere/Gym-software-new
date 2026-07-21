@@ -15,7 +15,6 @@ const DutyRoster = () => {
   const staffMembers = [
     { id: 101, name: "Alex Johnson", role: "Personal Trainer" },
     { id: 102, name: "Braidy Con", role: "Receptionist" },
-    { id: 103, name: "Sarah Kim", role: "Housekeeping" },
     { id: 104, name: "Michael Brown", role: "General Trainer" },
     { id: 105, name: "Emily Davis", role: "Receptionist" }
   ];
@@ -64,21 +63,6 @@ const DutyRoster = () => {
       approved_by_name: "Manager Smith",
       approved_at: "2025-04-01T11:15:00",
       status: "Approved"
-    },
-    {
-      shift_id: 3,
-      staff_id: 103,
-      staff_name: "Sarah Kim",
-      role: "Housekeeping", // 👈 Role
-      shift_type: "Straight Shift",
-      date: "2025-04-05",
-      start_time: "2025-04-05T10:00:00",
-      end_time: "2025-04-05T18:00:00",
-      breaks: [],
-      approved_by: null,
-      approved_by_name: null,
-      approved_at: null,
-      status: "Scheduled"
     },
     {
       shift_id: 4,
@@ -197,7 +181,6 @@ const DutyRoster = () => {
     const colors = {
       "Personal Trainer": "bg-primary",
       "Receptionist": "bg-info",
-      "Housekeeping": "bg-secondary",
       "General Trainer": "bg-success"
     };
     return (

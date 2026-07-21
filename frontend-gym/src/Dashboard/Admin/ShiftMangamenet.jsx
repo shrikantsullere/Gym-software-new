@@ -17,6 +17,8 @@ const ShiftManagement = () => {
   const [staffSearch, setStaffSearch] = useState("");
 
   const filteredStaff = staffMembers.filter(staff => {
+    const role = (staff.roleName || staff.role || '').toLowerCase();
+    if (role.includes('housekeeping')) return false;
     const name = staff.fullName || staff.name || staff.userName || staff.email || '';
     return name.toLowerCase().includes(staffSearch.toLowerCase());
   });

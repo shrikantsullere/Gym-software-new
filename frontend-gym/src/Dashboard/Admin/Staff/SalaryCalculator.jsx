@@ -72,7 +72,9 @@ const SalaryCalculator = () => {
       console.log("Staff API response:", response.data); // Debug log
       if (response.data.success) {
         // Transform API response to match component's expected format
-        const transformedStaff = response.data.staff.map((staff) => ({
+        const transformedStaff = response.data.staff
+          .filter((staff) => staff.roleId !== 8)
+          .map((staff) => ({
           id: staff.staffId,
           staff_id: staff.staffId,
           first_name: staff.fullName,
@@ -103,7 +105,6 @@ const SalaryCalculator = () => {
       5: "Personal Trainer",
       6: "General Trainer",
       7: "Receptionist",
-      8: "Housekeeping",
     };
     return roles[roleId] || "Unknown";
   };

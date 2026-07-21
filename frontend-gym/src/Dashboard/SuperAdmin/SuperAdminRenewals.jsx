@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../Api/axiosInstance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faBan, faDownload, faFilePdf, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faBan, faDownload, faFilePdf, faChevronDown, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -11,13 +12,15 @@ const SuperAdminRenewals = () => {
   const [expired, setExpired] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDropdown, setOpenDropdown] = useState(null); // 'upcoming' | 'expired' | null
+  const [days, setDays] = useState(7);
+  const [sendingBulk, setSendingBulk] = useState(false);
 
   const upcomingDropdownRef = useRef(null);
   const expiredDropdownRef = useRef(null);
 
   useEffect(() => {
     fetchRenewals();
-  }, []);
+  }, [days]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -34,8 +37,9 @@ const SuperAdminRenewals = () => {
   }, []);
 
   const fetchRenewals = async () => {
+    setLoading(true);
     try {
-      const res = await axiosInstance.get('/dashboard/renewals');
+      const res = await axiosInstance.get(`/dashboard/renewals?days=${days}`);
       if (res.data.success) {
         setUpcoming(res.data.data.upcomingRenewals);
         setExpired(res.data.data.expiredRenewals);
@@ -44,6 +48,26 @@ const SuperAdminRenewals = () => {
       console.error('Error fetching renewals:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBulkExpiryReminder = async () => {
+    const isConfirmed = window.confirm("Are you sure you want to send expiry reminders to all Gyms whose plans expire between 3 days ago and 3 days from now?");
+    if (!isConfirmed) return;
+    
+    setSendingBulk(true);
+    try {
+      const res = await axiosInstance.post('/dashboard/bulk-expiry-reminder');
+      if (res.data.success) {
+        toast.success(`Successfully sent reminders to ${res.data.count} gyms.`);
+      } else {
+        toast.error("Failed to send reminders");
+      }
+    } catch (err) {
+      console.error("Bulk reminder error:", err);
+      toast.error("Error sending bulk reminders");
+    } finally {
+      setSendingBulk(false);
     }
   };
 
@@ -209,20 +233,32 @@ const SuperAdminRenewals = () => {
       <div className="row g-4">
 
         {/* Upcoming Renewals */}
-        <div className="col-lg-6">
+        <div className="col-12">
           <div className="card shadow-sm border-0 rounded-4 h-100">
             <div className="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
               <h5 className="mb-0 fw-bold text-warning">
                 <FontAwesomeIcon icon={faClock} className="me-2" />
-                Upcoming Renewals (30 Days)
+                Upcoming Renewals
               </h5>
-              <ExportDropdown
-                dropdownKey="upcoming"
-                data={upcoming}
-                filename="Upcoming_Renewals"
-                title="Upcoming Renewals (30 Days)"
-                dropdownRef={upcomingDropdownRef}
-              />
+              <div className="d-flex align-items-center gap-3">
+                <select 
+                  className="form-select form-select-sm shadow-sm"
+                  style={{ width: 'auto', borderRadius: '8px', cursor: 'pointer' }}
+                  value={days}
+                  onChange={(e) => setDays(Number(e.target.value))}
+                >
+                  <option value={7}>Next 7 Days</option>
+                  <option value={15}>Next 15 Days</option>
+                  <option value={30}>Next 30 Days</option>
+                </select>
+                <ExportDropdown
+                  dropdownKey="upcoming"
+                  data={upcoming}
+                  filename="Upcoming_Renewals"
+                  title={`Upcoming Renewals (${days} Days)`}
+                  dropdownRef={upcomingDropdownRef}
+                />
+              </div>
             </div>
             <div className="card-body p-0">
               <div className="table-responsive" style={{ maxHeight: '350px', overflowY: 'auto' }}>
@@ -261,20 +297,35 @@ const SuperAdminRenewals = () => {
         </div>
 
         {/* Expired / Inactive */}
-        <div className="col-lg-6">
+        <div className="col-12">
           <div className="card shadow-sm border-0 rounded-4 h-100">
             <div className="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
               <h5 className="mb-0 fw-bold text-danger">
                 <FontAwesomeIcon icon={faBan} className="me-2" />
                 Expired / Inactive Subscriptions
               </h5>
-              <ExportDropdown
-                dropdownKey="expired"
-                data={expired}
-                filename="Expired_Renewals"
-                title="Expired / Inactive Subscriptions"
-                dropdownRef={expiredDropdownRef}
-              />
+              <div className="d-flex align-items-center gap-3">
+                <button 
+                  className="btn btn-sm btn-primary shadow-sm fw-bold d-flex align-items-center gap-2"
+                  style={{ borderRadius: '8px', padding: '6px 12px' }}
+                  onClick={handleBulkExpiryReminder}
+                  disabled={sendingBulk}
+                >
+                  {sendingBulk ? (
+                    <span className="spinner-border spinner-border-sm" />
+                  ) : (
+                    <FontAwesomeIcon icon={faPaperPlane} />
+                  )}
+                  {sendingBulk ? 'Sending...' : 'Bulk Send Reminders (-3 to +3 Days)'}
+                </button>
+                <ExportDropdown
+                  dropdownKey="expired"
+                  data={expired}
+                  filename="Expired_Renewals"
+                  title="Expired / Inactive Subscriptions"
+                  dropdownRef={expiredDropdownRef}
+                />
+              </div>
             </div>
             <div className="card-body p-0">
               <div className="table-responsive" style={{ maxHeight: '350px', overflowY: 'auto' }}>

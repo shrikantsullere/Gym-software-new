@@ -284,12 +284,8 @@ export default function DashboardHomePage() {
   const totalAdmins = dashboardData.totalAdmins ?? 0;
   const newAdmins = dashboardData.newAdmins ?? 0;
 
-  // Compute target achievement %
   const revenueArr = dashboardData.revenueVsTarget?.revenue ?? [];
   const targetArr = dashboardData.revenueVsTarget?.target ?? [];
-  const totalActual = revenueArr.reduce((s, v) => s + (v ?? 0), 0);
-  const totalTarget = targetArr.reduce((s, v) => s + (v ?? 0), 0);
-  const targetAchievement = pct(totalActual, totalTarget);
 
   /* ── KPI cards ── */
   const kpis = [
@@ -310,15 +306,7 @@ export default function DashboardHomePage() {
       positive: true,
       icon: FaChartBar,
       accent: "#10b981",
-    },
-    {
-      label: "Target Achievement",
-      value: `${targetAchievement}%`,
-      subValue: totalTarget > 0 ? `of ${fmtINR(totalTarget)}` : "No target set",
-      delta: targetAchievement >= 80 ? targetAchievement - 70 : 80 - targetAchievement,
-      positive: targetAchievement >= 80,
-      icon: FaBullseye,
-      accent: targetAchievement >= 80 ? "#10b981" : "#f59e0b",
+
     },
     {
       label: "Total Admins",
@@ -368,7 +356,7 @@ export default function DashboardHomePage() {
           margin-bottom: 20px;
         }
         @media (min-width: 1024px) {
-          .pbi-kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+          .pbi-kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
         }
 
         /* Charts row */

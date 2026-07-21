@@ -54,6 +54,9 @@ const AdminMember = () => {
   const [showCropper, setShowCropper] = useState(false);
   const [cropperImage, setCropperImage] = useState(null);
   const [cropperMode, setCropperMode] = useState(null); // 'add' or 'edit'
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   // Plans state
   const [apiPlans, setApiPlans] = useState([]);
@@ -100,7 +103,7 @@ const AdminMember = () => {
     fullName: "",
     phone: "",
     email: "",
-    password: "12345",
+    password: "123456",
     planId: "",
     planIds: [], // NEW: Support multiple plans
     address: "",
@@ -556,8 +559,8 @@ const AdminMember = () => {
       if (response.data) {
         const createdMemberId = response.data.data?.memberId;
 
-        // If personal trainer is selected, assign it
-        if (newMember.interestedIn === "Personal Training" && newMember.trainerId && createdMemberId) {
+        // If trainer is selected, assign it
+        if (newMember.trainerId && createdMemberId) {
           try {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: createdMemberId,
@@ -678,8 +681,8 @@ const AdminMember = () => {
       );
 
       if (response.data?.success) {
-        // If personal trainer is selected, assign it
-        if (editMember.interestedIn === "Personal Training" && editMember.trainerId) {
+        // If trainer is selected, assign it
+        if (editMember.trainerId) {
           try {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: editMember.id,
@@ -1474,6 +1477,20 @@ const handleDownloadReceipt = async (member) => {
     }
   };
 
+  const getAssignedTrainers = (member) => {
+    const trainers = new Set();
+    if (member.trainerName) trainers.add(member.trainerName);
+    if (member.assignedPlans && member.assignedPlans.length > 0) {
+      member.assignedPlans.forEach(p => {
+        if (p.computedStatus === 'Active' && p.trainerName) {
+          trainers.add(p.trainerName);
+        }
+      });
+    }
+    const arr = Array.from(trainers).filter(t => t);
+    return arr.length > 0 ? arr.join(', ') : 'None';
+  };
+
   return (
     <>
     <div className="container-fluid py-2 py-md-4">
@@ -1636,16 +1653,7 @@ const handleDownloadReceipt = async (member) => {
                           )}
                         </td>
                         <td>
-                          {member.assignedPlans && member.assignedPlans.length > 0 ? (
-                            <div>
-                              {member.assignedPlans
-                                .filter(p => p.computedStatus === 'Active')
-                                .map(p => p.trainerName || member.trainerName || 'None')
-                                .join(', ')}
-                            </div>
-                          ) : (
-                            <span>{member.trainerName || 'None'}</span>
-                          )}
+                          {getAssignedTrainers(member)}
                         </td>
                         {/* <td>
                           {member.remainingDays === null || member.remainingDays === undefined ? (
@@ -2006,19 +2014,28 @@ const handleDownloadReceipt = async (member) => {
                       <label className="form-label">
                         Password <span className="text-danger">*</span>
                       </label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        value={newMember.password}
-                        onChange={(e) =>
-                          setNewMember({
-                            ...newMember,
-                            password: e.target.value,
-                          })
-                        }
-                        autoComplete="new-password"
-                        required
-                      />
+                      <div className="input-group">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className="form-control"
+                          value={newMember.password}
+                          onChange={(e) =>
+                            setNewMember({
+                              ...newMember,
+                              password: e.target.value,
+                            })
+                          }
+                          autoComplete="new-password"
+                          required
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <Eye size={18} /> : <Eye size={18} style={{ opacity: 0.5 }}/>}
+                        </button>
+                      </div>
                     </div>
                     <div className="col-12 col-md-6">
                       <label className="form-label">Date of Birth</label>

@@ -86,14 +86,13 @@ export const getShiftByStaffIdService = async (staffId) => {
   const realStaffId = staffRows.length ? staffRows[0].id : staffId;
   const realUserId = staffRows.length ? staffRows[0].userId : staffId;
 
+  // Only return shifts actually assigned to this specific staff member
   const [shifts] = await pool.query(
     `SELECT * FROM shifts 
      WHERE FIND_IN_SET(?, staffIds) 
         OR FIND_IN_SET(?, staffIds)
         OR staffIds = ? 
         OR staffIds = ?
-        OR staffIds = '0' 
-        OR staffIds IS NULL
      ORDER BY id DESC`,
     [realStaffId, realUserId, realStaffId, realUserId]
   );
@@ -104,6 +103,7 @@ export const getShiftByStaffIdService = async (staffId) => {
 
   return shifts;
 };
+
 
 
 

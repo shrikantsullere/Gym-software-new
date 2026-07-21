@@ -11,6 +11,7 @@ const InventoryManagement = () => {
   const [stats, setStats] = useState({ totalItems: 0, lowStockCount: 0, maintenanceCount: 0 });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -224,6 +225,16 @@ const InventoryManagement = () => {
     }
   };
 
+  const displayedInventory = inventory.filter(item => {
+    if (statusFilter === 'LowStock') {
+      return item.quantity <= 2 || item.status === 'Low Stock' || item.status === 'Out of Stock' || item.condition === 'Low Stock';
+    }
+    if (statusFilter === 'NeedsMaintenance') {
+      return item.status === 'Maintenance Due' || item.status === 'Under Repair' || item.condition === 'Under Repair' || (item.nextMaintenanceDate && new Date(item.nextMaintenanceDate) <= new Date());
+    }
+    return true;
+  });
+
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
       <div className="row mb-4 align-items-center g-3">
@@ -252,7 +263,11 @@ const InventoryManagement = () => {
       {/* Stats Cards */}
       <div className="row g-3 mb-4">
         <div className="col-12 col-sm-6 col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 bg-white h-100">
+          <div 
+            className={`card border-0 shadow-sm rounded-4 bg-white h-100 ${statusFilter === 'All' ? 'ring-2 ring-primary border border-primary' : ''}`}
+            style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+            onClick={() => { setStatusFilter('All'); setActiveTab('equipment'); }}
+          >
             <div className="card-body d-flex align-items-center">
               <div className="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
                 <FontAwesomeIcon icon={faBoxes} className="text-primary fs-3" />
@@ -266,27 +281,41 @@ const InventoryManagement = () => {
         </div>
         
         <div className="col-12 col-sm-6 col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 bg-white h-100">
+          <div 
+            className={`card border-0 shadow-sm rounded-4 bg-white h-100 ${statusFilter === 'LowStock' ? 'border border-2 border-warning shadow' : ''}`}
+            style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+            onClick={() => { setStatusFilter(prev => prev === 'LowStock' ? 'All' : 'LowStock'); setActiveTab('equipment'); }}
+          >
             <div className="card-body d-flex align-items-center">
               <div className="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
                 <FontAwesomeIcon icon={faExclamationTriangle} className="text-warning fs-3" />
               </div>
               <div>
-                <h6 className="text-muted mb-1" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Low / Out of Stock</h6>
-                <h3 className="mb-0 fw-bold text-warning">{(stats.lowStockCount || 0) + (stats.outOfStockCount || 0)}</h3>
+                <div className="d-flex align-items-center justify-content-between">
+                  <h6 className="text-muted mb-1 me-2" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Low / Out of Stock</h6>
+                  {statusFilter === 'LowStock' && <span className="badge bg-warning text-dark style-sm">Active Filter</span>}
+                </div>
+                <h3 className="mb-0 fw-bold text-warning">{(Number(stats.lowStockCount) || 0) + (Number(stats.outOfStockCount) || 0)}</h3>
               </div>
             </div>
           </div>
         </div>
 
         <div className="col-12 col-sm-6 col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 bg-white h-100">
+          <div 
+            className={`card border-0 shadow-sm rounded-4 bg-white h-100 ${statusFilter === 'NeedsMaintenance' ? 'border border-2 border-danger shadow' : ''}`}
+            style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+            onClick={() => { setStatusFilter(prev => prev === 'NeedsMaintenance' ? 'All' : 'NeedsMaintenance'); setActiveTab('equipment'); }}
+          >
             <div className="card-body d-flex align-items-center">
               <div className="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
                 <FontAwesomeIcon icon={faTools} className="text-danger fs-3" />
               </div>
               <div>
-                <h6 className="text-muted mb-1" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Needs Maintenance</h6>
+                <div className="d-flex align-items-center justify-content-between">
+                  <h6 className="text-muted mb-1 me-2" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Needs Maintenance</h6>
+                  {statusFilter === 'NeedsMaintenance' && <span className="badge bg-danger text-white style-sm">Active Filter</span>}
+                </div>
                 <h3 className="mb-0 fw-bold text-danger">{stats.maintenanceCount || 0}</h3>
               </div>
             </div>
@@ -322,11 +351,21 @@ const InventoryManagement = () => {
       {activeTab === 'equipment' && (
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div className="card-header bg-white border-bottom p-4 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-          <h5 className="mb-0 fw-bold text-dark d-flex align-items-center">
-            <span className="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+          <h5 className="mb-0 fw-bold text-dark d-flex align-items-center flex-wrap gap-2">
+            <span className="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-1">
               <FontAwesomeIcon icon={faBoxes} />
             </span>
             Equipment List
+            {statusFilter !== 'All' && (
+              <span 
+                className="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-2 ms-2 rounded-pill fw-normal fs-6 shadow-sm"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setStatusFilter('All')}
+                title="Click to clear filter"
+              >
+                Filtered: {statusFilter === 'LowStock' ? 'Low / Out of Stock' : 'Needs Maintenance'} ✕
+              </span>
+            )}
           </h5>
           
           <div className="d-flex flex-column flex-sm-row gap-3 w-100 w-lg-auto">
@@ -383,8 +422,8 @@ const InventoryManagement = () => {
               <tbody>
                 {loading ? (
                   <tr><td colSpan="7" className="text-center py-5">Loading...</td></tr>
-                ) : inventory.length > 0 ? (
-                  inventory.map(item => (
+                ) : displayedInventory.length > 0 ? (
+                  displayedInventory.map(item => (
                     <tr key={item.id}>
                       <td className="px-4 py-3 fw-semibold text-dark">{item.name}</td>
                       <td className="py-3 text-muted">{item.category}</td>

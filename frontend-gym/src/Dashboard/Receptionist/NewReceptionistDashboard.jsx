@@ -225,14 +225,14 @@ const NewReceptionistDashboard = () => {
                           borderRadius: "8px",
                         }}
                       >
-                        {m.daysLeft === 0 ? "Expires Today" : `${m.daysLeft}d left`}
+                        {m.daysLeft === 0 ? "Expires Today" : m.daysLeft < 0 ? `Expired ${Math.abs(m.daysLeft)}d ago` : `${m.daysLeft}d left`}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <div className="p-3 text-center text-muted small">
-                  No renewals due in next 7 days.
+                  No expiring plans or renewals.
                 </div>
               )}
             </div>

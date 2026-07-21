@@ -15,31 +15,59 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     [adminId]
   );
 
-  // 3. Pending payments (payments with status pending or unpaid)
-  const pendingPayments = [{ count: 0, totalAmount: 0 }];
+  // 3. Pending payments (members without full payment recorded or unpaid)
+  const [pendingPayments] = await pool.query(
+    `SELECT COUNT(DISTINCT m.id) as count, 0 as totalAmount
+     FROM member m
+     LEFT JOIN payment p ON p.memberId = m.id
+     WHERE (m.adminId = ? OR ? IS NULL)
+       AND (m.amountPaid = 0 OR m.amountPaid IS NULL OR p.id IS NULL)`,
+    [adminId, adminId]
+  );
 
-  // 4. Members with expiring plans in next 7 days
+  // 4. Members with expiring/recently expired plans
   const [expiringPlans] = await pool.query(
-    `SELECT COUNT(*) as count FROM member_plan_assignment mpa
-     JOIN member m ON mpa.memberId = m.id
-     WHERE mpa.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-     AND m.adminId = ? AND mpa.status = 'Active'`,
-    [adminId]
+    `SELECT COUNT(DISTINCT m.id) as count 
+     FROM member m
+     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId AND mpa.status = 'Active'
+     WHERE (m.adminId = ? OR ? IS NULL)
+       AND COALESCE(mpa.membershipTo, m.membershipTo) IS NOT NULL
+       AND DATEDIFF(COALESCE(mpa.membershipTo, m.membershipTo), CURDATE()) BETWEEN -15 AND 30`,
+    [adminId, adminId]
   );
 
-  // 5. Low stock inventory alerts (products with currentStock <= 5)
-  const [lowStockItems] = await pool.query(
-    `SELECT id, name, currentStock, category FROM product
-     WHERE currentStock <= 5 AND isActive = 1 AND branchId = ?
-     ORDER BY currentStock ASC LIMIT 5`,
-    [branchId]
+  // 5. Low stock inventory & gym equipment alerts
+  const [eqItems] = await pool.query(
+    `SELECT id, name, quantity AS currentStock, COALESCE(category, 'Equipment') AS category 
+     FROM gym_equipment
+     WHERE (branchId = ? OR ? IS NULL OR branchId = 0) AND quantity <= 5 AND isActive = 1`,
+    [branchId, branchId]
   );
+  const [reqItems] = await pool.query(
+    `SELECT id, itemName AS name, quantity AS currentStock, COALESCE(category, 'Equipment Request') AS category 
+     FROM equipment_requests
+     WHERE (adminId = ? OR ? IS NULL) AND status = 'PENDING'`,
+    [adminId, adminId]
+  );
+  const [prodItems] = await pool.query(
+    `SELECT id, name, currentStock, COALESCE(category, 'General') AS category 
+     FROM product
+     WHERE currentStock <= 5 AND isActive = 1 AND (branchId = ? OR ? IS NULL OR branchId = 0)`,
+    [branchId, branchId]
+  );
+
+  const lowStockItems = [...eqItems, ...reqItems, ...prodItems]
+    .sort((a, b) => a.currentStock - b.currentStock)
+    .slice(0, 5);
 
   // 6. Recent walk-in members today (list)
   const [recentCheckins] = await pool.query(
-    `SELECT ma.id, ma.checkIn, ma.checkOut, m.fullName AS name, m.phone
+    `SELECT ma.id, ma.checkIn, ma.checkOut, 
+            COALESCE(m.fullName, u.fullName, 'Member') AS name, 
+            COALESCE(m.phone, u.phone) AS phone
      FROM memberattendance ma
-     JOIN member m ON ma.memberId = m.id
+     LEFT JOIN member m ON ma.memberId = m.id
+     LEFT JOIN user u ON ma.memberId = u.id OR m.userId = u.id
      WHERE DATE(ma.checkIn) = CURDATE()
      ORDER BY ma.checkIn DESC
      LIMIT 10`,
@@ -55,17 +83,19 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     [adminId]
   );
 
-  // 8. Members with renewals due soon (expiring in next 7 days, for follow-up)
+  // 8. Members with renewals due soon (for follow-up)
   const [renewalsList] = await pool.query(
-    `SELECT m.fullName AS name, m.phone, mpa.membershipTo AS endDate,
-       DATEDIFF(mpa.membershipTo, CURDATE()) as daysLeft
-     FROM member_plan_assignment mpa
-     JOIN member m ON mpa.memberId = m.id
-     WHERE mpa.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-     AND m.adminId = ? AND mpa.status = 'Active'
-     ORDER BY mpa.membershipTo ASC
+    `SELECT m.id, m.fullName AS name, m.phone, 
+            COALESCE(mpa.membershipTo, m.membershipTo) AS endDate,
+            DATEDIFF(COALESCE(mpa.membershipTo, m.membershipTo), CURDATE()) as daysLeft
+     FROM member m
+     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId AND mpa.status = 'Active'
+     WHERE (m.adminId = ? OR ? IS NULL)
+       AND COALESCE(mpa.membershipTo, m.membershipTo) IS NOT NULL
+       AND DATEDIFF(COALESCE(mpa.membershipTo, m.membershipTo), CURDATE()) BETWEEN -15 AND 30
+     ORDER BY COALESCE(mpa.membershipTo, m.membershipTo) ASC
      LIMIT 10`,
-    [adminId]
+    [adminId, adminId]
   );
 
   return {

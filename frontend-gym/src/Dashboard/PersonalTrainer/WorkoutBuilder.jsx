@@ -33,6 +33,7 @@ const WorkoutBuilder = () => {
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const branchId = user.branchId;
   const adminId = user.adminId || user.id;
+<<<<<<< HEAD
   const roleId = Number(user.roleId);
   const roleName = (user.roleName || user.role || '').toLowerCase().replace(/\s+/g, '');
 
@@ -60,7 +61,7 @@ const WorkoutBuilder = () => {
 
         const res = await axiosInstance.get(endpoint);
         if (res.data && res.data.success) {
-          setMembers(res.data.data || res.data.items || []);
+          setMembers(res.data.data || res.data.items || res.data.members || []);
         } else if (Array.isArray(res.data)) {
           setMembers(res.data);
         }
@@ -288,7 +289,7 @@ const WorkoutBuilder = () => {
                 >
                   <option value="">-- Select a Member --</option>
                   {members.map(member => (
-                    <option key={member.id} value={member.id}>{member.fullName} ({member.phone})</option>
+                    <option key={member.id} value={member.id}>{member.fullName || member.name || `Member #${member.id}`} ({member.phone || 'No phone'})</option>
                   ))}
                 </select>
                 <div className="form-text mt-2">

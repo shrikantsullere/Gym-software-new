@@ -250,6 +250,8 @@ const PersonalTraining = () => {
       alert('An error occurred while fetching the booking');
     }
   };
+  const uniqueTrainers = Array.from(new Set(trainingData.map(d => d.trainerName).filter(Boolean)));
+
   const filteredData = trainingData.filter((data) => {
     const matchesTrainer = trainerFilter ? data.trainerName?.toLowerCase().includes(trainerFilter.toLowerCase()) : true;
     // Map Paid to Completed for filtering or handle both
@@ -345,7 +347,13 @@ const PersonalTraining = () => {
               placeholder="Filter by Trainer Name"
               value={trainerFilter}
               onChange={(e) => setTrainerFilter(e.target.value)}
+              list="trainerNamesList"
             />
+            <datalist id="trainerNamesList">
+              {uniqueTrainers.map((name, idx) => (
+                <option key={idx} value={name} />
+              ))}
+            </datalist>
           </div>
           <div className="col-md-3">
             <select

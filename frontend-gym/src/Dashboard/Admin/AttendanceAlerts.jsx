@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BaseUrl from '../../Api/BaseUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle, faEnvelope, faPhone, faUserShield, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faExclamationTriangle, faEnvelope, faPhone, faUserShield, faSync, faDownload } from '@fortawesome/free-solid-svg-icons';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AttendanceAlerts = () => {
   const [members, setMembers] = useState([]);
@@ -68,7 +71,8 @@ const AttendanceAlerts = () => {
   const filteredMembers = members.filter((m) => {
     const absent = m.daysAbsent || 0;
     const attPct = m.attendancePercentage || 0;
-    if (durationFilter === "GT_3") return absent > 3 || attPct < 90;
+    if (durationFilter === "LT_90") return attPct < 90 || m.badge === "Blue";
+    if (durationFilter === "GT_3") return absent > 3;
     if (durationFilter === "GT_7") return absent > 7;
     if (durationFilter === "GT_14") return absent > 14;
     if (durationFilter === "GT_30") return absent > 30;
@@ -76,6 +80,49 @@ const AttendanceAlerts = () => {
       return absent >= Number(customDaysMin);
     return true;
   });
+
+  const exportToExcel = () => {
+    if (filteredMembers.length === 0) {
+      alert("No members available to export.");
+      return;
+    }
+    const dataToExport = filteredMembers.map((m) => ({
+      "Member Name": m.fullName || '—',
+      "Phone": m.phone || '—',
+      "Email": m.email || '—',
+      "Days Absent": m.daysAbsent ?? 'Never Attended',
+      "Attendance %": `${m.attendancePercentage}%`,
+      "Risk Badge": m.badge || '—',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "At-Risk Members");
+    XLSX.writeFile(workbook, `At_Risk_Members_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    if (filteredMembers.length === 0) {
+      alert("No members available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("At-Risk Members Attendance Report", 14, 15);
+    const tableColumn = ["Member Name", "Phone", "Email", "Days Absent", "Attendance %", "Risk Badge"];
+    const tableRows = filteredMembers.map((m) => [
+      m.fullName || '—',
+      m.phone || '—',
+      m.email || '—',
+      m.daysAbsent ?? 'Never Attended',
+      `${m.attendancePercentage}%`,
+      m.badge || '—',
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`At_Risk_Members_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -254,7 +301,8 @@ const AttendanceAlerts = () => {
           <span className="fw-semibold text-muted small me-1">ABSENCE DURATION:</span>
           {[
             { label: 'All At-Risk', val: 'ALL' },
-            { label: 'Absent > 3 Days (< 90%)', val: 'GT_3' },
+            { label: '< 90% Attendance', val: 'LT_90' },
+            { label: 'Absent > 3 Days', val: 'GT_3' },
             { label: 'Absent > 7 Days', val: 'GT_7' },
             { label: 'Absent > 14 Days', val: 'GT_14' },
             { label: 'Absent > 30 Days (High Risk)', val: 'GT_30' },
@@ -270,16 +318,42 @@ const AttendanceAlerts = () => {
           ))}
         </div>
 
-        {selectedIds.length > 0 && (
-          <button
-            type="button"
-            className="btn btn-sm btn-primary shadow-sm fw-semibold"
-            onClick={handleBulkMessageClick}
-          >
-            <FontAwesomeIcon icon={faEnvelope} className="me-2" />
-            Send Bulk Message ({selectedIds.length} Selected)
-          </button>
-        )}
+        <div className="d-flex align-items-center gap-2">
+          {/* Export Data Dropdown */}
+          <div className="dropdown">
+            <button
+              className="btn btn-success btn-sm dropdown-toggle fw-semibold d-flex align-items-center gap-2"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FontAwesomeIcon icon={faDownload} /> Export Data
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                  <strong className="text-success">XLSX</strong> Export to Excel
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportToPDF}>
+                  <strong className="text-danger">PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {selectedIds.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-sm btn-primary shadow-sm fw-semibold"
+              onClick={handleBulkMessageClick}
+            >
+              <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+              Send Bulk Message ({selectedIds.length} Selected)
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden">

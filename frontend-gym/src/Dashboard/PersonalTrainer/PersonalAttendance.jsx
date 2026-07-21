@@ -54,11 +54,13 @@ const PersonalAttendance = () => {
           const checkOutTime = entry.checkOut ? new Date(entry.checkOut) : null;
           let workHours = "--";
 
-          if (checkInTime && checkOutTime) {
+          if (checkInTime && checkOutTime && !isNaN(checkInTime.getTime()) && !isNaN(checkOutTime.getTime())) {
             const diffMs = checkOutTime - checkInTime;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            workHours = `${diffHours}h ${diffMinutes}m`;
+            if (diffMs > 0) {
+              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+              const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+              workHours = `${diffHours}h ${diffMinutes}m`;
+            }
           }
 
           return {

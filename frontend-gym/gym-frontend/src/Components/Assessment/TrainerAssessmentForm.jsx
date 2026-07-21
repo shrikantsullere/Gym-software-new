@@ -126,16 +126,24 @@ const TrainerAssessmentForm = () => {
     }
 
     try {
+      const gender = (formData.gender_at_assessment || 'male').toLowerCase();
+      const waist = parseFloat(formData.waist_cm) || 80;
+      const neck = parseFloat(formData.neck_cm) || (gender === 'male' ? Math.max(30, waist - 10) : 35);
+      const hip = gender === 'female' ? (parseFloat(formData.hip_cm) || waist + 10) : null;
+
       const payload = {
         ...formData,
-        memberId: parseInt(formData.memberId),
-        age_at_assessment: parseInt(formData.age_at_assessment),
+        memberId: parseInt(formData.memberId, 10),
+        age_at_assessment: parseInt(formData.age_at_assessment, 10) || 25,
+        gender_at_assessment: gender,
         weight_kg: parseFloat(formData.weight_kg),
         height_cm: parseFloat(formData.height_cm),
-        neck_cm: parseFloat(formData.neck_cm),
-        waist_cm: parseFloat(formData.waist_cm),
-        hip_cm: formData.gender_at_assessment === 'female' ? parseFloat(formData.hip_cm) : null,
-        resting_hr: parseInt(formData.resting_hr)
+        neck_cm: neck,
+        waist_cm: waist,
+        hip_cm: hip,
+        resting_hr: parseInt(formData.resting_hr, 10) || 72,
+        activity_level: formData.activity_level || 'moderate',
+        fitness_goal: formData.fitness_goal || 'fat_loss'
       };
 
       const res = await axiosInstance.post('/v1/assessments', payload);

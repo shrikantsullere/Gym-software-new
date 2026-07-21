@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaEdit, FaTrashAlt, FaUserPlus, FaTimes } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrashAlt, FaUserPlus, FaTimes, FaDownload } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import GetAdminId from '../../Api/GetAdminId';
 import axiosInstance from '../../Api/axiosInstance';
 import CustomTimePicker from '../../Components/CustomTimePicker';
@@ -272,6 +275,49 @@ const ClassesSchedule = () => {
     setSelectedClass(null);
   };
 
+  const exportToExcel = () => {
+    if (classes.length === 0) {
+      alert("No classes available to export.");
+      return;
+    }
+    const dataToExport = classes.map((c) => ({
+      "Class Name": c.className || '—',
+      "Trainer": c.trainer || '—',
+      "Date": c.date ? c.date.split('T')[0] : '—',
+      "Time": c.time || '—',
+      "Day": c.day || '—',
+      "Status": c.status || '—',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Scheduled Classes");
+    XLSX.writeFile(workbook, `Classes_Schedule_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    if (classes.length === 0) {
+      alert("No classes available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("All Classes Scheduled Report", 14, 15);
+    const tableColumn = ["Class Name", "Trainer", "Date", "Time", "Day", "Status"];
+    const tableRows = classes.map((c) => [
+      c.className || '—',
+      c.trainer || '—',
+      c.date ? c.date.split('T')[0] : '—',
+      c.time || '—',
+      c.day || '—',
+      c.status || '—',
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`Classes_Schedule_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const getStatusBadge = (status) => {
     const badgeClasses = {
       Active: "bg-success-subtle text-success-emphasis",
@@ -410,7 +456,32 @@ const ClassesSchedule = () => {
           <h2 className="fw-bold">All Class Scheduled</h2>
           <p className="text-muted mb-0">Manage all gym classes, trainers, and member assignments.</p>
         </div>
-        <div className="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <div className="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0 d-flex align-items-center justify-content-lg-end gap-2">
+          {/* Export Data Dropdown */}
+          <div className="dropdown">
+            <button
+              className="btn btn-success fw-semibold dropdown-toggle d-flex align-items-center gap-2"
+              style={{ borderRadius: '8px', padding: '10px 16px', fontWeight: '500' }}
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaDownload /> Export Data
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                  <strong className="text-success">XLSX</strong> Export to Excel
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportToPDF}>
+                  <strong className="text-danger">PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
+
           <button
             className="btn w-100 w-lg-auto"
             style={{

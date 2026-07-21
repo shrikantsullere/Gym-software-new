@@ -93,6 +93,22 @@ const ReportsAttendance = () => {
     }
   };
 
+  const calculateWorkHours = (checkInTime, checkOutTime) => {
+    if (!checkInTime || !checkOutTime) return '—';
+    try {
+      const start = new Date(checkInTime);
+      const end = new Date(checkOutTime);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return '—';
+      const diffMs = end - start;
+      if (diffMs <= 0) return '0h 0m';
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours}h ${minutes}m`;
+    } catch (e) {
+      return '—';
+    }
+  };
+
   const calculateShiftType = (checkInTime) => {
     if (!checkInTime) return '—';
     try {
@@ -480,6 +496,7 @@ const ReportsAttendance = () => {
                     <th className="fw-semibold text-nowrap" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '100px' }}>ROLE</th>
                     <th className="fw-semibold text-nowrap" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>CHECK-IN</th>
                     <th className="fw-semibold text-nowrap" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>CHECK-OUT</th>
+                    <th className="fw-semibold text-nowrap" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>WORK HOURS</th>
                     <th className="fw-semibold text-nowrap d-none d-lg-table-cell" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>MODE</th>
                     <th className="fw-semibold text-nowrap d-none d-md-table-cell" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>SHIFT</th>
                     <th className="fw-semibold text-nowrap" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>STATUS</th>
@@ -499,6 +516,15 @@ const ReportsAttendance = () => {
                         <td className="text-nowrap" style={{ padding: '0.5rem' }}>{getRoleBadge(record.role)}</td>
                         <td className="text-nowrap" style={{ padding: '0.5rem' }}>{formatTime(record.checkin_time)}</td>
                         <td className="text-nowrap" style={{ padding: '0.5rem' }}>{formatTime(record.checkout_time)}</td>
+                        <td className="text-nowrap fw-semibold" style={{ padding: '0.5rem' }}>
+                          {record.checkin_time && record.checkout_time ? (
+                            <span className="badge text-bg-light border text-dark px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                              {calculateWorkHours(record.checkin_time, record.checkout_time)}
+                            </span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
                         <td className="text-nowrap d-none d-lg-table-cell" style={{ padding: '0.5rem' }}>
                           {record.mode && record.mode !== '-' && record.mode !== 'Unknown' && record.mode !== '—' ? (
                             <span className={`badge rounded-pill ${record.mode === 'QR' || record.mode === 'QR Code' ? 'bg-info text-white' : 'bg-secondary text-white'} px-2 py-1`} style={{ fontSize: '0.65rem' }}>

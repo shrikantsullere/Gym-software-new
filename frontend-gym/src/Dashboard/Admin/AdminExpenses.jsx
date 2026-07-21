@@ -149,6 +149,29 @@ const AdminExpenses = () => {
     }
   };
 
+  const handleExport = () => {
+    const headers = ['Expense Category', 'Description / Title', 'Source Type', 'Payment Mode', 'Date', 'Amount'];
+    const csvData = expenses.map(expense => [
+      `"${expense.expenseType || ''}"`,
+      `"${expense.name || ''}"`,
+      `"${expense.category || ''}"`,
+      `"${expense.paymentMode || ''}"`,
+      `"${expense.date ? new Date(expense.date).toLocaleDateString() : ''}"`,
+      `"${expense.amount || 0}"`
+    ]);
+    
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...csvData.map(e => e.join(','))].join('\n');
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `expenses_${selectedMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="container-fluid p-3 p-md-4" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       {/* Header */}
@@ -177,6 +200,13 @@ const AdminExpenses = () => {
             title="Refresh"
           >
             <FontAwesomeIcon icon={faSync} />
+          </button>
+          <button
+            className="btn btn-success shadow-sm fw-semibold"
+            onClick={handleExport}
+            title="Export CSV"
+          >
+            <i className="bi bi-file-earmark-excel me-2"></i> Export
           </button>
           <button
             className="btn btn-primary shadow-sm fw-semibold"

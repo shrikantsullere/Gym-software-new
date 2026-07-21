@@ -683,7 +683,7 @@ const Leads = () => {
                                 {new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                               </td>
                               <td style={{ padding: '14px 16px' }}>
-                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <div className="d-flex align-items-center gap-2">
                                   <button
                                     className="btn btn-sm btn-outline-secondary"
                                     title="View"
@@ -708,40 +708,6 @@ const Leads = () => {
                                   >
                                     <FaTrashAlt size={14} />
                                   </button>
-                                  {/* Approve / In Progress / Reject */}
-                                  {lead.status !== 'Converted' && (
-                                    <button
-                                      className="btn btn-sm btn-success"
-                                      title="Approve (Mark as Converted)"
-                                      disabled={saasStatusLoading[lead.id] === 'Converted'}
-                                      onClick={() => handleSaasLeadStatus(lead.id, 'Converted')}
-                                      style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}
-                                    >
-                                      {saasStatusLoading[lead.id] === 'Converted' ? '...' : '✅ Approve'}
-                                    </button>
-                                  )}
-                                  {lead.status !== 'In Progress' && lead.status !== 'Converted' && (
-                                    <button
-                                      className="btn btn-sm btn-warning"
-                                      title="Mark as In Progress"
-                                      disabled={saasStatusLoading[lead.id] === 'In Progress'}
-                                      onClick={() => handleSaasLeadStatus(lead.id, 'In Progress')}
-                                      style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}
-                                    >
-                                      {saasStatusLoading[lead.id] === 'In Progress' ? '...' : '🔄 In Progress'}
-                                    </button>
-                                  )}
-                                  {lead.status !== 'Rejected' && (
-                                    <button
-                                      className="btn btn-sm btn-danger"
-                                      title="Reject Lead"
-                                      disabled={saasStatusLoading[lead.id] === 'Rejected'}
-                                      onClick={() => handleSaasLeadStatus(lead.id, 'Rejected')}
-                                      style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}
-                                    >
-                                      {saasStatusLoading[lead.id] === 'Rejected' ? '...' : '❌ Reject'}
-                                    </button>
-                                  )}
                                 </div>
                               </td>
                             </tr>

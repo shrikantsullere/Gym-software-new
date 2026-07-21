@@ -147,7 +147,11 @@ const Leads = () => {
       const adminId = user.adminId || user.id || 1;
       const response = await axiosInstance.get(`/staff/admin/${adminId}`);
       if (response.data && response.data.success) {
-        setStaffList(response.data.staff || []);
+        const filteredStaff = (response.data.staff || []).filter(s => {
+          const rName = (s.roleName || "").toLowerCase();
+          return rName === "receptionist" || rName === "sales_agent" || rName === "sales agent" || s.roleId === 9 || s.roleId === 10;
+        });
+        setStaffList(filteredStaff);
       }
     } catch (error) {
       console.error("Error fetching staff:", error);

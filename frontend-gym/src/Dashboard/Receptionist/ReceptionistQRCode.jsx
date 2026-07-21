@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
-import { FaEye, FaTrash, FaTimesCircle } from "react-icons/fa";
+import { FaEye, FaTrash, FaTimesCircle, FaDownload } from "react-icons/fa";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import axiosInstance from '../../Api/axiosInstance';
 
 const ReceptionistQRCode = () => {
@@ -184,6 +187,52 @@ const ReceptionistQRCode = () => {
     );
   });
 
+  const exportToExcel = () => {
+    if (filteredAttendance.length === 0) {
+      alert("No attendance records available to export.");
+      return;
+    }
+    const dataToExport = filteredAttendance.map((m) => ({
+      "Attendance ID": m.attendance_id,
+      "Member ID": m.member_id,
+      "Member Name": m.name,
+      "Check-in": m.checkin_time || "—",
+      "Check-out": m.checkout_time || "—",
+      "Work Hours": m.workHours || "—",
+      "Mode": m.mode || "—",
+      "Notes": m.notes || "",
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Daily Attendance");
+    XLSX.writeFile(workbook, `Daily_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    if (filteredAttendance.length === 0) {
+      alert("No attendance records available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("Daily Attendance Report", 14, 15);
+    const tableColumn = ["ID", "Member Name", "Check-in", "Check-out", "Work Hours", "Mode", "Notes"];
+    const tableRows = filteredAttendance.map((m) => [
+      m.attendance_id,
+      m.name,
+      m.checkin_time || "—",
+      m.checkout_time || "—",
+      m.workHours || "—",
+      m.mode || "—",
+      m.notes || "",
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`Daily_Attendance_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div className="p-3 p-md-4 bg-white rounded shadow">
       <h2 className="mb-2 mb-md-3 fw-bold">Attendance Management</h2>
@@ -208,7 +257,7 @@ const ReceptionistQRCode = () => {
       ) : (
         <>
           {/* Filters Row */}
-          <Row className="mb-4 g-2 g-md-3">
+          <Row className="mb-4 g-2 g-md-3 align-items-center">
             <Col xs={12} sm={6} md={4}>
               <Form.Control
                 type="text"
@@ -229,10 +278,32 @@ const ReceptionistQRCode = () => {
                 }
               />
             </Col>
-            {/* <Col xs={12} sm={6} md={4} className="d-flex justify-content-start justify-content-md-end">
-              <Button variant="outline-secondary me-2">Filter</Button>
-              <Button variant="outline-secondary">Export</Button>
-            </Col> */}
+            <Col xs={12} sm={6} md={4} className="d-flex justify-content-start justify-content-md-end">
+              {/* Export Data Dropdown */}
+              <div className="dropdown">
+                <button
+                  className="btn btn-success fw-semibold dropdown-toggle d-flex align-items-center gap-2"
+                  style={{ borderRadius: '8px', padding: '6px 14px', fontWeight: '500' }}
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <FaDownload /> Export Data
+                </button>
+                <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+                  <li>
+                    <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                      <strong className="text-success">XLSX</strong> Export to Excel
+                    </button>
+                  </li>
+                  <li>
+                    <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportToPDF}>
+                      <strong className="text-danger">PDF</strong> Export to PDF
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </Col>
           </Row>
 
           {/* Desktop Table View */}

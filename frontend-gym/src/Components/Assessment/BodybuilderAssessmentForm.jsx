@@ -135,7 +135,6 @@ const BodybuilderAssessmentForm = () => {
                 calves_cm: latestLog.calves_cm || prev.calves_cm,
                 coach_notes: latestLog.notes || prev.coach_notes
               }));
-              }));
             } else {
               // Fallback to fetch general health log for basic measurements if no bodybuilding log
               try {

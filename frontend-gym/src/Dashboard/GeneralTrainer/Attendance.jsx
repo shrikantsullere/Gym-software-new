@@ -54,23 +54,27 @@ const Attendance = () => {
           // Calculate work hours
           const checkInTime = entry.checkIn ? new Date(entry.checkIn) : null;
           const checkOutTime = entry.checkOut ? new Date(entry.checkOut) : null;
-          let workHours = "--";
+          let workHours = "—";
           
-          if (checkInTime && checkOutTime) {
+          if (checkInTime && checkOutTime && !isNaN(checkInTime.getTime()) && !isNaN(checkOutTime.getTime())) {
             const diffMs = checkOutTime - checkInTime;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            workHours = `${diffHours}h ${diffMinutes}m`;
+            if (diffMs > 0) {
+              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+              const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+              workHours = `${diffHours}h ${diffMinutes}m`;
+            }
           }
           
           return {
             attendance_id: entry.id,
             member_id: entry.memberId,
             name: entry.fullName || `Member ID: ${entry.memberId}`,
+            rawCheckIn: entry.checkIn,
+            rawCheckOut: entry.checkOut,
             status: entry.computedStatus === 'Active' ? 'Present' : 
                     entry.computedStatus === 'Completed' ? 'Present' : 'Absent',
-            checkin_time: entry.checkIn ? new Date(entry.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
-            checkout_time: entry.checkOut ? new Date(entry.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+            checkin_time: entry.checkIn ? new Date(entry.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—",
+            checkout_time: entry.checkOut ? new Date(entry.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—",
             mode: entry.mode,
             notes: entry.notes,
             computedStatus: entry.computedStatus,
@@ -159,17 +163,7 @@ const Attendance = () => {
       const data = await response.json();
       
       if (data.success) {
-        // Update specific member to show checked out status
-        setAttendance(attendance.map(member => 
-          member.attendance_id === id 
-            ? { 
-                ...member, 
-                checkingOut: false,
-                checkedOut: true,
-                checkout_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              }
-            : member
-        ));
+        await fetchAttendanceData();
         alert('Check-out successful!');
       } else {
         alert(data.message || 'Check-out failed');

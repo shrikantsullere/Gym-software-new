@@ -5,6 +5,22 @@ export const validateAssessmentInputs = (data) => {
     'neck_cm', 'waist_cm', 'resting_hr', 'activity_level', 'fitness_goal'
   ];
 
+  // Auto-default missing optional fields if omitted
+  if (!data.gender_at_assessment) {
+    data.gender_at_assessment = 'male';
+  }
+  if (!data.neck_cm && data.waist_cm) {
+    data.neck_cm = Math.max(30, Number(data.waist_cm) - 10);
+  } else if (!data.neck_cm) {
+    data.neck_cm = 38;
+  }
+  if (!data.waist_cm) {
+    data.waist_cm = 80;
+  }
+  if (!data.resting_hr) {
+    data.resting_hr = 72;
+  }
+
   requiredFields.forEach(field => {
     if (data[field] === undefined || data[field] === null || data[field] === '') {
       errors.push(`Missing required field: ${field}`);

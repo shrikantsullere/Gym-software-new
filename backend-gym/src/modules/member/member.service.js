@@ -1065,34 +1065,106 @@ export const getMembersByAdminIdService = async (adminId) => {
 };
 
 export const getMembersByTrainerIdService = async (trainerId) => {
-  // Find associated staff and user IDs, and adminId for fallback
+  // 1. Find staff & user records for trainerId, including role info
+  let realStaffId = trainerId;
+  let realUserId = trainerId;
+  let adminId = null;
+  let roleName = '';
+
   const [staffRows] = await pool.query(
-    "SELECT id, userId, adminId FROM staff WHERE id = ? OR userId = ?",
+    `SELECT s.id AS staffId, s.userId, s.adminId, u.roleId, r.name AS roleName
+     FROM staff s
+     LEFT JOIN user u ON s.userId = u.id
+     LEFT JOIN role r ON u.roleId = r.id
+     WHERE s.id = ? OR s.userId = ?`,
     [trainerId, trainerId]
   );
 
-  const realStaffId = staffRows.length ? staffRows[0].id : trainerId;
-  const realUserId = staffRows.length ? staffRows[0].userId : trainerId;
-  const adminId = staffRows.length ? staffRows[0].adminId : null;
+  if (staffRows.length) {
+    realStaffId = staffRows[0].staffId;
+    realUserId = staffRows[0].userId;
+    adminId = staffRows[0].adminId;
+    roleName = staffRows[0].roleName || '';
+  } else {
+    // Try user table directly
+    const [userRows] = await pool.query(
+      `SELECT u.id AS userId, u.adminId, u.roleId, r.name AS roleName, s.id AS staffId
+       FROM user u
+       LEFT JOIN role r ON u.roleId = r.id
+       LEFT JOIN staff s ON u.id = s.userId
+       WHERE u.id = ?`,
+      [trainerId]
+    );
+    if (userRows.length) {
+      realUserId = userRows[0].userId;
+      realStaffId = userRows[0].staffId || trainerId;
+      adminId = userRows[0].adminId;
+      roleName = userRows[0].roleName || '';
+    }
+  }
 
-  const [rows] = await pool.query(
-    `
-    SELECT DISTINCT m.*
-    FROM member m
-    LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
-    LEFT JOIN memberplan p1 ON mpa.planId = p1.id
-    LEFT JOIN memberplan p2 ON m.planId = p2.id
-    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
-    ORDER BY m.fullName
-    `,
+  // 2. Query 1-to-1 directly assigned members first
+  const [directRows] = await pool.query(
+    `SELECT DISTINCT m.*
+     FROM member m
+     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
+     LEFT JOIN memberplan p1 ON mpa.planId = p1.id
+     LEFT JOIN memberplan p2 ON m.planId = p2.id
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
+     ORDER BY m.fullName`,
     [realStaffId, realUserId, realStaffId, realUserId]
   );
 
-  if (rows.length > 0) {
-    return rows;
+  if (directRows.length > 0) {
+    return directRows;
   }
 
-  // Fallback: If no assigned members found, return all members for this gym admin
+  // 3. Fallback filtering based on Trainer Type (Personal Trainer vs General Trainer)
+  const isPersonalTrainer = roleName.toLowerCase().includes('personal') || roleName.toLowerCase().includes('pt');
+  const isGeneralTrainer = roleName.toLowerCase().includes('general') || roleName.toLowerCase().includes('gt');
+
+  if (isPersonalTrainer) {
+    // Return members enrolled in Personal Training / PT plans
+    const [ptMembers] = await pool.query(
+      `SELECT DISTINCT m.*
+       FROM member m
+       LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
+       LEFT JOIN memberplan p1 ON mpa.planId = p1.id
+       LEFT JOIN memberplan p2 ON m.planId = p2.id
+       WHERE (m.adminId = ? OR ? IS NULL)
+         AND (
+           p1.type = 'PERSONAL' OR p1.trainerType = 'personal' OR p1.name LIKE '%personal%' OR p1.name LIKE '%PT%' OR p1.name = 'Pre'
+           OR p2.type = 'PERSONAL' OR p2.trainerType = 'personal' OR p2.name LIKE '%personal%' OR p2.name LIKE '%PT%' OR p2.name = 'Pre'
+         )
+       ORDER BY m.fullName`,
+      [adminId, adminId]
+    );
+    if (ptMembers.length > 0) {
+      return ptMembers;
+    }
+  } else if (isGeneralTrainer) {
+    // Return members enrolled in General Gym Training plans
+    const [gtMembers] = await pool.query(
+      `SELECT DISTINCT m.*
+       FROM member m
+       LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
+       LEFT JOIN memberplan p1 ON mpa.planId = p1.id
+       LEFT JOIN memberplan p2 ON m.planId = p2.id
+       WHERE (m.adminId = ? OR ? IS NULL)
+         AND (
+           (p1.type != 'PERSONAL' AND p1.type IS NOT NULL) OR (p2.type != 'PERSONAL' AND p2.type IS NOT NULL) 
+           OR p1.trainerType = 'general' OR p2.trainerType = 'general'
+           OR p1.name LIKE '%general%' OR p2.name LIKE '%general%' OR p1.name LIKE '%basic%' OR p2.name LIKE '%basic%'
+         )
+       ORDER BY m.fullName`,
+      [adminId, adminId]
+    );
+    if (gtMembers.length > 0) {
+      return gtMembers;
+    }
+  }
+
+  // Fallback: If adminId is available, return all members for that admin
   if (adminId) {
     const [allMembers] = await pool.query(
       `SELECT * FROM member WHERE adminId = ? ORDER BY fullName`,
@@ -1101,20 +1173,7 @@ export const getMembersByTrainerIdService = async (trainerId) => {
     return allMembers;
   }
 
-  // Second Fallback: Query by user.adminId if user is passed directly
-  const [userRows] = await pool.query(
-    "SELECT adminId FROM user WHERE id = ?",
-    [trainerId]
-  );
-  if (userRows.length && userRows[0].adminId) {
-    const [allMembers] = await pool.query(
-      `SELECT * FROM member WHERE adminId = ? ORDER BY fullName`,
-      [userRows[0].adminId]
-    );
-    return allMembers;
-  }
-
-  return rows;
+  return directRows;
 };
 
 const calculateMembershipDates = (lastMembershipTo, validityDays = 30) => {

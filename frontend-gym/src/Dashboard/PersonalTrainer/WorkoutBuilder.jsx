@@ -33,7 +33,6 @@ const WorkoutBuilder = () => {
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const branchId = user.branchId;
   const adminId = user.adminId || user.id;
-<<<<<<< HEAD
   const roleId = Number(user.roleId);
   const roleName = (user.roleName || user.role || '').toLowerCase().replace(/\s+/g, '');
 

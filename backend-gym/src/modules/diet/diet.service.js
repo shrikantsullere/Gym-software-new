@@ -25,7 +25,6 @@ export const createDietPlanService = async ({ title, notes, branchId, createdBy,
 
 // ----- GET ALL DIET PLANS (FOR TRAINER/ADMIN) -----
 export const getAllDietPlansService = async (branchId, createdBy) => {
-  // We can fetch all plans, or filter by branchId/createdBy
   let query = "SELECT * FROM dietplan ORDER BY id DESC";
   let params = [];
   
@@ -36,7 +35,6 @@ export const getAllDietPlansService = async (branchId, createdBy) => {
 
   const [plans] = await pool.query(query, params);
 
-  // Fetch all meals for these plans
   if (plans.length === 0) return [];
 
   const planIds = plans.map(p => p.id);
@@ -62,11 +60,9 @@ export const getDietPlanByIdService = async (id) => {
 
 // ----- UPDATE DIET PLAN -----
 export const updateDietPlanService = async (id, { title, notes, meals, dietType }) => {
-  // Check if exists
   const [existing] = await pool.query("SELECT * FROM dietplan WHERE id = ?", [id]);
   if (existing.length === 0) throw { status: 404, message: "Diet plan not found" };
 
-  // Update plan details
   if (title !== undefined || notes !== undefined || dietType !== undefined) {
     await pool.query(
       "UPDATE dietplan SET title = COALESCE(?, title), notes = COALESCE(?, notes), dietType = COALESCE(?, dietType) WHERE id = ?",
@@ -74,7 +70,6 @@ export const updateDietPlanService = async (id, { title, notes, meals, dietType 
     );
   }
 
-  // Update meals (Easiest way: delete old meals and insert new ones)
   if (meals && Array.isArray(meals)) {
     await pool.query("DELETE FROM dietmeal WHERE dietPlanId = ?", [id]);
     
@@ -92,29 +87,21 @@ export const updateDietPlanService = async (id, { title, notes, meals, dietType 
 
 // ----- DELETE DIET PLAN -----
 export const deleteDietPlanService = async (id) => {
-  // Delete assignments first
   await pool.query("DELETE FROM dietplanassignment WHERE dietPlanId = ?", [id]);
-  
-  // Delete meals
   await pool.query("DELETE FROM dietmeal WHERE dietPlanId = ?", [id]);
-  
-  // Delete plan
   const [result] = await pool.query("DELETE FROM dietplan WHERE id = ?", [id]);
   if (result.affectedRows === 0) throw { status: 404, message: "Diet plan not found" };
-
   return true;
 };
 
 // ----- ASSIGN DIET PLAN TO MEMBER -----
 export const assignDietPlanService = async (memberId, dietPlanId) => {
-  // Check if assignment exists
   const [existing] = await pool.query(
     "SELECT * FROM dietplanassignment WHERE memberId = ? AND dietPlanId = ?",
     [memberId, dietPlanId]
   );
   if (existing.length) throw { status: 400, message: "Diet plan already assigned to member" };
 
-  // Insert assignment
   await pool.query(
     "INSERT INTO dietplanassignment (memberId, dietPlanId) VALUES (?, ?)",
     [memberId, dietPlanId]
@@ -124,39 +111,102 @@ export const assignDietPlanService = async (memberId, dietPlanId) => {
 };
 
 // ----- GET MEMBER DIET PLANS -----
-export const getMemberDietPlanService = async (memberId) => {
+export const getMemberDietPlanService = async (memberIdParam) => {
+  const memberId = parseInt(memberIdParam, 10);
+  if (!memberId) return [];
+
+  // 1. Resolve realMemberId & member details
+  let realMemberId = memberId;
+  let branchId = null;
+
+  try {
+    const [mRows] = await pool.query(
+      `SELECT id, branchId, goal FROM member WHERE id = ? OR userId = ? LIMIT 1`,
+      [memberId, memberId]
+    );
+    if (mRows.length) {
+      realMemberId = mRows[0].id;
+      branchId = mRows[0].branchId;
+    }
+  } catch (e) {
+    console.error("Error looking up member for diet:", e);
+  }
+
+  // 2. Query direct assignments in dietplanassignment
   const [assignments] = await pool.query(
-    `SELECT a.id AS assignmentId, a.assignedAt, d.id AS dietPlanId, d.title, d.notes,
+    `SELECT a.id AS assignmentId, a.assignedAt, d.id AS dietPlanId, d.title, d.notes, d.dietType,
             m.id AS mealId, m.time AS mealTime, m.food AS mealFood
      FROM dietplanassignment a
      JOIN dietplan d ON a.dietPlanId = d.id
      LEFT JOIN dietmeal m ON d.id = m.dietPlanId
-     WHERE a.memberId = ?
+     WHERE a.memberId = ? OR a.memberId = ?
      ORDER BY a.id DESC`,
-    [memberId]
+    [realMemberId, memberId]
   );
 
-  // Format meals under diet plans
-  const plans = {};
-  assignments.forEach(a => {
-    if (!plans[a.dietPlanId]) {
-      plans[a.dietPlanId] = { 
-        id: a.dietPlanId, 
-        assignmentId: a.assignmentId,
-        assignedAt: a.assignedAt,
-        title: a.title, 
-        notes: a.notes, 
+  const plansMap = {};
+  if (assignments.length > 0) {
+    assignments.forEach(a => {
+      if (!plansMap[a.dietPlanId]) {
+        plansMap[a.dietPlanId] = { 
+          id: a.dietPlanId, 
+          assignmentId: a.assignmentId,
+          assignedAt: a.assignedAt,
+          title: a.title, 
+          notes: a.notes, 
+          dietType: a.dietType || 'Any',
+          meals: [] 
+        };
+      }
+      if (a.mealId) {
+        plansMap[a.dietPlanId].meals.push({
+          id: a.mealId,
+          time: a.mealTime,
+          food: a.mealFood
+        });
+      }
+    });
+    return Object.values(plansMap);
+  }
+
+  // 3. Fallback: If no direct assignment exists, fetch available diet plans for branch or general system diet plans
+  let fallbackSql = `
+    SELECT d.id AS dietPlanId, d.title, d.notes, d.dietType, d.createdAt AS assignedAt,
+           m.id AS mealId, m.time AS mealTime, m.food AS mealFood
+    FROM dietplan d
+    LEFT JOIN dietmeal m ON d.id = m.dietPlanId
+  `;
+  const fallbackParams = [];
+
+  if (branchId && parseInt(branchId, 10) > 0) {
+    fallbackSql += ` WHERE (d.branchId = ? OR d.branchId = 0 OR d.branchId IS NULL)`;
+    fallbackParams.push(parseInt(branchId, 10));
+  }
+
+  fallbackSql += ` ORDER BY d.id DESC`;
+
+  const [fallbackRows] = await pool.query(fallbackSql, fallbackParams);
+
+  fallbackRows.forEach(r => {
+    if (!plansMap[r.dietPlanId]) {
+      plansMap[r.dietPlanId] = { 
+        id: r.dietPlanId, 
+        assignmentId: 0,
+        assignedAt: r.assignedAt,
+        title: r.title, 
+        notes: r.notes, 
+        dietType: r.dietType || 'Any',
         meals: [] 
       };
     }
-    if (a.mealId) {
-      plans[a.dietPlanId].meals.push({
-        id: a.mealId,
-        time: a.mealTime,
-        food: a.mealFood
+    if (r.mealId) {
+      plansMap[r.dietPlanId].meals.push({
+        id: r.mealId,
+        time: r.mealTime,
+        food: r.mealFood
       });
     }
   });
 
-  return Object.values(plans);
+  return Object.values(plansMap);
 };

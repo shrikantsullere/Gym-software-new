@@ -153,7 +153,7 @@ const GeneralClassesSchedule = () => {
 
     setSelectedClass({
       ...gymClass,
-      members: [], // API doesn't return members, so leave empty
+      members: gymClass.members || [], 
       trainerId,
       // branchId: branch?.id || '', // Commented out branch field
       startTime,
@@ -687,6 +687,21 @@ const GeneralClassesSchedule = () => {
                         }
                         readOnly
                       />
+                    </div>
+                  )}
+                  {modalType === "view" && (selectedClass.members || []).length > 0 && (
+                    <div className="col-12 mb-3">
+                      <label className="form-label fw-semibold text-muted small uppercase">Enrolled Members List</label>
+                      <div className="border rounded-3 p-3 bg-light d-flex flex-wrap gap-2">
+                        {selectedClass.members.map((member) => (
+                          <span
+                            key={member.id}
+                            className="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm"
+                          >
+                            {member.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

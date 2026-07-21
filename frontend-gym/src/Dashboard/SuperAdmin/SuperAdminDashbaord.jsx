@@ -450,7 +450,6 @@ export default function DashboardHomePage() {
           {[
             { label: "Total Revenue", value: fmtINR(totalRevenue) },
             { label: "Monthly", value: fmtINR(monthlyRevenue) },
-            { label: "Achievement", value: `${targetAchievement}%` },
             { label: "Admins", value: totalAdmins },
           ].map((item, i) => (
             <div key={i} style={{ textAlign: "center" }}>

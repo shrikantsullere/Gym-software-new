@@ -855,22 +855,19 @@ export const getAttendanceByAdminId = async (req, res, next) => {
             a.status,
             a.notes
           FROM memberattendance a
-          WHERE a.staffId IN (?)
+          WHERE (a.staffId IN (?) OR a.memberId IN (?) OR a.memberId IN (?))
             AND DATE(a.checkIn) IN (?)
           ORDER BY a.checkIn DESC
         `,
-          [targetIds, dateList]
+          [targetIds, targetIds, userIds, dateList]
         );
       }
     }
 
     const attendanceMap = new Map();
     for (const row of attendanceRows) {
-      const matchId = category.toLowerCase() === "member" ? row.memberId : (row.staffId || row.memberId);
-      const key = `${matchId}_${row.date}`;
-      if (!attendanceMap.has(key)) {
-        attendanceMap.set(key, row);
-      }
+      if (row.staffId) attendanceMap.set(`${row.staffId}_${row.date}`, row);
+      if (row.memberId) attendanceMap.set(`${row.memberId}_${row.date}`, row);
     }
 
     // 4️⃣ Derive status dynamically (LEFT JOIN business logic)
@@ -878,9 +875,9 @@ export const getAttendanceByAdminId = async (req, res, next) => {
     for (const dStr of dateList) {
       const dayOfWeek = new Date(dStr + "T00:00:00").getDay(); // 0 = Sunday
       for (const s of staffList) {
-        const matchId = category.toLowerCase() === "member" ? s.staffId : (s.staffId || s.userId);
-        const key = `${matchId}_${dStr}`;
-        const att = attendanceMap.get(key);
+        const keyStaff = `${s.staffId}_${dStr}`;
+        const keyUser = `${s.userId}_${dStr}`;
+        const att = attendanceMap.get(keyStaff) || attendanceMap.get(keyUser);
 
         if (att) {
           let computedStatus = att.status || "Present";

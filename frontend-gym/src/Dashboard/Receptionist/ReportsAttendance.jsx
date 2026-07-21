@@ -272,19 +272,20 @@ const ReportsAttendance = () => {
   };
 
   const getRoleBadge = (role) => {
-    if (!role) return <span className="badge rounded-pill bg-light text-dark px-2 py-1" style={{ fontSize: '0.65rem' }}>Unknown</span>;
+    if (!role) return <span className="badge rounded-pill bg-secondary text-white px-2 py-1" style={{ fontSize: '0.65rem' }}>Unknown</span>;
     const colors = {
-      "Personal Trainer": "bg-primary",
-      "Receptionist": "bg-info",
-      "Housekeeping": "bg-secondary",
-      "General Trainer": "bg-success",
-      "Admin": "bg-danger",
-      "Manager": "bg-warning",
-      "Trainer": "bg-primary",
-      "Member": "bg-dark"
+      "Personal Trainer": "bg-primary text-white",
+      "Receptionist": "bg-info text-dark",
+      "Housekeeping": "bg-secondary text-white",
+      "General Trainer": "bg-success text-white",
+      "Sales Agent": "bg-warning text-dark",
+      "Admin": "bg-danger text-white",
+      "Manager": "bg-warning text-dark",
+      "Trainer": "bg-primary text-white",
+      "Member": "bg-dark text-white"
     };
     return (
-      <span className={`badge rounded-pill ${colors[role] || 'bg-light'} text-light px-2 py-1`} style={{ fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
+      <span className={`badge rounded-pill ${colors[role] || 'bg-secondary text-white'} px-2 py-1`} style={{ fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
         {role}
       </span>
     );

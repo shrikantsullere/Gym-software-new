@@ -67,6 +67,8 @@ const AttendanceAlerts = () => {
   // Filter members by duration
   const filteredMembers = members.filter((m) => {
     const absent = m.daysAbsent || 0;
+    const attPct = m.attendancePercentage || 0;
+    if (durationFilter === "GT_3") return absent > 3 || attPct < 90;
     if (durationFilter === "GT_7") return absent > 7;
     if (durationFilter === "GT_14") return absent > 14;
     if (durationFilter === "GT_30") return absent > 30;
@@ -217,7 +219,7 @@ const AttendanceAlerts = () => {
       </div>
 
       <div className="row mb-4">
-        <div className="col-md-6 mb-3">
+        <div className="col-md-4 mb-3">
           <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-danger border-4">
             <div className="card-body p-4">
               <h6 className="text-muted mb-2 fw-semibold text-uppercase">High Risk (Red Badge)</h6>
@@ -226,12 +228,21 @@ const AttendanceAlerts = () => {
             </div>
           </div>
         </div>
-        <div className="col-md-6 mb-3">
+        <div className="col-md-4 mb-3">
           <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-warning border-4">
             <div className="card-body p-4">
               <h6 className="text-muted mb-2 fw-semibold text-uppercase">Irregular (Yellow Badge)</h6>
               <h3 className="fw-bold text-dark mb-0">{members.filter(m => m.badge === 'Yellow').length} Members</h3>
               <p className="text-warning small mt-2 mb-0">40% - 75% attendance or absent &gt; 7 days</p>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-info border-4">
+            <div className="card-body p-4">
+              <h6 className="text-muted mb-2 fw-semibold text-uppercase">Moderate Risk (Blue Badge)</h6>
+              <h3 className="fw-bold text-dark mb-0">{members.filter(m => m.badge === 'Blue').length} Members</h3>
+              <p className="text-info small mt-2 mb-0">75% - 90% attendance or absent &gt; 3 days</p>
             </div>
           </div>
         </div>
@@ -243,6 +254,7 @@ const AttendanceAlerts = () => {
           <span className="fw-semibold text-muted small me-1">ABSENCE DURATION:</span>
           {[
             { label: 'All At-Risk', val: 'ALL' },
+            { label: 'Absent > 3 Days (< 90%)', val: 'GT_3' },
             { label: 'Absent > 7 Days', val: 'GT_7' },
             { label: 'Absent > 14 Days', val: 'GT_14' },
             { label: 'Absent > 30 Days (High Risk)', val: 'GT_30' },
@@ -337,12 +349,12 @@ const AttendanceAlerts = () => {
                         <div className="d-flex align-items-center">
                           <span className="me-2">{member.attendancePercentage}%</span>
                           <div className="progress w-100" style={{ height: '6px' }}>
-                            <div className={`progress-bar ${member.badge === 'Red' ? 'bg-danger' : 'bg-warning'}`} role="progressbar" style={{ width: `${member.attendancePercentage}%` }}></div>
+                            <div className={`progress-bar ${member.badge === 'Red' ? 'bg-danger' : member.badge === 'Yellow' ? 'bg-warning' : 'bg-info'}`} role="progressbar" style={{ width: `${member.attendancePercentage}%` }}></div>
                           </div>
                         </div>
                       </td>
                       <td className="py-3">
-                        <span className={`badge rounded-pill ${member.badge === 'Red' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                        <span className={`badge rounded-pill ${member.badge === 'Red' ? 'bg-danger' : member.badge === 'Yellow' ? 'bg-warning text-dark' : 'bg-info text-dark'}`}>
                           {member.badge}
                         </span>
                       </td>

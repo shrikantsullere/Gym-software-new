@@ -176,9 +176,7 @@ export const getLatestAssessment = async (memberId) => {
   });
 
   if (!result) {
-    const error = new Error('No assessment records found.');
-    error.status = 404;
-    throw error;
+    return null;
   }
 
   let dashboardData = {};

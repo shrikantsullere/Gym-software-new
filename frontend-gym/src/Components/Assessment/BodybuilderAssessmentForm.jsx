@@ -192,9 +192,9 @@ const BodybuilderAssessmentForm = () => {
           <div className="card shadow-sm border-0 rounded-3">
             <div className="card-header bg-white border-bottom-0 pt-4 pb-0 px-3 px-md-4">
               <h2 className="text-primary fw-bold mb-0">
-                <i className="bi bi-person-bounding-box me-2"></i>Bodybuilder Assessment
+                <i className="bi bi-person-bounding-box me-2"></i>Body Builder
               </h2>
-              <p className="text-muted mt-2">Detailed muscle group measurements and progress tracking for professional bodybuilders.</p>
+              <p className="text-muted mt-2">Detailed muscle group measurements and progress tracking.</p>
             </div>
             
             <div className="card-body p-4">
@@ -208,7 +208,7 @@ const BodybuilderAssessmentForm = () => {
               {success && (
                 <div className="alert alert-success d-flex align-items-center" role="alert">
                   <i className="bi bi-check-circle-fill me-2"></i>
-                  <div>Bodybuilder assessment saved successfully! Redirecting...</div>
+                  <div>Body Builder assessment saved successfully! Redirecting...</div>
                 </div>
               )}
 

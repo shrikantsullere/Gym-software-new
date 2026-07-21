@@ -136,7 +136,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     ADMIN: [
       { name: "Dashboard",               icon: faChartPie,          path: "/admin/admin-dashboard" },
       { name: "Leads / Inquiries",        icon: faAddressBook,        path: "/admin/leads" },
-      { name: "Branches",                 icon: faCodeBranch,         path: "/admin/AdminBranches" },
       { name: "Members",                  icon: faUsers,              path: "/admin/AdminMember" },
       { name: "At-Risk Members",          icon: faHeartbeat,          path: "/admin/at-risk-members" },
       { name: "QR Check-in",              icon: faQrcode,             path: "/admin/qrcheckin" },

@@ -2,12 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
 import { FaEye, FaTrash, FaTimesCircle } from "react-icons/fa";
 import BaseUrl from '../../Api/BaseUrl';
+import * as XLSX from "xlsx";
 
 const PersonalAttendance = () => {
   const [search, setSearch] = useState("");
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewMember, setViewMember] = useState(null);
   const [filters, setFilters] = useState({
+    memberId: "",
+    memberName: "",
+  });
+  const [activeFilters, setActiveFilters] = useState({
     memberId: "",
     memberName: "",
   });
@@ -175,15 +180,48 @@ const PersonalAttendance = () => {
   // Filtered attendance
   const filteredAttendance = attendance.filter((m) => {
     return (
-      (filters.memberId
-        ? m.member_id.toString().includes(filters.memberId)
+      (activeFilters.memberId
+        ? m.member_id.toString().includes(activeFilters.memberId)
         : true) &&
-      (filters.memberName
-        ? m.name.toLowerCase().includes(filters.memberName.toLowerCase())
+      (activeFilters.memberName
+        ? m.name.toLowerCase().includes(activeFilters.memberName.toLowerCase())
         : true) &&
       (search ? m.name.toLowerCase().includes(search.toLowerCase()) : true)
     );
   });
+
+  const handleApplyFilter = () => {
+    setActiveFilters({
+      memberId: filters.memberId,
+      memberName: filters.memberName
+    });
+  };
+
+  const handleExport = () => {
+    if (filteredAttendance.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    
+    // Prepare data for export
+    const exportData = filteredAttendance.map(item => ({
+      "Attendance ID": item.attendance_id,
+      "Member ID": item.member_id,
+      "Name": item.name,
+      "Check-In": item.checkin_time || "--",
+      "Check-Out": item.checkout_time || "--",
+      "Mode": item.mode || "N/A",
+      "Notes": item.notes || ""
+    }));
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+    // Download file
+    XLSX.writeFile(workbook, `Attendance_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
 
   return (
     <div className="p-3 p-md-4 bg-white rounded shadow">
@@ -231,8 +269,8 @@ const PersonalAttendance = () => {
               />
             </Col>
             <Col xs={12} sm={6} md={4} className="d-flex justify-content-start justify-content-md-end">
-              <Button variant="outline-secondary me-2">Filter</Button>
-              <Button variant="outline-secondary">Export</Button>
+              <Button variant="outline-secondary me-2" onClick={handleApplyFilter}>Filter</Button>
+              <Button variant="outline-secondary" onClick={handleExport}>Export</Button>
             </Col>
           </Row>
 

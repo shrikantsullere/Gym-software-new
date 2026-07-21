@@ -41,7 +41,8 @@ import {
   faTrophy,
   faBoxes,
   faBullhorn,
-  faCoins
+  faCoins,
+  faEnvelope
 } from "@fortawesome/free-solid-svg-icons";
 
 import "./Sidebar.css";
@@ -115,7 +116,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Payments", icon: faMoneyCheckAlt, path: "/superadmin/payments" },
       { name: "Announcements", icon: faComments, path: "/superadmin/announcements" }, // ✅ Broadcast Module
       { name: "Setting", icon: faCogs, path: "/superadmin/setting" },
-      { name: "Trial & Automation", icon: faCogs, path: "/superadmin/automation-settings" },
+      { name: "Message Templates", icon: faEnvelope, path: "/superadmin/automation-settings" },
       { name: "Manage Sub-Admins", icon: faUsers, path: "/superadmin/subadmins" },
       // { name: "Leaderboard", icon: faTrophy, path: "/leaderboard" },
     ],
@@ -128,7 +129,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Plans & Pricing", icon: faTags, path: "/superadmin/Plans&Pricing", module: "Plans & Pricing" },
       { name: "Payments", icon: faMoneyCheckAlt, path: "/superadmin/payments", module: "Payments" },
       { name: "Announcements", icon: faComments, path: "/superadmin/announcements", module: "Announcements" },
-      { name: "Trial & Automation", icon: faCogs, path: "/superadmin/automation-settings", module: "Trial & Automation" },
+      { name: "Message Templates", icon: faEnvelope, path: "/superadmin/automation-settings", module: "Message Templates" },
       { name: "Setting", icon: faCogs, path: "/superadmin/setting", module: "Setting" },
     ].filter(m => userPermissions.includes(m.module)),
 

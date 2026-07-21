@@ -68,11 +68,11 @@ export const getUserNotificationsService = async (userId) => {
 
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
-     WHERE (\`to\` = ? OR \`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
+     WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
        AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH', 'IN_APP')
        AND (status = 'UNREAD' OR status = 'PENDING')
      ORDER BY createdAt DESC LIMIT 20`,
-    [userId.toString(), adminIdStr]
+    [userId.toString()]
   );
   return rows;
 };
@@ -87,10 +87,10 @@ export const getAllUserNotificationsService = async (userId) => {
 
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
-     WHERE (\`to\` = ? OR \`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
+     WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
        AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH', 'IN_APP')
      ORDER BY createdAt DESC LIMIT 100`,
-    [userId.toString(), adminIdStr]
+    [userId.toString()]
   );
   return rows;
 };
@@ -402,8 +402,8 @@ export const deleteAnnouncementService = async (id, adminId) => {
 // ─────────────────────────────────────────────────────────
 export const notifySuperAdmin = async (message, type = "SYSTEM_ALERT") => {
   try {
-    // Find superadmin (assuming roleId = 1)
-    const [superAdmins] = await pool.query(`SELECT id FROM user WHERE roleId = 1`);
+    // Find superadmin (roleId = 1) and sub-admins (roleId = 9)
+    const [superAdmins] = await pool.query(`SELECT id FROM user WHERE roleId IN (1, 9) AND status = 'Active'`);
     
     if (superAdmins.length === 0) return; // No superadmin found
 

@@ -26,6 +26,11 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartInitialized, setChartInitialized] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [chartPeriod, setChartPeriod] = useState(1);
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const branchDisplayName = user.branchName || "Main Branch";
@@ -42,7 +47,7 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         const response = await axiosInstance.get(
-          `auth/admindashboard/${adminId}?branchId=${user.branchId || ""}`
+          `auth/admindashboard/${adminId}?branchId=${user.branchId || ""}&month=${selectedMonth}&chartPeriod=${chartPeriod}`
         );
 
         if (response.data.success && response.data.data) {
@@ -60,7 +65,7 @@ const AdminDashboard = () => {
     };
 
     fetchDashboardData();
-  }, [adminId]);
+  }, [adminId, selectedMonth, chartPeriod]);
 
   // Initialize charts
   useEffect(() => {

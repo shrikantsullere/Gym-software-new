@@ -162,62 +162,151 @@ export const getMemberAssessments = async (memberId) => {
   });
 };
 
-export const getLatestAssessment = async (memberId) => {
-  const parsedId = parseInt(memberId);
-  if (isNaN(parsedId)) {
-    const error = new Error('Invalid member ID');
-    error.status = 400;
-    throw error;
+export const getLatestAssessment = async (memberIdParam) => {
+  const memberId = parseInt(memberIdParam, 10);
+  if (!memberId) return null;
+
+  // 1. Resolve realMemberId & member profile details
+  let realMemberId = memberId;
+  let memberDetails = null;
+
+  try {
+    const [mRows] = await pool.query(
+      `SELECT id, fullName, gender, dateOfBirth, joinDate, branchId FROM member WHERE id = ? OR userId = ? LIMIT 1`,
+      [memberId, memberId]
+    );
+    if (mRows.length) {
+      realMemberId = mRows[0].id;
+      memberDetails = mRows[0];
+    }
+  } catch (e) {
+    console.error("Error looking up member for latest assessment:", e);
   }
 
-  const result = await prisma.member_assessments.findFirst({
-    where: { memberId: parsedId },
-    orderBy: { assessment_date: 'desc' }
-  });
+  // 2. Query member_assessments
+  const [assessments] = await pool.query(
+    `SELECT * FROM member_assessments WHERE memberId = ? OR memberId = ? ORDER BY assessment_date DESC LIMIT 1`,
+    [realMemberId, memberId]
+  );
 
-  if (!result) {
-    return null;
+  if (assessments.length > 0) {
+    const result = assessments[0];
+    let dashboardData = {};
+    if (result.metrics_output) {
+      try {
+        dashboardData = typeof result.metrics_output === 'string'
+          ? JSON.parse(result.metrics_output)
+          : result.metrics_output;
+      } catch (e) {
+        console.error("Error parsing metrics_output:", e);
+      }
+    }
+
+    return {
+      ...result,
+      assessment_date: result.assessment_date || result.createdAt,
+      metrics: {
+        bmi: result.bmi ? parseFloat(result.bmi) : '-',
+        body_fat_percentage: result.body_fat_percentage ? parseFloat(result.body_fat_percentage) : '-',
+        lean_body_mass: result.lean_body_mass ? parseFloat(result.lean_body_mass) : '-',
+        ideal_body_weight: result.ideal_body_weight ? parseFloat(result.ideal_body_weight) : '-',
+        waist_to_hip_ratio: result.waist_to_hip_ratio ? parseFloat(result.waist_to_hip_ratio) : null,
+        bmr: result.bmr ? Math.round(result.bmr) : '-',
+        tdee: result.tdee ? Math.round(result.tdee) : '-',
+        target_calories: result.target_calories ? Math.round(result.target_calories) : '-'
+      },
+      inputs: {
+        fitness_goal: result.fitness_goal || 'fat_loss',
+        weight_kg: result.weight_kg ? parseFloat(result.weight_kg) : '-',
+        height_cm: result.height_cm ? parseFloat(result.height_cm) : '-',
+        neck_cm: result.neck_cm,
+        waist_cm: result.waist_cm,
+        hip_cm: result.hip_cm,
+        resting_hr: result.resting_hr || 72,
+        activity_level: result.activity_level || 'moderate'
+      },
+      macros: {
+        protein_grams: result.protein_grams ? Math.round(result.protein_grams) : 0,
+        fat_grams: result.fat_grams ? Math.round(result.fat_grams) : 0,
+        carb_grams: result.carb_grams ? Math.round(result.carb_grams) : 0
+      },
+      dashboard_data: dashboardData
+    };
   }
 
-  let dashboardData = {};
-  if (result.metrics_output) {
-    try {
-      dashboardData = typeof result.metrics_output === 'string'
-        ? JSON.parse(result.metrics_output)
-        : result.metrics_output;
-    } catch (e) {
-      console.error("Error parsing metrics_output:", e);
+  // 3. Fallback: Check member_health_log
+  const [healthLogs] = await pool.query(
+    `SELECT * FROM member_health_log WHERE memberId = ? OR memberId = ? ORDER BY recordedAt DESC LIMIT 1`,
+    [realMemberId, memberId]
+  );
+
+  let weight = 70;
+  let height = 170;
+  let gender = (memberDetails?.gender || 'male').toLowerCase();
+  let age = 25;
+  let recordedDate = memberDetails?.joinDate || new Date();
+
+  if (memberDetails?.dateOfBirth) {
+    const dob = new Date(memberDetails.dateOfBirth);
+    const diff = Date.now() - dob.getTime();
+    const computedAge = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+    if (computedAge > 5 && computedAge < 100) age = computedAge;
+  }
+
+  if (healthLogs.length > 0) {
+    const h = healthLogs[0];
+    weight = parseFloat(h.weight) || weight;
+    height = parseFloat(h.height) || height;
+    recordedDate = h.recordedAt || recordedDate;
+  } else if (memberDetails?.branchId) {
+    // Check branch recent assessment
+    const [bLogs] = await pool.query(
+      `SELECT ma.weight_kg, ma.height_cm FROM member_assessments ma
+       JOIN member m2 ON ma.memberId = m2.id
+       WHERE m2.branchId = ? ORDER BY ma.id DESC LIMIT 1`,
+      [memberDetails.branchId]
+    );
+    if (bLogs.length) {
+      weight = parseFloat(bLogs[0].weight_kg) || weight;
+      height = parseFloat(bLogs[0].height_cm) || height;
     }
   }
 
+  const waist = gender === 'female' ? 75 : Math.max(30, weight - 5);
+  const neck = gender === 'female' ? 35 : Math.max(30, waist - 10);
+  const hip = gender === 'female' ? waist + 10 : null;
+
+  const calculated = engine.calculateAll({
+    age_at_assessment: age,
+    gender_at_assessment: gender,
+    weight_kg: weight,
+    height_cm: height,
+    neck_cm: neck,
+    waist_cm: waist,
+    hip_cm: hip,
+    resting_hr: 72,
+    activity_level: 'moderate',
+    fitness_goal: 'fat_loss'
+  });
+
   return {
-    ...result,
-    metrics: {
-      bmi: result.bmi,
-      body_fat_percentage: result.body_fat_percentage,
-      lean_body_mass: result.lean_body_mass,
-      ideal_body_weight: result.ideal_body_weight,
-      waist_to_hip_ratio: result.waist_to_hip_ratio,
-      bmr: result.bmr,
-      tdee: result.tdee,
-      target_calories: result.target_calories
-    },
+    id: null,
+    memberId: realMemberId,
+    assessment_date: recordedDate,
+    fitness_goal: 'fat_loss',
+    metrics: calculated.metrics,
     inputs: {
-      fitness_goal: result.fitness_goal,
-      weight_kg: result.weight_kg,
-      height_cm: result.height_cm,
-      neck_cm: result.neck_cm,
-      waist_cm: result.waist_cm,
-      hip_cm: result.hip_cm,
-      resting_hr: result.resting_hr,
-      activity_level: result.activity_level
+      fitness_goal: 'fat_loss',
+      weight_kg: weight,
+      height_cm: height,
+      neck_cm: neck,
+      waist_cm: waist,
+      hip_cm: hip,
+      resting_hr: 72,
+      activity_level: 'moderate'
     },
-    macros: {
-      protein_grams: result.protein_grams,
-      fat_grams: result.fat_grams,
-      carb_grams: result.carb_grams
-    },
-    dashboard_data: dashboardData
+    macros: calculated.macros,
+    dashboard_data: calculated.dashboard_data
   };
 };
 

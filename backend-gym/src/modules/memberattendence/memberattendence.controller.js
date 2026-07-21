@@ -924,7 +924,7 @@ export const getAttendanceByAdminId = async (req, res, next) => {
             date: dStr,
             checkIn: null,
             checkOut: null,
-            mode: "-",
+            mode: "—",
             status: computedStatus,
             notes: computedStatus === "Weekly Off" ? "Weekly Off Day" : "Absent",
           });

@@ -94,7 +94,7 @@ const ReportsAttendance = () => {
   };
 
   const calculateShiftType = (checkInTime) => {
-    if (!checkInTime) return 'Unknown';
+    if (!checkInTime) return '—';
     try {
       const date = new Date(checkInTime);
       const hours = date.getHours();
@@ -103,7 +103,7 @@ const ReportsAttendance = () => {
       if (hours >= 17 && hours < 22) return 'Evening Shift';
       return 'Night Shift';
     } catch (e) {
-      return 'Unknown';
+      return '—';
     }
   };
 
@@ -500,12 +500,20 @@ const ReportsAttendance = () => {
                         <td className="text-nowrap" style={{ padding: '0.5rem' }}>{formatTime(record.checkin_time)}</td>
                         <td className="text-nowrap" style={{ padding: '0.5rem' }}>{formatTime(record.checkout_time)}</td>
                         <td className="text-nowrap d-none d-lg-table-cell" style={{ padding: '0.5rem' }}>
-                          <span className={`badge rounded-pill ${record.mode === 'QR' ? 'bg-info text-white' : 'bg-secondary text-white'} px-2 py-1`} style={{ fontSize: '0.65rem' }}>
-                            {record.mode || 'Unknown'}
-                          </span>
+                          {record.mode && record.mode !== '-' && record.mode !== 'Unknown' && record.mode !== '—' ? (
+                            <span className={`badge rounded-pill ${record.mode === 'QR' || record.mode === 'QR Code' ? 'bg-info text-white' : 'bg-secondary text-white'} px-2 py-1`} style={{ fontSize: '0.65rem' }}>
+                              {record.mode}
+                            </span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
                         </td>
                         <td className="text-nowrap d-none d-md-table-cell" style={{ padding: '0.5rem' }}>
-                          <span style={{ fontSize: '0.75rem' }}>{record.shift_name || 'Unknown'}</span>
+                          {record.shift_name && record.shift_name !== 'Unknown' && record.shift_name !== '—' ? (
+                            <span style={{ fontSize: '0.75rem' }}>{record.shift_name}</span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
                         </td>
                         <td className="text-nowrap" style={{ padding: '0.5rem' }}>{getStatusBadge(record.status)}</td>
                       </tr>

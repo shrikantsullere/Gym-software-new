@@ -37,9 +37,12 @@ export const receptionistDashboardService = async (adminId, branchId) => {
 
   // 6. Recent walk-in members today (list)
   const [recentCheckins] = await pool.query(
-    `SELECT ma.id, ma.checkIn, ma.checkOut, m.fullName AS name, m.phone
+    `SELECT ma.id, ma.checkIn, ma.checkOut, 
+            COALESCE(m.fullName, u.fullName, 'Member') AS name, 
+            COALESCE(m.phone, u.phone) AS phone
      FROM memberattendance ma
-     JOIN member m ON ma.memberId = m.id
+     LEFT JOIN member m ON ma.memberId = m.id
+     LEFT JOIN user u ON ma.memberId = u.id OR m.userId = u.id
      WHERE DATE(ma.checkIn) = CURDATE()
      ORDER BY ma.checkIn DESC
      LIMIT 10`,

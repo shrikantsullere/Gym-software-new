@@ -448,9 +448,22 @@ const LendingPage = () => {
   ];
 
   // Convert plan duration to readable period
-  const getPeriodText = (durationDays) => {
-    if (!durationDays) return "per plan";
-    const days = parseInt(durationDays);
+  const getPeriodText = (duration) => {
+    if (!duration) return "per plan";
+    
+    // Handle specific strings
+    if (typeof duration === 'string') {
+      const lower = duration.toLowerCase();
+      if (lower.includes('month')) return "per month";
+      if (lower.includes('year')) return "per year";
+      if (lower.includes('week') || lower === '7 days') return "per week";
+      
+      // If it contains a number (like "6 Months")
+      return `per ${duration}`;
+    }
+
+    const days = parseInt(duration);
+    if (isNaN(days)) return `per ${duration}`;
     if (days === 365) return "per year";
     if (days === 30) return "per month";
     if (days === 7) return "per week";
@@ -466,7 +479,7 @@ const LendingPage = () => {
       const isPopular = index === midIndex;
       const period = getPeriodText(plan.duration);
       const discountPercent = plan.discountPercent || 0;
-      const hasDiscount = plan.duration === 'Yearly' && discountPercent > 0;
+      const hasDiscount = discountPercent > 0;
       const discountedPrice = hasDiscount ? Math.round(plan.price - (plan.price * discountPercent / 100)) : plan.price;
 
       return (
@@ -509,7 +522,7 @@ const LendingPage = () => {
               </li>
               <li>
                 <FiCheckIcon className="check-icon" />
-                Duration: {plan.duration} days
+                Duration: {plan.duration}
               </li>
             </ul>
           </div>

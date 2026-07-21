@@ -10,23 +10,34 @@ const MemberAssessmentDashboard = ({ memberId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchLatestAssessment = async () => {
-      try {
-        const res = await axiosInstance.get(`/v1/assessments/member/${memberId}/latest`);
-        if (res.data.success) {
-          setAssessment(res.data.data);
-        }
-      } catch (err) {
-        if (err.response?.status === 404) {
-          setError("No assessment records found.");
-        } else {
-          setError("Failed to load assessment data.");
-        }
-      } finally {
-        setLoading(false);
+  const fetchLatestAssessment = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axiosInstance.get(`/v1/assessments/member/${memberId}/latest`);
+      if (res.data.success) {
+        setAssessment(res.data.data);
       }
-    };
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setError({
+          type: '404',
+          title: "No Assessment Recorded Yet",
+          message: "No body composition or metrics recorded for this member yet."
+        });
+      } else {
+        setError({
+          type: 'network',
+          title: "Temporary Network Issue",
+          message: "Could not fetch assessment data from server. Please retry or log a new assessment."
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (memberId) fetchLatestAssessment();
   }, [memberId]);
 
@@ -40,11 +51,19 @@ const MemberAssessmentDashboard = ({ memberId }) => {
     <div className="container mt-5">
       <div className="card shadow-sm border-0 text-center py-5 px-4 rounded-3">
         <div className="mb-3">
-          <i className="bi bi-journal-x display-4 text-secondary"></i>
+          <i className={`bi ${error.type === '404' ? 'bi-journal-x' : 'bi-exclamation-triangle'} display-4 text-secondary`}></i>
         </div>
-        <h4 className="fw-bold text-dark">{error}</h4>
-        <p className="text-muted small mb-4">No body composition or metrics recorded for this member yet.</p>
-        <div>
+        <h4 className="fw-bold text-dark">{error.title}</h4>
+        <p className="text-muted small mb-4">{error.message}</p>
+        <div className="d-flex justify-content-center gap-2">
+          {error.type === 'network' && (
+            <button 
+              className="btn btn-outline-primary px-4 py-2 fw-semibold"
+              onClick={fetchLatestAssessment}
+            >
+              <i className="bi bi-arrow-clockwise me-1"></i> Retry
+            </button>
+          )}
           <button 
             className="btn btn-primary px-4 py-2 fw-semibold"
             onClick={() => navigate('/personaltrainer/assessment-form', { state: { preselectMember: memberId } })}

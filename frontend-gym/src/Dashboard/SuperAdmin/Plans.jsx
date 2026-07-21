@@ -373,18 +373,32 @@ const MembershipPlans = () => {
                     />
 
                     <label className="form-label">Duration</label>
-                    <input
-                      className="form-control mb-2"
-                      list="duration-options"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      placeholder="Select or type duration (e.g., 6 Months)"
-                    />
-                    <datalist id="duration-options">
-                      <option value="Monthly" />
-                      <option value="Yearly" />
-                      <option value="7 Days" />
-                    </datalist>
+                    <select
+                      className="form-select mb-2"
+                      value={["Monthly", "Yearly", "7 Days"].includes(duration) ? duration : "Custom"}
+                      onChange={(e) => {
+                        if (e.target.value !== "Custom") {
+                          setDuration(e.target.value);
+                        } else {
+                          setDuration("");
+                        }
+                      }}
+                    >
+                      <option value="Monthly">Monthly</option>
+                      <option value="Yearly">Yearly</option>
+                      <option value="7 Days">7 Days</option>
+                      <option value="Custom">Custom (Type manually)</option>
+                    </select>
+
+                    {!["Monthly", "Yearly", "7 Days"].includes(duration) && (
+                      <input
+                        className="form-control mb-2"
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                        placeholder="Type custom duration (e.g., 6 Months)"
+                        autoFocus
+                      />
+                    )}
 
                     <label className="form-label">Discount (%)</label>
                     <input

@@ -443,21 +443,36 @@ const MemberLeaderboard = () => {
 
       {/* Controls Bar: Month Selector & Export Excel */}
       <div className="bg-white p-3 rounded-4 shadow-sm mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <FontAwesomeIcon icon={faCalendarAlt} className="text-primary fs-5 me-1" />
           <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Leaderboard Month:</span>
-          <select
-            className="form-select form-select-sm border shadow-none rounded-pill fw-bold text-dark px-3 py-2 bg-light"
-            style={{ minWidth: '160px', cursor: 'pointer' }}
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-          >
-            {availableMonths.map(m => (
-              <option key={m.monthKey || m.key} value={m.monthKey || m.key}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+          
+          <div className="d-flex align-items-center gap-2">
+            <input
+              type="month"
+              className="form-control form-control-sm border shadow-none rounded-pill fw-bold text-dark px-3 py-2 bg-light"
+              style={{ minWidth: '165px', cursor: 'pointer' }}
+              value={selectedMonth || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              title="Click to select month from calendar"
+            />
+            {availableMonths.length > 0 && (
+              <select
+                className="form-select form-select-sm border shadow-none rounded-pill fw-semibold text-muted px-3 py-2 bg-light"
+                style={{ width: 'auto', cursor: 'pointer', fontSize: '13px' }}
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                title="Or choose from months with data"
+              >
+                <option value="">-- Months with Data --</option>
+                {availableMonths.map(m => (
+                  <option key={m.monthKey || m.key} value={m.monthKey || m.key}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
 
         <button

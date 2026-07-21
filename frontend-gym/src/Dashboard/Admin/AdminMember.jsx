@@ -63,7 +63,7 @@ const AdminMember = () => {
   const [plansLoaded, setPlansLoaded] = useState(false);
   const [planError, setPlanError] = useState(null);
   const [planLoading, setPlanLoading] = useState(false);
-  const [personalTrainers, setPersonalTrainers] = useState([]);
+  const [allTrainers, setAllTrainers] = useState([]);
   const [showAssignTrainerModal, setShowAssignTrainerModal] = useState(false);
   const [assignTrainerMember, setAssignTrainerMember] = useState(null);
   const [selectedTrainerId, setSelectedTrainerId] = useState("");
@@ -433,7 +433,7 @@ const AdminMember = () => {
   useEffect(() => {
     fetchMembersByAdminId();
     fetchPlansFromAPI();
-    fetchPersonalTrainers();
+    fetchTrainers();
   }, []);
 
   // Pre-fill from Lead Data if navigated from Leads page
@@ -454,15 +454,18 @@ const AdminMember = () => {
     }
   }, [location.state]);
 
-  // Fetch personal trainers for admin
-  const fetchPersonalTrainers = async () => {
+  // Fetch all trainers for admin
+  const fetchTrainers = async () => {
     try {
       const response = await axiosInstance.get(`${BaseUrl}staff/admin/${effectiveAdminId}`);
       if (response.data && response.data.success) {
-        const pts = (response.data.data || response.data.staff || []).filter(
-          (s) => (s.roleId === 5 || (s.roleName || "").toLowerCase() === "personaltrainer")
+        const trainers = (response.data.data || response.data.staff || []).filter(
+          (s) => {
+            const roleStr = (s.roleName || "").toLowerCase();
+            return [5, 6].includes(s.roleId) || roleStr.includes("trainer") || roleStr.includes("pt") || roleStr.includes("gt");
+          }
         );
-        setPersonalTrainers(pts);
+        setAllTrainers(trainers);
       }
     } catch (err) {
       console.error("Error fetching trainers:", err);
@@ -565,7 +568,7 @@ const AdminMember = () => {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: createdMemberId,
               trainerId: parseInt(newMember.trainerId),
-              trainerType: "personal",
+              trainerType: newMember.interestedIn === "General Trainer" ? "general" : "personal",
               adminId: effectiveAdminId,
             });
           } catch (trainerErr) {
@@ -687,7 +690,7 @@ const AdminMember = () => {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: editMember.id,
               trainerId: parseInt(editMember.trainerId),
-              trainerType: "personal",
+              trainerType: editMember.interestedIn === "General Trainer" ? "general" : "personal",
               adminId,
             });
           } catch (trainerErr) {
@@ -1475,6 +1478,16 @@ const handleDownloadReceipt = async (member) => {
       console.error("Error generating receipt:", error);
       alert("Failed to generate receipt. Please try again.");
     }
+  };
+
+  const getFilteredTrainers = (interestedIn) => {
+    if (interestedIn === "Personal Training") {
+      return allTrainers.filter(t => t.roleId === 5 || (t.roleName || "").toLowerCase().includes("personal") || (t.roleName || "").toLowerCase().includes("pt"));
+    }
+    if (interestedIn === "General Trainer") {
+      return allTrainers.filter(t => t.roleId === 6 || (t.roleName || "").toLowerCase().includes("general") || (t.roleName || "").toLowerCase().includes("gt"));
+    }
+    return allTrainers;
   };
 
   const getAssignedTrainers = (member) => {
@@ -2292,7 +2305,7 @@ const handleDownloadReceipt = async (member) => {
                           }
                         >
                           <option value="">-- Select Trainer --</option>
-                          {personalTrainers.map((t) => (
+                          {getFilteredTrainers(newMember.interestedIn).map((t) => (
                             <option key={t.id || t.staffId} value={t.userId || t.id}>
                               {t.fullName || t.name} ({t.phone || "No phone"})
                             </option>
@@ -2728,7 +2741,7 @@ const handleDownloadReceipt = async (member) => {
                     }
                   >
                     <option value="">-- Select Trainer --</option>
-                    {personalTrainers.map((t) => (
+                    {getFilteredTrainers(editMember.interestedIn).map((t) => (
                       <option key={t.id || t.staffId} value={t.userId || t.id}>
                         {t.fullName || t.name} ({t.phone || "No phone"})
                       </option>

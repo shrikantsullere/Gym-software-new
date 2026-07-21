@@ -264,7 +264,7 @@ const InventoryManagement = () => {
       <div className="row g-3 mb-4">
         <div className="col-12 col-sm-6 col-md-4">
           <div 
-            className={`card border-0 shadow-sm rounded-4 bg-white h-100 ${statusFilter === 'All' ? 'ring-2 ring-primary border border-primary' : ''}`}
+            className="card border-0 shadow-sm rounded-4 bg-white h-100"
             style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
             onClick={() => { setStatusFilter('All'); setActiveTab('equipment'); }}
           >
@@ -282,7 +282,7 @@ const InventoryManagement = () => {
         
         <div className="col-12 col-sm-6 col-md-4">
           <div 
-            className={`card border-0 shadow-sm rounded-4 bg-white h-100 ${statusFilter === 'LowStock' ? 'border border-2 border-warning shadow' : ''}`}
+            className="card border-0 shadow-sm rounded-4 bg-white h-100"
             style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
             onClick={() => { setStatusFilter(prev => prev === 'LowStock' ? 'All' : 'LowStock'); setActiveTab('equipment'); }}
           >
@@ -291,11 +291,13 @@ const InventoryManagement = () => {
                 <FontAwesomeIcon icon={faExclamationTriangle} className="text-warning fs-3" />
               </div>
               <div>
-                <div className="d-flex align-items-center justify-content-between">
-                  <h6 className="text-muted mb-1 me-2" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Low / Out of Stock</h6>
-                  {statusFilter === 'LowStock' && <span className="badge bg-warning text-dark style-sm">Active Filter</span>}
-                </div>
+                <h6 className="text-muted mb-1" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Low / Out of Stock</h6>
                 <h3 className="mb-0 fw-bold text-warning">{(Number(stats.lowStockCount) || 0) + (Number(stats.outOfStockCount) || 0)}</h3>
+                {statusFilter === 'LowStock' && (
+                  <small className="text-warning fw-semibold d-block mt-1" style={{ fontSize: '0.75rem' }}>
+                    Active Filter
+                  </small>
+                )}
               </div>
             </div>
           </div>
@@ -303,7 +305,7 @@ const InventoryManagement = () => {
 
         <div className="col-12 col-sm-6 col-md-4">
           <div 
-            className={`card border-0 shadow-sm rounded-4 bg-white h-100 ${statusFilter === 'NeedsMaintenance' ? 'border border-2 border-danger shadow' : ''}`}
+            className="card border-0 shadow-sm rounded-4 bg-white h-100"
             style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
             onClick={() => { setStatusFilter(prev => prev === 'NeedsMaintenance' ? 'All' : 'NeedsMaintenance'); setActiveTab('equipment'); }}
           >
@@ -312,11 +314,13 @@ const InventoryManagement = () => {
                 <FontAwesomeIcon icon={faTools} className="text-danger fs-3" />
               </div>
               <div>
-                <div className="d-flex align-items-center justify-content-between">
-                  <h6 className="text-muted mb-1 me-2" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Needs Maintenance</h6>
-                  {statusFilter === 'NeedsMaintenance' && <span className="badge bg-danger text-white style-sm">Active Filter</span>}
-                </div>
+                <h6 className="text-muted mb-1" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Needs Maintenance</h6>
                 <h3 className="mb-0 fw-bold text-danger">{stats.maintenanceCount || 0}</h3>
+                {statusFilter === 'NeedsMaintenance' && (
+                  <small className="text-danger fw-semibold d-block mt-1" style={{ fontSize: '0.75rem' }}>
+                    Active Filter
+                  </small>
+                )}
               </div>
             </div>
           </div>

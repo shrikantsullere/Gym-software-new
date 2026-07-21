@@ -58,12 +58,41 @@ const MemberAssessmentDashboard = ({ memberId }) => {
   if (!assessment) return null;
 
   // Defensive null checks for nested properties to prevent crashes
-  const metrics = assessment.metrics || {};
-  const inputs = assessment.inputs || {};
-  const macros = assessment.macros || {};
-  const dashboardData = assessment.dashboard_data || {};
+  const metrics = assessment.metrics || {
+    bmi: assessment.bmi || '-',
+    body_fat_percentage: assessment.body_fat_percentage || '-',
+    lean_body_mass: assessment.lean_body_mass || '-',
+    ideal_body_weight: assessment.ideal_body_weight || '-',
+    waist_to_hip_ratio: assessment.waist_to_hip_ratio || null,
+    bmr: assessment.bmr || '-',
+    tdee: assessment.tdee || '-',
+    target_calories: assessment.target_calories || '-'
+  };
+  const inputs = assessment.inputs || {
+    fitness_goal: assessment.fitness_goal || '',
+    weight_kg: assessment.weight_kg,
+    height_cm: assessment.height_cm
+  };
+  const macros = assessment.macros || {
+    protein_grams: assessment.protein_grams || 0,
+    fat_grams: assessment.fat_grams || 0,
+    carb_grams: assessment.carb_grams || 0
+  };
+  let dashboardData = assessment.dashboard_data || {};
+  if (!dashboardData || Object.keys(dashboardData).length === 0) {
+    try {
+      if (typeof assessment.metrics_output === 'string') {
+        dashboardData = JSON.parse(assessment.metrics_output);
+      } else if (typeof assessment.metrics_output === 'object') {
+        dashboardData = assessment.metrics_output || {};
+      }
+    } catch (e) {
+      dashboardData = {};
+    }
+  }
   const cardioZones = dashboardData.cardio_zones || {};
-  const fitnessGoal = inputs.fitness_goal ? inputs.fitness_goal.replace('_', ' ').toUpperCase() : 'N/A';
+  const goalStr = inputs.fitness_goal || assessment.fitness_goal || '';
+  const fitnessGoal = goalStr ? goalStr.replace(/_/g, ' ').toUpperCase() : 'N/A';
 
   return (
     <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>

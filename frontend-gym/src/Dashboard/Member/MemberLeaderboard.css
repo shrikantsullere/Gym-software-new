@@ -99,26 +99,28 @@
   object-fit: cover;
 }
 
-/* Table Horizontal Scrollbar Styling */
+/* Thin Elegant Scrollbar Styling */
 .table-responsive {
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
 }
 
 .table-responsive::-webkit-scrollbar {
-  height: 8px;
+  height: 4px;
 }
 
 .table-responsive::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8fafc;
   border-radius: 10px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb {
-  background: #2f6a87;
+  background: #cbd5e1;
   border-radius: 10px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #1e4b61;
+  background: #94a3b8;
 }

@@ -241,8 +241,8 @@ const MemberLeaderboard = () => {
           </span>
         </div>
 
-        <div className="table-responsive shadow-sm rounded-3 border" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table className="table table-hover align-middle mb-0 text-nowrap" style={{ minWidth: '1250px' }}>
+        <div className="table-responsive shadow-sm rounded-3 border">
+          <table className="table table-hover align-middle mb-0 text-nowrap" style={{ width: '100%' }}>
             <thead className="table-light">
               <tr style={{ fontSize: '13px', letterSpacing: '0.3px' }}>
                 <th className="px-3 py-3">Rank</th>

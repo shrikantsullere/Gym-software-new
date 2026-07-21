@@ -999,14 +999,14 @@ export const getMembersByAdminIdService = async (adminId) => {
       m.interestedIn,
       m.amountPaid,
       u.profileImage,
-      COALESCE(m.trainerId, p.trainerId) AS trainerId,
-      COALESCE(m.trainerType, p.trainerType) AS trainerType,
+      p.trainerId AS trainerId,
+      p.trainerType AS trainerType,
       trainerUser.fullName AS trainerName
 
     FROM member m
     LEFT JOIN user u ON u.id = m.userId
     LEFT JOIN memberplan p ON m.planId = p.id
-    LEFT JOIN user trainerUser ON COALESCE(m.trainerId, p.trainerId) = trainerUser.id
+    LEFT JOIN user trainerUser ON p.trainerId = trainerUser.id
     WHERE m.adminId = ?
     ORDER BY m.id DESC
     `,
@@ -1082,10 +1082,10 @@ export const getMembersByTrainerIdService = async (trainerId) => {
     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
     LEFT JOIN memberplan p1 ON mpa.planId = p1.id
     LEFT JOIN memberplan p2 ON m.planId = p2.id
-    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
+    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
     ORDER BY m.fullName
     `,
-    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
+    [realStaffId, realUserId, realStaffId, realUserId]
   );
 
   if (rows.length > 0) {

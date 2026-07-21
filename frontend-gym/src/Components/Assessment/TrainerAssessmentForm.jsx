@@ -287,6 +287,29 @@ const TrainerAssessmentForm = () => {
                   </div>
                 </div>
 
+                <h5 className="mb-3 text-secondary border-bottom pb-2">Goals & Activity</h5>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold">Activity Level <span className="text-danger">*</span></label>
+                    <select name="activity_level" value={formData.activity_level} onChange={handleChange} className="form-select shadow-none">
+                      <option value="sedentary">Sedentary (Little/no exercise)</option>
+                      <option value="light">Light (1-3 days/week)</option>
+                      <option value="moderate">Moderate (3-5 days/week)</option>
+                      <option value="active">Active (6-7 days/week)</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold">Fitness Goal <span className="text-danger">*</span></label>
+                    <select name="fitness_goal" value={formData.fitness_goal} onChange={handleChange} className="form-select shadow-none">
+                      <option value="fat_loss">Fat Loss</option>
+                      <option value="maintenance">Maintenance</option>
+                      <option value="muscle_gain">Muscle Gain</option>
+                      <option value="competition_prep">Competition Prep</option>
+                    </select>
+                  </div>
+                </div>
+
                 <h5 className="mb-3 text-secondary border-bottom pb-2">Body Measurements</h5>
                 <div className="row g-3 mb-4">
                   <div className="col-md-4">
@@ -379,29 +402,9 @@ const TrainerAssessmentForm = () => {
                   </div>
                 </div>
 
-                <h5 className="mb-3 text-secondary border-bottom pb-2">Goals & Remarks</h5>
+                <h5 className="mb-3 text-secondary border-bottom pb-2">Remarks & Notes</h5>
                 <div className="row g-3 mb-5">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Activity Level <span className="text-danger">*</span></label>
-                    <select name="activity_level" value={formData.activity_level} onChange={handleChange} className="form-select shadow-none">
-                      <option value="sedentary">Sedentary (Little/no exercise)</option>
-                      <option value="light">Light (1-3 days/week)</option>
-                      <option value="moderate">Moderate (3-5 days/week)</option>
-                      <option value="active">Active (6-7 days/week)</option>
-                    </select>
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Fitness Goal <span className="text-danger">*</span></label>
-                    <select name="fitness_goal" value={formData.fitness_goal} onChange={handleChange} className="form-select shadow-none">
-                      <option value="fat_loss">Fat Loss</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="muscle_gain">Muscle Gain</option>
-                      <option value="competition_prep">Competition Prep</option>
-                    </select>
-                  </div>
-
-                  <div className="col-12 mt-3">
+                  <div className="col-12">
                     <label className="form-label fw-semibold">Coach Notes / Remarks</label>
                     <textarea name="coach_notes" value={formData.coach_notes} onChange={handleChange} className="form-control shadow-none" rows="3" placeholder="Enter notes on symmetry, weakness areas, diet suggestions, etc."></textarea>
                   </div>

@@ -224,7 +224,8 @@ const Leads = () => {
       const payload = {
         ...formData,
         adminId: adminId,
-        branchId: user.branchId || null
+        branchId: user.branchId || null,
+        leadType: (userRole === "SUPERADMIN" || userRole === "SUBADMIN") ? "SAAS" : "GYM"
       };
       
       if (modalType === 'add') {
@@ -362,25 +363,21 @@ const Leads = () => {
               </li>
             </ul>
           </div>
-          {(userRole !== "SUPERADMIN" && userRole !== "SUBADMIN") && (
-            <>
-              <button 
-                className="btn btn-primary px-4 py-2" 
-                style={{ background: "#4318FF", border: "none", borderRadius: "10px", fontWeight: "600" }}
-                onClick={handleAddNew}
-              >
-                + Add New Lead
-              </button>
-              {userRole === "ADMIN" && (
-                <button 
-                  className="btn btn-secondary px-4 py-2" 
-                  style={{ background: "#28a745", border: "none", borderRadius: "10px", fontWeight: "600" }}
-                  onClick={handleBulkAllocate}
-                >
-                  Bulk Allocate Leads
-                </button>
-              )}
-            </>
+          <button 
+            className="btn btn-primary px-4 py-2" 
+            style={{ background: "#4318FF", border: "none", borderRadius: "10px", fontWeight: "600" }}
+            onClick={handleAddNew}
+          >
+            + Add New Lead
+          </button>
+          {userRole === "ADMIN" && (
+            <button 
+              className="btn btn-secondary px-4 py-2" 
+              style={{ background: "#28a745", border: "none", borderRadius: "10px", fontWeight: "600" }}
+              onClick={handleBulkAllocate}
+            >
+              Bulk Allocate Leads
+            </button>
           )}
         </div>
       </div>
@@ -566,6 +563,7 @@ const Leads = () => {
                           <th style={{ fontWeight: '700', color: '#4a5568', fontSize: '13px', padding: '12px 16px' }}>Inquiry Details</th>
                           <th style={{ fontWeight: '700', color: '#4a5568', fontSize: '13px', padding: '12px 16px' }}>Status</th>
                           <th style={{ fontWeight: '700', color: '#4a5568', fontSize: '13px', padding: '12px 16px' }}>Date</th>
+                          <th style={{ fontWeight: '700', color: '#4a5568', fontSize: '13px', padding: '12px 16px' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -618,6 +616,34 @@ const Leads = () => {
                               </td>
                               <td style={{ padding: '14px 16px', fontSize: '12.5px', color: '#6b7280', fontWeight: '500' }}>
                                 {new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </td>
+                              <td style={{ padding: '14px 16px' }}>
+                                <div className="d-flex align-items-center gap-2">
+                                  <button
+                                    className="btn btn-sm btn-outline-secondary"
+                                    title="View"
+                                    onClick={() => handleView(lead)}
+                                    style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
+                                  >
+                                    <FaEye size={14} />
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-outline-primary"
+                                    title="Edit"
+                                    onClick={() => handleEdit(lead)}
+                                    style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
+                                  >
+                                    <FaEdit size={14} />
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    title="Delete"
+                                    onClick={() => handleDeleteClick(lead)}
+                                    style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
+                                  >
+                                    <FaTrashAlt size={14} />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );

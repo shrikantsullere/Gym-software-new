@@ -176,6 +176,7 @@ const TrainerAssessmentForm = () => {
       return;
     }
 
+    try {
       const gender = (formData.gender_at_assessment || 'male').toLowerCase();
       const waist = parseFloat(formData.waist_cm) || 80;
       const neck = parseFloat(formData.neck_cm) || (gender === 'male' ? Math.max(30, waist - 10) : 35);

@@ -273,7 +273,7 @@ const InventoryManagement = () => {
               </div>
               <div>
                 <h6 className="text-muted mb-1" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>Low / Out of Stock</h6>
-                <h3 className="mb-0 fw-bold text-warning">{(stats.lowStockCount || 0) + (stats.outOfStockCount || 0)}</h3>
+                <h3 className="mb-0 fw-bold text-warning">{(Number(stats.lowStockCount) || 0) + (Number(stats.outOfStockCount) || 0)}</h3>
               </div>
             </div>
           </div>

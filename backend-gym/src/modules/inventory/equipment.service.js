@@ -117,7 +117,13 @@ export const getEquipmentStatsByAdminService = async (adminId) => {
      FROM gym_equipment WHERE branchId IN (${branchIds.map(() => '?').join(',')}) AND isActive = 1`,
     branchIds
   );
-  return rows[0];
+  return {
+    totalItems: Number(rows[0].totalItems || 0),
+    totalQuantity: Number(rows[0].totalQuantity || 0),
+    lowStockCount: Number(rows[0].lowStockCount || 0),
+    outOfStockCount: Number(rows[0].outOfStockCount || 0),
+    maintenanceCount: Number(rows[0].maintenanceCount || 0)
+  };
 };
 
 export const updateEquipmentService = async (id, data) => {
@@ -154,7 +160,13 @@ export const getEquipmentStatsService = async (branchId) => {
      FROM gym_equipment WHERE branchId = ? AND isActive = 1`,
     [branchId]
   );
-  return rows[0];
+  return {
+    totalItems: Number(rows[0].totalItems || 0),
+    totalQuantity: Number(rows[0].totalQuantity || 0),
+    lowStockCount: Number(rows[0].lowStockCount || 0),
+    outOfStockCount: Number(rows[0].outOfStockCount || 0),
+    maintenanceCount: Number(rows[0].maintenanceCount || 0)
+  };
 };
 
 

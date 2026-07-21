@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import BaseUrl from '../../Api/BaseUrl';
+import axiosInstance from '../../Api/axiosInstance';
 import GetAdminId from '../../Api/GetAdminId';
 
 const GeneralTrainerShiftManagement = () => {
@@ -20,8 +20,6 @@ const GeneralTrainerShiftManagement = () => {
   const user = getUserFromStorage();
   const staffId = user?.staffId || user?.id;
 
-  console.log("Staff ID:", staffId);
-
   useEffect(() => {
     const fetchShifts = async () => {
       if (!staffId) {
@@ -32,8 +30,8 @@ const GeneralTrainerShiftManagement = () => {
 
       try {
         setLoading(true);
-        const response = await fetch(`${BaseUrl}shift/bystaff/${staffId}`);
-        const data = await response.json();
+        const response = await axiosInstance.get(`shift/bystaff/${staffId}`);
+        const data = response.data;
 
         if (data.success && data.data) {
           const list = Array.isArray(data.data) ? data.data : [data.data];

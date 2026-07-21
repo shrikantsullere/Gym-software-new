@@ -149,7 +149,7 @@ const Leads = () => {
       if (response.data && response.data.success) {
         const filteredStaff = (response.data.staff || []).filter(s => {
           const rName = (s.roleName || "").toLowerCase();
-          return rName === "receptionist" || rName === "sales_agent" || rName === "sales agent" || s.roleId === 9 || s.roleId === 10;
+          return rName === "receptionist" || rName === "sales_agent" || rName === "sales agent" || s.roleId === 7 || s.roleId === 10;
         });
         setStaffList(filteredStaff);
       }

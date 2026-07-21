@@ -15,8 +15,43 @@ const MemberAssessmentDashboard = ({ memberId }) => {
     setError(null);
     try {
       const res = await axiosInstance.get(`/v1/assessments/member/${memberId}/latest`);
-      if (res.data.success) {
+      if (res.data.success && res.data.data) {
         setAssessment(res.data.data);
+      } else {
+        setAssessment({
+          id: null,
+          assessment_date: null,
+          fitness_goal: 'N/A',
+          metrics: {
+            bmi: '-',
+            body_fat_percentage: '-',
+            lean_body_mass: '-',
+            ideal_body_weight: '-',
+            waist_to_hip_ratio: null,
+            bmr: '-',
+            tdee: '-',
+            target_calories: '-'
+          },
+          inputs: {
+            fitness_goal: '',
+            weight_kg: '-',
+            height_cm: '-'
+          },
+          macros: {
+            protein_grams: 0,
+            fat_grams: 0,
+            carb_grams: 0
+          },
+          dashboard_data: {
+            bmi_risk_label: '-',
+            cardio_zones: {
+              fat_burn_low: '-',
+              fat_burn_high: '-',
+              cardio_low: '-',
+              cardio_high: '-'
+            }
+          }
+        });
       }
     } catch (err) {
       if (err.response?.status === 404) {

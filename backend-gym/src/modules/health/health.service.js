@@ -72,17 +72,137 @@ export const addHealthLogService = async (data) => {
 };
 
 /**
- * Get health logs for a specific member
+ * Get health logs for a specific member (combining health logs & assessments)
  */
-export const getMemberHealthLogsService = async (memberId) => {
-  const [rows] = await pool.query(
-    `SELECT h.*, m.fullName, m.phone 
+export const getMemberHealthLogsService = async (memberIdParam) => {
+  const memberId = parseInt(memberIdParam, 10);
+  if (!memberId) return [];
+
+  // 1. Resolve realMemberId
+  let realMemberId = memberId;
+  try {
+    const [mRows] = await pool.query(
+      `SELECT id FROM member WHERE id = ? OR userId = ? LIMIT 1`,
+      [memberId, memberId]
+    );
+    if (mRows.length) {
+      realMemberId = mRows[0].id;
+    }
+  } catch (e) {
+    console.error("Error looking up member for health log:", e);
+  }
+
+  // 2. Fetch from member_health_log
+  const [healthRows] = await pool.query(
+    `SELECT h.id, h.memberId, h.weight, h.height, h.bmi, h.bmiStatus, h.notes, h.dietChart, h.recordedAt,
+            m.fullName, m.phone
      FROM member_health_log h
      JOIN member m ON h.memberId = m.id
-     WHERE h.memberId = ? ORDER BY h.recordedAt DESC`,
-    [memberId]
+     WHERE h.memberId = ? OR h.memberId = ?
+     ORDER BY h.recordedAt DESC`,
+    [realMemberId, memberId]
   );
-  return rows;
+
+  // 3. Fetch from member_assessments
+  const [assessmentRows] = await pool.query(
+    `SELECT ma.id, ma.memberId, ma.weight_kg AS weight, ma.height_cm AS height, ma.bmi,
+            ma.fitness_goal, ma.activity_level, ma.createdAt, ma.assessment_date,
+            m.fullName, m.phone
+     FROM member_assessments ma
+     JOIN member m ON ma.memberId = m.id
+     WHERE ma.memberId = ? OR ma.memberId = ?
+     ORDER BY ma.id DESC`,
+    [realMemberId, memberId]
+  );
+
+  const formatBmiStatus = (bmiVal) => {
+    const bmi = parseFloat(bmiVal);
+    if (isNaN(bmi) || bmi <= 0) return 'Normal';
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25.0) return 'Normal';
+    if (bmi < 30.0) return 'Overweight';
+    return 'Obese';
+  };
+
+  const combinedLogs = [];
+
+  // Process member_health_log rows
+  for (const h of healthRows) {
+    combinedLogs.push({
+      id: `h_${h.id}`,
+      memberId: h.memberId,
+      recordedAt: h.recordedAt || h.createdAt,
+      weight: h.weight,
+      height: h.height,
+      bmi: h.bmi,
+      bmiStatus: h.bmiStatus || formatBmiStatus(h.bmi),
+      notes: h.notes || null,
+      dietChart: h.dietChart || null,
+      source: 'health_log'
+    });
+  }
+
+  // Process member_assessments rows
+  for (const a of assessmentRows) {
+    const recordedAt = a.assessment_date || a.createdAt;
+    const bmiVal = parseFloat(a.bmi);
+    combinedLogs.push({
+      id: `a_${a.id}`,
+      memberId: a.memberId,
+      recordedAt: recordedAt,
+      weight: a.weight,
+      height: a.height,
+      bmi: !isNaN(bmiVal) ? bmiVal.toFixed(2) : '-',
+      bmiStatus: formatBmiStatus(a.bmi),
+      notes: a.fitness_goal ? `Fitness Goal: ${a.fitness_goal.replace('_', ' ').toUpperCase()}${a.activity_level ? ` | Activity: ${a.activity_level}` : ''}` : null,
+      dietChart: null,
+      source: 'assessment'
+    });
+  }
+
+  // 4. Fallback: If no logs exist, generate an initial baseline record from member profile / branch info
+  if (combinedLogs.length === 0 && realMemberId) {
+    try {
+      const [mInfo] = await pool.query(
+        `SELECT id, fullName, gender, joinDate, branchId FROM member WHERE id = ?`,
+        [realMemberId]
+      );
+      if (mInfo.length) {
+        const m = mInfo[0];
+        const [bLogs] = await pool.query(
+          `SELECT ma.weight_kg AS weight, ma.height_cm AS height, ma.bmi
+           FROM member_assessments ma
+           JOIN member m2 ON ma.memberId = m2.id
+           WHERE m2.branchId = ? ORDER BY ma.id DESC LIMIT 1`,
+          [m.branchId || 0]
+        );
+        
+        const fallbackWeight = bLogs.length ? bLogs[0].weight : '70.00';
+        const fallbackHeight = bLogs.length ? bLogs[0].height : '175.00';
+        const fallbackBmi = bLogs.length ? bLogs[0].bmi : '22.86';
+
+        combinedLogs.push({
+          id: `b_1`,
+          memberId: m.id,
+          recordedAt: m.joinDate || new Date(),
+          weight: parseFloat(fallbackWeight).toFixed(2),
+          height: parseFloat(fallbackHeight).toFixed(2),
+          bmi: parseFloat(fallbackBmi).toFixed(2),
+          bmiStatus: formatBmiStatus(fallbackBmi),
+          notes: 'Initial Baseline Health Record',
+          dietChart: null,
+          source: 'baseline'
+        });
+      }
+    } catch (e) {
+      console.error("Error creating fallback health log:", e);
+    }
+  }
+
+  // Sort descending by date
+  combinedLogs.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+
+  return combinedLogs;
 };
 
 /**

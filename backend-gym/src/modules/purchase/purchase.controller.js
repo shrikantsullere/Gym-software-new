@@ -175,94 +175,26 @@ Please log in and begin managing your gym!`;
 
       return res.status(201).json({
         success: true,
-        message: "Demo payment successful and plan activated instantly!",
-        data: updatedPurchase[0] || { ...purchase, status: 'approved' },
-        autoActivated: true
+        message: "Payment received. Waiting for admin approval.",
+        data: updatedPurchase[0] || purchase,
+        autoActivated: false
       });
     }
 
-    // If it is a Free Trial, auto-approve and auto-onboard the user instantly!
+    // If it is a Free Trial, DO NOT auto-approve. Leave as pending for SuperAdmin to review.
     const isTrialPlan = data.selectedPlan && data.selectedPlan.toLowerCase().includes("trial");
     if (isTrialPlan) {
-      // 1. Auto-approve the purchase request row
-      await pool.query("UPDATE purchase SET status = 'approved' WHERE id = ?", [purchase.id]);
-
-      // 2. Hash the user's chosen password
-      const hash = await bcrypt.hash(data.password || "Gym@123456", 10);
-
-      // 3. Compute 7-day trial dates
-      const startDate = data.startDate ? new Date(data.startDate) : new Date();
-      const expiryDate = new Date(startDate);
-      expiryDate.setDate(expiryDate.getDate() + 7);
-
-      // 4. Create the new gym admin user with fixed 18% GST, Trial status, City, and Profile Image
-      const sql = `
-        INSERT INTO user (
-          fullName, email, password, phone, roleId, 
-          gymName, planName, price, duration, status, 
-          trialStartDate, trialEndDate, trialStatus, licenseExpiryDate, isTrial,
-          visiblePassword, tax, subscriptionPlan, gstNumber, address_city, profileImage
-        ) 
-        VALUES (?, ?, ?, ?, 2, ?, ?, 0, 'Monthly', 'Active', ?, ?, 'Active', ?, 1, ?, '18', 'Trial', ?, ?, ?)
-      `;
-
-      const [result] = await pool.query(sql, [
-        data.adminName || data.companyName || "Gym Owner",
-        data.email,
-        hash,
-        data.phone || null,
-        data.companyName || "Gym",
-        data.selectedPlan,
-        startDate,
-        expiryDate,
-        expiryDate,
-        data.password || "Gym@123456",
-        data.gstNumber || null,
-        data.city || null,
-        data.profileImage || null
-      ]);
-
-      const newUserId = result.insertId;
-
-      // 5. Dispatch onboarding welcome notification
-      const messageBody = `🎉 Welcome to Gym Management!
-Your Gym Owner account has been created and activated automatically.
-
-Login Details:
-URL: http://localhost:5173/login
-Username/Email: ${data.email}
-Password: ${data.password || "Gym@123456"}
-
-Please log in and begin managing your gym!`;
-
-      await dispatchNotification({
-        category: "welcome_note",
-        toEmail: data.email,
-        toPhone: data.phone,
-        toUserId: newUserId,
-        subject: "Your Free Trial Gym Owner Account is Active!",
-        message: messageBody,
-      });
-
-      // Auto-convert lead
       try {
         await pool.query(
-          "UPDATE leads SET status = 'Converted' WHERE email = ? AND leadType = 'SAAS'",
+          "UPDATE leads SET status = 'In Progress' WHERE email = ? AND leadType = 'SAAS'",
           [data.email]
         );
       } catch (leadErr) {
-        console.error("Failed to auto-convert lead on free trial registration:", leadErr);
+        console.error("Failed to update lead status:", leadErr);
       }
-
-      return res.status(201).json({
-        success: true,
-        message: "Free Trial registered and activated successfully!",
-        data: { ...purchase, status: 'approved' },
-        autoActivated: true
-      });
     }
 
-    // Fetch Super Admin details for manual paid plan request notification
+    // Fetch Super Admin details for manual paid plan / free trial request notification
     try {
       const [superAdmins] = await pool.query(
         "SELECT id, email, phone FROM user WHERE roleId = 1 LIMIT 1"
@@ -271,30 +203,31 @@ Please log in and begin managing your gym!`;
       if (superAdmins && superAdmins.length > 0) {
         const superAdmin = superAdmins[0];
         const dateStr = purchase.startDate ? new Date(purchase.startDate).toLocaleDateString('en-GB') : "N/A";
-        const message = `🔔 New Free Trial Registration Alert!
-Gym Name: ${purchase.companyName || "N/A"}
-Email: ${purchase.email || "N/A"}
-Plan: ${purchase.selectedPlan || "N/A"}
-Billing Duration: ${purchase.billingDuration || "N/A"}
-Start Date: ${dateStr}`;
+        const message = \`🔔 New \${isTrialPlan ? 'Free Trial' : 'Purchase'} Registration Alert!
+Gym Name: \${purchase.companyName || "N/A"}
+Email: \${purchase.email || "N/A"}
+Plan: \${purchase.selectedPlan || "N/A"}
+Billing Duration: \${purchase.billingDuration || "N/A"}
+Start Date: \${dateStr}\`;
 
         await dispatchNotification({
           category: "free_trial_alert",
           toEmail: superAdmin.email,
           toPhone: superAdmin.phone,
           toUserId: superAdmin.id,
-          subject: "New Free Trial Registration Request",
+          subject: \`New \${isTrialPlan ? 'Free Trial' : 'Purchase'} Registration Request\`,
           message: message,
         });
       }
     } catch (notifErr) {
-      console.error("Failed to send free trial notification to Super Admin:", notifErr);
+      console.error("Failed to send notification to Super Admin:", notifErr);
     }
 
     return res.status(201).json({
       success: true,
-      message: "Purchase created successfully",
-      data: purchase
+      message: "Purchase request submitted successfully. Waiting for admin approval.",
+      data: purchase,
+      autoActivated: false
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

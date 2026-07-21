@@ -161,7 +161,6 @@ const NewReceptionistDashboard = () => {
                     <thead style={{ backgroundColor: "#f1f5f9" }}>
                       <tr>
                         <th className="ps-4 py-2 fw-semibold text-muted small border-0">Member</th>
-                        <th className="py-2 fw-semibold text-muted small border-0">Phone</th>
                         <th className="py-2 fw-semibold text-muted small border-0">Check-in</th>
                         <th className="py-2 fw-semibold text-muted small border-0">Check-out</th>
                       </tr>
@@ -170,7 +169,6 @@ const NewReceptionistDashboard = () => {
                       {data.recentCheckins.map((row, i) => (
                         <tr key={i}>
                           <td className="ps-4 py-2 fw-medium">{row.name}</td>
-                          <td className="py-2 text-muted small">{row.phone || "—"}</td>
                           <td className="py-2 small">
                             {new Date(row.checkIn).toLocaleTimeString("en-IN", {
                               hour: "2-digit", minute: "2-digit",

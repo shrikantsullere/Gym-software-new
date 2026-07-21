@@ -100,7 +100,7 @@ const AdminMember = () => {
     fullName: "",
     phone: "",
     email: "",
-    password: "",
+    password: "12345",
     planId: "",
     planIds: [], // NEW: Support multiple plans
     address: "",
@@ -587,7 +587,7 @@ const AdminMember = () => {
           fullName: "",
           phone: "",
           email: "",
-          password: "",
+          password: "12345",
           planId: "",
           planIds: [],
           address: "",

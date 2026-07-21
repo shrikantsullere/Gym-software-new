@@ -35,8 +35,8 @@ export const createMemberService = async (data) => {
     };
   }
 
-  // Use provided password or default password fallback
-  const userPassword = password || "12345678";
+  // Use provided password or default password fallback (12345 as requested)
+  const userPassword = password || "12345";
   const hashedPassword = await bcrypt.hash(userPassword, 10);
 
   // Handle email: if not provided or empty, auto-generate unique email

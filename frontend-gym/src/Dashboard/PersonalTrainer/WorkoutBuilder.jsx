@@ -30,21 +30,30 @@ const WorkoutBuilder = () => {
 
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const branchId = user.branchId;
+  const adminId = user.adminId || user.id;
 
   // Fetch members for assignment
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await axiosInstance.get(`/members/branch/${branchId}`);
+        let endpoint = `/members/admin/${adminId}`;
+        const res = await axiosInstance.get(endpoint);
         if (res.data.success) {
-          setMembers(res.data.items || []);
+          setMembers(res.data.members || res.data.items || res.data.data || []);
         }
       } catch (err) {
-        console.error("Error fetching members:", err);
+        try {
+          const res2 = await axiosInstance.get(`/members/branch/${branchId}`);
+          if (res2.data.success) {
+            setMembers(res2.data.items || res2.data.members || res2.data.data || []);
+          }
+        } catch (err2) {
+          console.error("Error fetching members:", err2);
+        }
       }
     };
-    if (branchId) fetchMembers();
-  }, [branchId]);
+    if (adminId || branchId) fetchMembers();
+  }, [adminId, branchId]);
 
   const handleAddExercise = () => {
     setExercises([...exercises, { name: '', customName: '', reps: '', sets: '', notes: '' }]);
@@ -262,7 +271,7 @@ const WorkoutBuilder = () => {
                 >
                   <option value="">-- Select a Member --</option>
                   {members.map(member => (
-                    <option key={member.id} value={member.id}>{member.fullName} ({member.phone})</option>
+                    <option key={member.id} value={member.id}>{member.fullName || member.name || `Member #${member.id}`} ({member.phone || 'No phone'})</option>
                   ))}
                 </select>
                 <div className="form-text mt-2">

@@ -151,7 +151,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         ]
       },
       { name: "Expenses & Profit",        icon: faCoins,              path: "/admin/expenses" },
-      { name: "Bodybuilder Assessment",   icon: faHeartbeat,          path: "/bodybuilder-assessment" },
+      { name: "Body Builder",             icon: faHeartbeat,          path: "/bodybuilder-assessment" },
       { name: "Inventory",                icon: faBoxes,              path: "/admin/inventory" },
       {
         name: "Staff",
@@ -185,7 +185,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Members", icon: faUsers, path: "/admin/AdminMember" },
       { name: "Client Progress", icon: faChartBar, path: "/personaltrainer/client-progress" },
       { name: "New Assessment", icon: faHeartbeat, path: "/personaltrainer/assessment-form" },
-      { name: "Bodybuilder Assessment", icon: faDumbbell, path: "/bodybuilder-assessment" },
+      { name: "Body Builder", icon: faDumbbell, path: "/bodybuilder-assessment" },
       { name: "Diet Builder", icon: faClipboardList, path: "/generaltrainer/diet-builder" },
       { name: "Workout Builder", icon: faDumbbell, path: "/generaltrainer/workout-builder" },
       { name: "Health & BMI Log", icon: faHeartbeat, path: "/generaltrainer/health-log" },
@@ -203,7 +203,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Members", icon: faUsers, path: "/admin/AdminMember" },
       { name: "Client Progress", icon: faChartBar, path: "/personaltrainer/client-progress" },
       { name: "New Assessment", icon: faHeartbeat, path: "/personaltrainer/assessment-form" },
-      { name: "Bodybuilder Assessment", icon: faDumbbell, path: "/bodybuilder-assessment" },
+      { name: "Body Builder", icon: faDumbbell, path: "/bodybuilder-assessment" },
       { name: "Diet Builder", icon: faClipboardList, path: "/personaltrainer/diet-builder" },
       { name: "Workout Builder", icon: faDumbbell, path: "/personaltrainer/workout-builder" },
       { name: "Health & BMI Log", icon: faHeartbeat, path: "/personaltrainer/health-log" },

@@ -706,7 +706,7 @@ export const getAttendanceByAdminId = async (req, res, next) => {
       staffSql = `
         SELECT DISTINCT
           u.id AS userId,
-          m.id AS staffId,
+          IFNULL(m.id, u.id) AS staffId,
           u.fullName AS name,
           IFNULL(r.name, 'Member') AS role,
           u.branchId,
@@ -724,7 +724,7 @@ export const getAttendanceByAdminId = async (req, res, next) => {
       staffSql = `
         SELECT DISTINCT
           u.id AS userId,
-          IFNULL(s.id, m.id) AS staffId,
+          COALESCE(s.id, m.id, u.id) AS staffId,
           u.fullName AS name,
           r.name AS role,
           u.branchId,
@@ -743,7 +743,7 @@ export const getAttendanceByAdminId = async (req, res, next) => {
       staffSql = `
         SELECT DISTINCT
           u.id AS userId,
-          s.id AS staffId,
+          IFNULL(s.id, u.id) AS staffId,
           u.fullName AS name,
           r.name AS role,
           u.branchId,
@@ -794,31 +794,80 @@ export const getAttendanceByAdminId = async (req, res, next) => {
       return res.json({ success: true, attendance: [] });
     }
 
-    const userIds = staffList.map((s) => s.userId);
+    const targetIds = staffList.map((s) => s.staffId).filter(Boolean);
+    const userIds = staffList.map((s) => s.userId).filter(Boolean);
 
     // 3️⃣ Fetch actual attendance events from event log table
-    const [attendanceRows] = await pool.query(
-      `
-      SELECT 
-        a.id,
-        a.memberId,
-        DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
-        a.checkIn,
-        a.checkOut,
-        a.mode,
-        a.status,
-        a.notes
-      FROM memberattendance a
-      WHERE a.memberId IN (?)
-        AND DATE(a.checkIn) IN (?)
-      ORDER BY a.checkIn DESC
-    `,
-      [userIds, dateList]
-    );
+    let attendanceRows = [];
+    if (targetIds.length > 0) {
+      if (category.toLowerCase() === "member") {
+        [attendanceRows] = await pool.query(
+          `
+          SELECT 
+            a.id,
+            a.memberId,
+            a.staffId,
+            DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
+            a.checkIn,
+            a.checkOut,
+            a.mode,
+            a.status,
+            a.notes
+          FROM memberattendance a
+          WHERE a.memberId IN (?)
+            AND DATE(a.checkIn) IN (?)
+          ORDER BY a.checkIn DESC
+        `,
+          [targetIds, dateList]
+        );
+      } else if (category.toLowerCase() === "all") {
+        [attendanceRows] = await pool.query(
+          `
+          SELECT 
+            a.id,
+            a.memberId,
+            a.staffId,
+            DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
+            a.checkIn,
+            a.checkOut,
+            a.mode,
+            a.status,
+            a.notes
+          FROM memberattendance a
+          WHERE (a.memberId IN (?) OR a.staffId IN (?))
+            AND DATE(a.checkIn) IN (?)
+          ORDER BY a.checkIn DESC
+        `,
+          [targetIds, targetIds, dateList]
+        );
+      } else {
+        // staff
+        [attendanceRows] = await pool.query(
+          `
+          SELECT 
+            a.id,
+            a.memberId,
+            a.staffId,
+            DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
+            a.checkIn,
+            a.checkOut,
+            a.mode,
+            a.status,
+            a.notes
+          FROM memberattendance a
+          WHERE a.staffId IN (?)
+            AND DATE(a.checkIn) IN (?)
+          ORDER BY a.checkIn DESC
+        `,
+          [targetIds, dateList]
+        );
+      }
+    }
 
     const attendanceMap = new Map();
     for (const row of attendanceRows) {
-      const key = `${row.memberId}_${row.date}`;
+      const matchId = category.toLowerCase() === "member" ? row.memberId : (row.staffId || row.memberId);
+      const key = `${matchId}_${row.date}`;
       if (!attendanceMap.has(key)) {
         attendanceMap.set(key, row);
       }
@@ -829,7 +878,8 @@ export const getAttendanceByAdminId = async (req, res, next) => {
     for (const dStr of dateList) {
       const dayOfWeek = new Date(dStr + "T00:00:00").getDay(); // 0 = Sunday
       for (const s of staffList) {
-        const key = `${s.userId}_${dStr}`;
+        const matchId = category.toLowerCase() === "member" ? s.staffId : (s.staffId || s.userId);
+        const key = `${matchId}_${dStr}`;
         const att = attendanceMap.get(key);
 
         if (att) {

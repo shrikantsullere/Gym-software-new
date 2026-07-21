@@ -226,6 +226,12 @@ const LendingPage = () => {
     const matched = allPlans.find(p => p.name.toLowerCase() === purchaseFormData.selectedPlan.toLowerCase());
     if (!matched) return 0;
 
+    // If plan has its own discountPercent (Yearly plans), apply it directly
+    const planDiscount = matched.discountPercent || 0;
+    if (matched.duration === 'Yearly' && planDiscount > 0) {
+      return Math.round(matched.price - (matched.price * planDiscount / 100));
+    }
+
     return calculateDiscountedPrice(
       matched.price,
       matched.duration,
@@ -459,6 +465,9 @@ const LendingPage = () => {
     return plans.map((plan, index) => {
       const isPopular = index === midIndex;
       const period = getPeriodText(plan.duration);
+      const discountPercent = plan.discountPercent || 0;
+      const hasDiscount = plan.duration === 'Yearly' && discountPercent > 0;
+      const discountedPrice = hasDiscount ? Math.round(plan.price - (plan.price * discountPercent / 100)) : plan.price;
 
       return (
         <motion.div
@@ -473,8 +482,22 @@ const LendingPage = () => {
           {isPopular && <div className="popular-badge">Most Popular</div>}
           <div className="pricing-header">
             <h3>{plan.name}</h3>
+            {hasDiscount && (
+              <div className="discount-badge" style={{ backgroundColor: '#28a745', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', display: 'inline-block', marginBottom: '8px' }}>
+                Save {discountPercent}%
+              </div>
+            )}
             <div className="pricing-price">
-              <span className="price">₹{plan.price.toLocaleString()}</span>
+              {hasDiscount ? (
+                <div className="d-flex flex-column align-items-center">
+                  <span className="price text-muted text-decoration-line-through fs-5 me-2" style={{ textDecoration: 'line-through', opacity: 0.7, fontSize: '1.2rem' }}>
+                    ₹{plan.price.toLocaleString()}
+                  </span>
+                  <span className="price">₹{discountedPrice.toLocaleString()}</span>
+                </div>
+              ) : (
+                <span className="price">₹{plan.price.toLocaleString()}</span>
+              )}
               <span className="period">{period}</span>
             </div>
           </div>
@@ -1552,13 +1575,28 @@ const LendingPage = () => {
                       <div className="d-flex justify-content-between border-top pt-2 mt-2" style={{ fontSize: '1.05rem' }}>
                         <span className="fw-bold text-dark">Amount to Pay:</span>
                         <span className="fw-bold text-primary">
-                          ₹{(() => {
+                          {(() => {
                             const matched = plans.find(p => p.name === purchaseFormData.selectedPlan);
-                            if (matched) return matched.price.toLocaleString('en-IN');
-                            if (purchaseFormData.selectedPlan.toLowerCase().includes('gold')) return '4,998';
-                            if (purchaseFormData.selectedPlan.toLowerCase().includes('basic')) return '8,999';
-                            if (purchaseFormData.selectedPlan.toLowerCase().includes('pro')) return '11,999';
-                            return '0';
+                            const price = matched ? matched.price : 0;
+                            const discount = matched?.discountPercent || 0;
+                            const isYearly = matched?.duration === 'Yearly';
+                            if (isYearly && discount > 0) {
+                              const discounted = Math.round(price - (price * discount / 100));
+                              return (
+                                <span>
+                                  <span className="text-muted me-2" style={{ textDecoration: 'line-through', fontSize: '0.9rem' }}>
+                                    ₹{price.toLocaleString('en-IN')}
+                                  </span>
+                                  ₹{discounted.toLocaleString('en-IN')}
+                                  <span className="badge bg-success ms-2" style={{ fontSize: '0.7rem' }}>Save {discount}%</span>
+                                </span>
+                              );
+                            }
+                            if (matched) return `₹${price.toLocaleString('en-IN')}`;
+                            if (purchaseFormData.selectedPlan.toLowerCase().includes('gold')) return '₹4,998';
+                            if (purchaseFormData.selectedPlan.toLowerCase().includes('basic')) return '₹8,999';
+                            if (purchaseFormData.selectedPlan.toLowerCase().includes('pro')) return '₹11,999';
+                            return '₹0';
                           })()}
                         </span>
                       </div>

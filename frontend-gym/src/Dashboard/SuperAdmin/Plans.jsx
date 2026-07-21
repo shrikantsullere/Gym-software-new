@@ -20,6 +20,7 @@ const MembershipPlans = () => {
   const [status, setStatus] = useState("Active");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("PRO");
+  const [discountPercent, setDiscountPercent] = useState("");
 
   // Fetch all plans
   const fetchPlans = async () => {
@@ -34,6 +35,7 @@ const MembershipPlans = () => {
           status: p.status === "ACTIVE" ? "Active" : "Inactive",
           description: p.description || "",
           category: p.category || "PRO",
+          discountPercent: p.discountPercent || 0,
         }));
         setPlans(mapped);
       }
@@ -62,6 +64,7 @@ const MembershipPlans = () => {
     setStatus("Active");
     setDescription("");
     setCategory("PRO");
+    setDiscountPercent("");
   };
 
   // ---------------- Open Modals ----------------
@@ -81,6 +84,7 @@ const MembershipPlans = () => {
     setStatus(plan.status);
     setDescription(plan.description);
     setCategory(plan.category || "PRO");
+    setDiscountPercent(plan.discountPercent || "");
     setIsModalOpen(true);
   };
 
@@ -110,6 +114,7 @@ const MembershipPlans = () => {
       description: description,
       status: status === "Active" ? "ACTIVE" : "INACTIVE",
       category: category,
+      discountPercent: duration === "Yearly" ? Number(discountPercent || 0) : 0,
     };
 
     setSaving(true);
@@ -132,6 +137,7 @@ const MembershipPlans = () => {
                   status: response.data.plan.status === "ACTIVE" ? "Active" : "Inactive",
                   description: response.data.plan.description || "",
                   category: response.data.plan.category || "PRO",
+                  discountPercent: response.data.plan.discountPercent || 0,
                 }
               : plan
           );
@@ -319,6 +325,14 @@ const MembershipPlans = () => {
                         <span className="fw-bold">{selectedPlan?.category || "—"}</span>
                       </div>
                     </div>
+                    {selectedPlan?.duration === "Yearly" && (
+                      <div className="col-12">
+                        <div className="d-flex justify-content-between">
+                          <strong className="text-muted">Discount (%)</strong>
+                          <span className="fw-bold">{selectedPlan?.discountPercent || 0}%</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="col-12">
                       <div className="d-flex justify-content-between align-items-start">
                         <strong className="text-muted">Status</strong>
@@ -368,6 +382,21 @@ const MembershipPlans = () => {
                       <option value="Yearly">Yearly</option>
                       <option value="7 Days">7 Days</option>
                     </select>
+
+                    {duration === "Yearly" && (
+                      <>
+                        <label className="form-label">Discount (%)</label>
+                        <input
+                          className="form-control mb-2"
+                          type="number"
+                          value={discountPercent}
+                          onChange={(e) => setDiscountPercent(e.target.value)}
+                          placeholder="e.g., 15"
+                          min="0"
+                          max="100"
+                        />
+                      </>
+                    )}
 
                     <label className="form-label">Category</label>
                     <select

@@ -17,6 +17,7 @@ export const createPlanService = async (data) => {
     "description",
     "category",
     "duration",
+    "discountPercent",
   ];
 
   if (!data.name) throw { status: 400, message: "Plan name is required" };
@@ -100,6 +101,7 @@ export const updatePlanService = async (id, data) => {
     "description",
     "category",
     "duration",
+    "discountPercent",
   ];
 
   if (data.duration && !allowedDurations.includes(data.duration)) {
@@ -158,7 +160,8 @@ export const getPlansByBranchService = async (branchId) => {
       branchId,
       sessions,
       validityDays,
-      createdAt
+      createdAt,
+      discountPercent
     FROM plan
     WHERE branchId = ?
     ORDER BY createdAt DESC

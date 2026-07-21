@@ -1270,24 +1270,7 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
       <div className="mb-4">
         <h6 className="fw-bold mb-3 text-primary">Subscription Settings</h6>
         <div className="row g-2">
-          <div className="col-12 col-md-6">
-            <label className="form-label fs-6">Subscription Plan *</label>
-            <select
-              name="subscriptionPlan"
-              className="form-select form-select-sm"
-              value={formData.subscriptionPlan}
-              onChange={handleInputChange}
-              disabled={isView}
-              required
-            >
-              <option value="Basic">🔵 Basic</option>
-              <option value="Growth">🟡 Growth</option>
-              <option value="Premium">🟢 Premium</option>
-              <option value="Trial">⚪ Trial (7 Days)</option>
-            </select>
-            <small className="text-muted">Select the SaaS tier for this gym owner.</small>
-          </div>
-          <div className="col-12 col-md-6">
+          <div className="col-12">
             <label className="form-label fs-6">License Expiry Date *</label>
             <input
               type="date"

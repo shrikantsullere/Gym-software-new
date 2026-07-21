@@ -308,8 +308,16 @@ const PersonalAttendance = () => {
                           >
                             <FaEye />
                           </Button>
-                          {/* Checkout button - show only if not checked out */}
-                          {!member.checkedOut ? (
+                          {/* Checkout button - show only if checked in and not checked out */}
+                          {member.checkin_time === "-" ? (
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              disabled
+                            >
+                              <span className="ms-1">Not Checked In</span>
+                            </Button>
+                          ) : !member.checkedOut ? (
                             <Button
                               variant="outline-success"
                               size="sm"
@@ -436,8 +444,16 @@ const PersonalAttendance = () => {
                       >
                         <FaEye />
                       </Button>
-                      {/* Checkout button - show only if not checked out */}
-                      {!member.checkedOut ? (
+                       {/* Checkout button - show only if checked in and not checked out */}
+                      {member.checkin_time === "-" ? (
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          disabled
+                        >
+                          <span className="ms-1">Not Checked In</span>
+                        </Button>
+                      ) : !member.checkedOut ? (
                         <Button
                           variant="outline-success"
                           size="sm"

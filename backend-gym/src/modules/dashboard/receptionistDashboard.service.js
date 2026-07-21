@@ -18,13 +18,15 @@ export const receptionistDashboardService = async (adminId, branchId) => {
   // 3. Pending payments (payments with status pending or unpaid)
   const pendingPayments = [{ count: 0, totalAmount: 0 }];
 
-  // 4. Members with expiring plans in next 7 days
+  // 4. Members with expiring/recently expired plans
   const [expiringPlans] = await pool.query(
-    `SELECT COUNT(*) as count FROM member_plan_assignment mpa
-     JOIN member m ON mpa.memberId = m.id
-     WHERE mpa.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-     AND m.adminId = ? AND mpa.status = 'Active'`,
-    [adminId]
+    `SELECT COUNT(DISTINCT m.id) as count 
+     FROM member m
+     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId AND mpa.status = 'Active'
+     WHERE (m.adminId = ? OR ? IS NULL)
+       AND COALESCE(mpa.membershipTo, m.membershipTo) IS NOT NULL
+       AND DATEDIFF(COALESCE(mpa.membershipTo, m.membershipTo), CURDATE()) BETWEEN -15 AND 30`,
+    [adminId, adminId]
   );
 
   // 5. Low stock inventory alerts (products with currentStock <= 5)
@@ -58,17 +60,19 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     [adminId]
   );
 
-  // 8. Members with renewals due soon (expiring in next 7 days, for follow-up)
+  // 8. Members with renewals due soon (for follow-up)
   const [renewalsList] = await pool.query(
-    `SELECT m.fullName AS name, m.phone, mpa.membershipTo AS endDate,
-       DATEDIFF(mpa.membershipTo, CURDATE()) as daysLeft
-     FROM member_plan_assignment mpa
-     JOIN member m ON mpa.memberId = m.id
-     WHERE mpa.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-     AND m.adminId = ? AND mpa.status = 'Active'
-     ORDER BY mpa.membershipTo ASC
+    `SELECT m.id, m.fullName AS name, m.phone, 
+            COALESCE(mpa.membershipTo, m.membershipTo) AS endDate,
+            DATEDIFF(COALESCE(mpa.membershipTo, m.membershipTo), CURDATE()) as daysLeft
+     FROM member m
+     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId AND mpa.status = 'Active'
+     WHERE (m.adminId = ? OR ? IS NULL)
+       AND COALESCE(mpa.membershipTo, m.membershipTo) IS NOT NULL
+       AND DATEDIFF(COALESCE(mpa.membershipTo, m.membershipTo), CURDATE()) BETWEEN -15 AND 30
+     ORDER BY COALESCE(mpa.membershipTo, m.membershipTo) ASC
      LIMIT 10`,
-    [adminId]
+    [adminId, adminId]
   );
 
   return {

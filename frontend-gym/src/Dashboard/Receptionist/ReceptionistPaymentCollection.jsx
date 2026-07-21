@@ -237,6 +237,8 @@ const ReceptionistPaymentCollection = () => {
       planId: selectedPlanId,
       amount: plan ? plan.price : ""
     });
+  };
+
   const exportAttendanceToExcel = () => {
     if (attendanceRecords.length === 0) {
       alert("No attendance records available to export.");

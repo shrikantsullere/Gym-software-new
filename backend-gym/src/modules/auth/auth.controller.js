@@ -198,8 +198,10 @@ export const getAdminDashboard = async (req, res, next) => {
   try {
     const adminId = req.params.id; // or req.user.adminId
     const branchId = req.query.branchId; // Get branchId from query parameters
+    const month = req.query.month; // e.g., '2026-07'
+    const chartPeriod = req.query.chartPeriod ? parseInt(req.query.chartPeriod) : 6;
 
-    const data = await getAdminDashboardData(adminId, branchId);
+    const data = await getAdminDashboardData(adminId, branchId, month, chartPeriod);
 
     res.json({
       success: true,

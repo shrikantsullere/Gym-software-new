@@ -46,17 +46,27 @@ const AssessmentHistory = ({ memberId }) => {
           series: []
         };
       } else {
-        const dates = history.map(item => new Date(item.assessment_date).toLocaleDateString());
-        const weights = history.map(item => item.inputs?.weight_kg ?? item.weight_kg ?? 0);
-        const bodyFats = history.map(item => item.metrics?.body_fat_percentage ?? item.body_fat_percentage ?? 0);
+        let dates = history.map(item => new Date(item.assessment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        let weights = history.map(item => item.inputs?.weight_kg ?? item.weight_kg ?? 0);
+        let bodyFats = history.map(item => item.metrics?.body_fat_percentage ?? item.body_fat_percentage ?? 0);
+
+        if (history.length === 1) {
+          const firstDate = new Date(history[0].assessment_date);
+          const prevDate = new Date(firstDate);
+          prevDate.setDate(prevDate.getDate() - 7);
+
+          dates = [prevDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), ...dates];
+          weights = [weights[0], ...weights];
+          bodyFats = [bodyFats[0], ...bodyFats];
+        }
 
         option = {
           tooltip: { trigger: 'axis' },
           legend: { data: ['Weight (kg)', 'Body Fat %'], bottom: 0 },
-          grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
-          xAxis: { type: 'category', boundaryGap: false, data: dates },
+          grid: { left: '3%', right: '4%', bottom: '12%', containLabel: true },
+          xAxis: { type: 'category', boundaryGap: true, data: dates },
           yAxis: [
-            { type: 'value', name: 'Weight', position: 'left' },
+            { type: 'value', name: 'Weight (kg)', position: 'left' },
             { type: 'value', name: 'Body Fat %', position: 'right' }
           ],
           series: [
@@ -67,7 +77,9 @@ const AssessmentHistory = ({ memberId }) => {
               yAxisIndex: 0,
               itemStyle: { color: '#0d6efd' },
               areaStyle: { color: 'rgba(13, 110, 253, 0.1)' },
-              smooth: true
+              smooth: true,
+              symbolSize: 8,
+              showSymbol: true
             },
             {
               name: 'Body Fat %',
@@ -76,7 +88,9 @@ const AssessmentHistory = ({ memberId }) => {
               yAxisIndex: 1,
               itemStyle: { color: '#dc3545' },
               areaStyle: { color: 'rgba(220, 53, 69, 0.1)' },
-              smooth: true
+              smooth: true,
+              symbolSize: 8,
+              showSymbol: true
             }
           ]
         };

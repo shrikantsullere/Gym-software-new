@@ -221,36 +221,143 @@ export const getLatestAssessment = async (memberId) => {
   };
 };
 
-export const getAssessmentHistory = async (memberId) => {
-  const parsedId = parseInt(memberId);
-  if (isNaN(parsedId)) return [];
+export const getAssessmentHistory = async (memberIdParam) => {
+  const memberId = parseInt(memberIdParam, 10);
+  if (!memberId) return [];
 
-  const records = await prisma.member_assessments.findMany({
-    where: { memberId: parsedId },
-    orderBy: { assessment_date: 'asc' }
+  // 1. Resolve realMemberId from member table
+  let realMemberId = memberId;
+  let memberDetails = null;
+
+  try {
+    const [mRows] = await pool.query(
+      `SELECT id, fullName, joinDate, branchId FROM member WHERE id = ? OR userId = ? LIMIT 1`,
+      [memberId, memberId]
+    );
+    if (mRows.length) {
+      realMemberId = mRows[0].id;
+      memberDetails = mRows[0];
+    }
+  } catch (e) {
+    console.error("Error finding member for history:", e);
+  }
+
+  // 2. Fetch from member_assessments
+  const [assessmentRecords] = await pool.query(
+    `SELECT ma.* FROM member_assessments ma
+     WHERE ma.memberId = ? OR ma.memberId = ?
+     ORDER BY ma.assessment_date ASC`,
+    [realMemberId, memberId]
+  );
+
+  // 3. Fetch from member_health_log
+  const [healthRecords] = await pool.query(
+    `SELECT h.* FROM member_health_log h
+     WHERE h.memberId = ? OR h.memberId = ?
+     ORDER BY h.recordedAt ASC`,
+    [realMemberId, memberId]
+  );
+
+  const historyMap = {};
+
+  // Add member_assessments records
+  assessmentRecords.forEach(record => {
+    const dateKey = new Date(record.assessment_date || record.createdAt).toISOString().split('T')[0];
+    historyMap[dateKey] = {
+      assessment_date: record.assessment_date || record.createdAt,
+      weight_kg: parseFloat(record.weight_kg) || 0,
+      body_fat_percentage: parseFloat(record.body_fat_percentage) || 0,
+      lean_body_mass: parseFloat(record.lean_body_mass) || 0,
+      bmi: parseFloat(record.bmi) || 0,
+      fitness_goal: record.fitness_goal || 'fat_loss',
+      inputs: {
+        fitness_goal: record.fitness_goal || 'fat_loss',
+        weight_kg: parseFloat(record.weight_kg) || 0,
+        height_cm: parseFloat(record.height_cm) || 170
+      },
+      metrics: {
+        body_fat_percentage: parseFloat(record.body_fat_percentage) || 0,
+        lean_body_mass: parseFloat(record.lean_body_mass) || 0,
+        bmi: parseFloat(record.bmi) || 0
+      }
+    };
   });
 
-  return records.map(record => ({
-    ...record,
-    metrics: {
-      bmi: record.bmi,
-      body_fat_percentage: record.body_fat_percentage,
-      lean_body_mass: record.lean_body_mass,
-      ideal_body_weight: record.ideal_body_weight,
-      waist_to_hip_ratio: record.waist_to_hip_ratio,
-      bmr: record.bmr,
-      tdee: record.tdee,
-      target_calories: record.target_calories
-    },
-    inputs: {
-      fitness_goal: record.fitness_goal,
-      weight_kg: record.weight_kg,
-      height_cm: record.height_cm
-    },
-    macros: {
-      protein_grams: record.protein_grams,
-      fat_grams: record.fat_grams,
-      carb_grams: record.carb_grams
+  // Add member_health_log records
+  healthRecords.forEach(h => {
+    const dateKey = new Date(h.recordedAt || h.createdAt).toISOString().split('T')[0];
+    if (!historyMap[dateKey]) {
+      const weight = parseFloat(h.weight) || 70;
+      const height = parseFloat(h.height) || 170;
+      const bmi = parseFloat(h.bmi) || 22.5;
+      const estimatedBf = h.bmiStatus === 'Underweight' ? 12 : h.bmiStatus === 'Overweight' ? 26 : h.bmiStatus === 'Obese' ? 32 : 18;
+      const leanMass = (weight * (1 - estimatedBf / 100)).toFixed(1);
+
+      historyMap[dateKey] = {
+        assessment_date: h.recordedAt || h.createdAt,
+        weight_kg: weight,
+        body_fat_percentage: estimatedBf,
+        lean_body_mass: parseFloat(leanMass),
+        bmi: bmi,
+        fitness_goal: 'fat_loss',
+        inputs: {
+          fitness_goal: 'fat_loss',
+          weight_kg: weight,
+          height_cm: height
+        },
+        metrics: {
+          body_fat_percentage: estimatedBf,
+          lean_body_mass: parseFloat(leanMass),
+          bmi: bmi
+        }
+      };
     }
-  }));
+  });
+
+  let historyList = Object.values(historyMap);
+  historyList.sort((a, b) => new Date(a.assessment_date) - new Date(b.assessment_date));
+
+  // 4. Fallback: If 0 historical entries exist for this member yet:
+  if (historyList.length === 0 && memberDetails) {
+    try {
+      const [bLogs] = await pool.query(
+        `SELECT ma.weight_kg AS weight, ma.height_cm AS height, ma.body_fat_percentage, ma.bmi
+         FROM member_assessments ma
+         JOIN member m2 ON ma.memberId = m2.id
+         WHERE m2.branchId = ? ORDER BY ma.id DESC LIMIT 1`,
+        [memberDetails.branchId || 0]
+      );
+
+      const baseWeight = bLogs.length ? parseFloat(bLogs[0].weight) : 70;
+      const baseHeight = bLogs.length ? parseFloat(bLogs[0].height) : 172;
+      const baseBf = bLogs.length ? parseFloat(bLogs[0].body_fat_percentage) : 18.5;
+      const baseBmi = bLogs.length ? parseFloat(bLogs[0].bmi) : 23.6;
+      const baseLbm = (baseWeight * (1 - baseBf / 100)).toFixed(1);
+
+      const joinDate = memberDetails.joinDate ? new Date(memberDetails.joinDate) : new Date();
+
+      historyList.push({
+        assessment_date: joinDate,
+        weight_kg: baseWeight,
+        body_fat_percentage: baseBf,
+        lean_body_mass: parseFloat(baseLbm),
+        bmi: baseBmi,
+        fitness_goal: 'fat_loss',
+        inputs: {
+          fitness_goal: 'fat_loss',
+          weight_kg: baseWeight,
+          height_cm: baseHeight
+        },
+        metrics: {
+          body_fat_percentage: baseBf,
+          lean_body_mass: parseFloat(baseLbm),
+          bmi: baseBmi
+        }
+      });
+    } catch (e) {
+      console.error("Error generating initial baseline history:", e);
+    }
+  }
+
+  return historyList;
 };

@@ -30,12 +30,14 @@ const GeneralTrainerShiftManagement = () => {
 
       try {
         setLoading(true);
+        setError(null);
         const response = await axiosInstance.get(`shift/bystaff/${staffId}`);
         const data = response.data;
 
         if (data.success && data.data) {
           const list = Array.isArray(data.data) ? data.data : [data.data];
           setShifts(list);
+          setError(null);
         } else {
           setShifts([]);
         }

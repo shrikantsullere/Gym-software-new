@@ -29,12 +29,14 @@ const PersonsalTrainerShiftManagement = () => {
 
       try {
         setLoading(true);
+        setError(null);
         const response = await axiosInstance.get(`shift/bystaff/${staffId}`);
         const data = response.data;
 
         if (data.success && data.data) {
           const list = Array.isArray(data.data) ? data.data : [data.data];
           setShifts(list);
+          setError(null);
         } else {
           setShifts([]);
         }
@@ -100,7 +102,7 @@ const PersonsalTrainerShiftManagement = () => {
       <h2 className="mb-4">Shift Management</h2>
       <h4 className="mb-3 text-secondary">Duty Roster</h4>
 
-      {error ? (
+      {error && shifts.length === 0 ? (
         <div className="alert alert-danger mb-4">{error}</div>
       ) : null}
 

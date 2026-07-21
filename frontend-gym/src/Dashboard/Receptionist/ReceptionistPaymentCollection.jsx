@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaMoneyBillWave, FaReceipt, FaCheck, FaUndo, FaEye, FaFileCsv, FaFilePdf, FaCalendarAlt, FaSearch, FaFilter, FaTags } from 'react-icons/fa';
+import { FaMoneyBillWave, FaReceipt, FaCheck, FaUndo, FaEye, FaFileCsv, FaFilePdf, FaCalendarAlt, FaSearch, FaFilter, FaTags, FaDownload } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import axiosInstance from '../../Api/axiosInstance';
 
 const ReceptionistPaymentCollection = () => {
@@ -234,6 +237,90 @@ const ReceptionistPaymentCollection = () => {
       planId: selectedPlanId,
       amount: plan ? plan.price : ""
     });
+  const exportAttendanceToExcel = () => {
+    if (attendanceRecords.length === 0) {
+      alert("No attendance records available to export.");
+      return;
+    }
+    const dataToExport = attendanceRecords.map((r) => ({
+      "Member Name": r.name || '—',
+      "Date": formatDate(r.checkIn || r.date),
+      "Role": r.role || 'Member',
+      "Status": r.status || '—',
+      "Mode": r.mode || '—',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Daily Attendance");
+    XLSX.writeFile(workbook, `Daily_Attendance_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportAttendanceToPDF = () => {
+    if (attendanceRecords.length === 0) {
+      alert("No attendance records available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("Daily Attendance Report", 14, 15);
+    const tableColumn = ["Member Name", "Date", "Role", "Status", "Mode"];
+    const tableRows = attendanceRecords.map((r) => [
+      r.name || '—',
+      formatDate(r.checkIn || r.date),
+      r.role || 'Member',
+      r.status || '—',
+      r.mode || '—',
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`Daily_Attendance_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const exportPaymentsToExcel = () => {
+    if (payments.length === 0) {
+      alert("No payment records available to export.");
+      return;
+    }
+    const dataToExport = payments.map((p) => ({
+      "Invoice No": p.invoiceNo || p.invoice_number || `INV-${p.id}`,
+      "Member Name": p.memberName || p.member_name || '—',
+      "Plan": p.planName || p.plan_name || '—',
+      "Amount": `₹${p.amount || 0}`,
+      "Mode": p.paymentMode || p.payment_mode || '—',
+      "Date": p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—',
+      "Status": p.status || 'Paid',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
+    XLSX.writeFile(workbook, `Payment_Collection_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportPaymentsToPDF = () => {
+    if (payments.length === 0) {
+      alert("No payment records available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("Payment Collection Report", 14, 15);
+    const tableColumn = ["Invoice No", "Member Name", "Plan", "Amount", "Mode", "Date", "Status"];
+    const tableRows = payments.map((p) => [
+      p.invoiceNo || p.invoice_number || `INV-${p.id}`,
+      p.memberName || p.member_name || '—',
+      p.planName || p.plan_name || '—',
+      `₹${p.amount || 0}`,
+      p.paymentMode || p.payment_mode || '—',
+      p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—',
+      p.status || 'Paid',
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`Payment_Collection_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
@@ -298,13 +385,37 @@ const ReceptionistPaymentCollection = () => {
             {activeTab === 'payment' && (
               <div>
                 <div className="row mb-4 align-items-center">
-                  <div className="col-12 col-lg-8">
+                  <div className="col-12 col-lg-7">
                     <h3 className="fw-bold">Payment Collection</h3>
                     <p className="text-muted mb-0">Manage member payments and receipts</p>
                   </div>
-                  <div className="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+                  <div className="col-12 col-lg-5 text-lg-end mt-3 mt-lg-0 d-flex align-items-center justify-content-lg-end gap-2">
+                    {/* Export Data Dropdown */}
+                    <div className="dropdown">
+                      <button
+                        className="btn btn-success fw-semibold dropdown-toggle d-flex align-items-center gap-2"
+                        style={{ borderRadius: '8px', padding: '10px 16px', fontWeight: '500' }}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FaDownload /> Export Data
+                      </button>
+                      <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li>
+                          <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportPaymentsToExcel}>
+                            <strong className="text-success">XLSX</strong> Export to Excel
+                          </button>
+                        </li>
+                        <li>
+                          <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportPaymentsToPDF}>
+                            <strong className="text-danger">PDF</strong> Export to PDF
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
                     <button
-                      className="btn d-flex align-items-center justify-content-center col-12"
+                      className="btn d-flex align-items-center justify-content-center"
                       style={{ backgroundColor: '#6EB2CC', color: 'white', borderRadius: '8px', padding: '10px 20px', fontWeight: '500' }}
                       onClick={handleAddPayment}
                     >
@@ -441,9 +552,35 @@ const ReceptionistPaymentCollection = () => {
             {activeTab === 'attendance' && (
               <div>
                 <div className="row mb-4 align-items-center">
-                  <div className="col-12">
+                  <div className="col-12 col-md-8">
                     <h3 className="fw-bold">Daily Attendance Report</h3>
                     <p className="text-muted mb-0">View member attendance records</p>
+                  </div>
+                  <div className="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+                    {/* Export Data Dropdown */}
+                    <div className="dropdown">
+                      <button
+                        className="btn btn-success fw-semibold dropdown-toggle d-inline-flex align-items-center gap-2"
+                        style={{ borderRadius: '8px', padding: '10px 16px', fontWeight: '500' }}
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <FaDownload /> Export Data
+                      </button>
+                      <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li>
+                          <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportAttendanceToExcel}>
+                            <strong className="text-success">XLSX</strong> Export to Excel
+                          </button>
+                        </li>
+                        <li>
+                          <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportAttendanceToPDF}>
+                            <strong className="text-danger">PDF</strong> Export to PDF
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 

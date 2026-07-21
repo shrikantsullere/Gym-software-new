@@ -182,14 +182,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "My Subscription",          icon: faTags,               path: "/admin/my-subscription" }
     ],
 
-    HOUSEKEEPING: [
-      { name: "Dashboard", icon: faBroom, path: "/housekeeping/dashboard" },
-      { name: "Shift Management", icon: faClock, path: "/housekeeping/shift-management" },
-      { name: "Task Checklist", icon: faTasks, path: "/housekeeping/duty-roster" },
-      { name: "QR Check-in", icon: faQrcode, path: "/housekeeping/qrcheckin" },
-      { name: "Announcements", icon: faBullhorn, path: "/staff/announcements" },
-    ],
-
     GENERALTRAINER: [
       { name: "Dashboard", icon: faDumbbell, path: "/generaltrainer/dashboard" },
       { name: "Members", icon: faUsers, path: "/admin/AdminMember" },

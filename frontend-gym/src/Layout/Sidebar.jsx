@@ -45,6 +45,7 @@ import {
   faEnvelope
 } from "@fortawesome/free-solid-svg-icons";
 
+import SuperAdminLogo from "../assets/Logo/superadmin_logo.png";
 import "./Sidebar.css";
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -302,6 +303,19 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       )}
       <div className={`sidebar-container ${collapsed ? "collapsed" : ""}`}>
         <div className="sidebar">
+          {userRole === "SUPERADMIN" && (
+            <div className="text-center bg-white mb-2" style={{ borderBottom: '1px solid #eee' }}>
+              <img 
+                src={SuperAdminLogo} 
+                alt="GymSoft Logo" 
+                style={{ 
+                  maxWidth: collapsed ? '40px' : '120px', 
+                  padding: collapsed ? '10px 0' : '15px 0',
+                  transition: 'all 0.3s ease'
+                }} 
+              />
+            </div>
+          )}
           <ul className="menu">
           {userMenus.map((menu, index) => {
             if (!menu.subItems) {

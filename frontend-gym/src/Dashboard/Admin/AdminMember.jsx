@@ -2305,7 +2305,7 @@ const handleDownloadReceipt = async (member) => {
                           }
                         >
                           <option value="">-- Select Trainer --</option>
-                          {getFilteredTrainers(newMember.interestedIn).map((t) => (
+                          {getFilteredTrainers(newMember?.interestedIn).map((t) => (
                             <option key={t.id || t.staffId} value={t.userId || t.id}>
                               {t.fullName || t.name} ({t.phone || "No phone"})
                             </option>
@@ -2741,7 +2741,7 @@ const handleDownloadReceipt = async (member) => {
                     }
                   >
                     <option value="">-- Select Trainer --</option>
-                    {getFilteredTrainers(editMember.interestedIn).map((t) => (
+                    {getFilteredTrainers(editMember?.interestedIn).map((t) => (
                       <option key={t.id || t.staffId} value={t.userId || t.id}>
                         {t.fullName || t.name} ({t.phone || "No phone"})
                       </option>
@@ -3220,26 +3220,26 @@ const handleDownloadReceipt = async (member) => {
                 <p className="mb-3">
                   Member: <strong>{assignTrainerMember.name}</strong>
                 </p>
-                <label className="form-label fw-semibold">Select Personal Trainer</label>
+                <label className="form-label fw-semibold">Select Trainer</label>
                 <select
                   className="form-select"
                   value={selectedTrainerId}
                   onChange={(e) => setSelectedTrainerId(e.target.value)}
                 >
                   <option value="">-- Select Trainer --</option>
-                  {personalTrainers.length === 0 ? (
-                    <option disabled>No personal trainers found</option>
+                  {allTrainers.length === 0 ? (
+                    <option disabled>No trainers found</option>
                   ) : (
-                    personalTrainers.map((t) => (
-                      <option key={t.staffId} value={t.userId}>
+                    allTrainers.map((t) => (
+                      <option key={t.id || t.staffId} value={t.userId || t.id}>
                         {t.fullName || t.name} ({t.phone || "No phone"})
                       </option>
                     ))
                   )}
                 </select>
-                {personalTrainers.length === 0 && (
+                {allTrainers.length === 0 && (
                   <p className="text-muted small mt-2">
-                    No personal trainers registered yet. Please add staff with Personal Trainer role first.
+                    No trainers registered yet. Please add staff with Trainer role first.
                   </p>
                 )}
               </div>

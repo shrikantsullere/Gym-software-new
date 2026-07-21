@@ -144,6 +144,7 @@ const AdminMember = () => {
     plan: "",
     paymentMode: "cash",
     amountPaid: "",
+    startDate: new Date().toISOString().split("T")[0],
   });
 
   // Handle profile image change for both add and edit forms
@@ -478,6 +479,7 @@ const AdminMember = () => {
       const response = await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
         memberId: assignTrainerMember.id,
         trainerId: parseInt(selectedTrainerId),
+        trainerType: "personal",
         adminId: effectiveAdminId,
       });
       if (response.data && response.data.success) {
@@ -560,6 +562,7 @@ const AdminMember = () => {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: createdMemberId,
               trainerId: parseInt(newMember.trainerId),
+              trainerType: "personal",
               adminId: effectiveAdminId,
             });
           } catch (trainerErr) {
@@ -681,6 +684,7 @@ const AdminMember = () => {
             await axiosInstance.post(`${BaseUrl}members/assign-trainer`, {
               memberId: editMember.id,
               trainerId: parseInt(editMember.trainerId),
+              trainerType: "personal",
               adminId,
             });
           } catch (trainerErr) {
@@ -731,9 +735,42 @@ const AdminMember = () => {
     }
   };
 
-  const handleViewMember = (member) => {
-    setSelectedMember(member);
+  const handleViewMember = async (member) => {
     setShowViewModal(true);
+    // Set list data immediately for fast display
+    setSelectedMember(member);
+    // Fetch fresh detailed data from API
+    try {
+      const response = await axiosInstance.get(`${BaseUrl}members/detail/${member.id}`);
+      if (response.data?.success) {
+        const detail = response.data.member || response.data.data;
+        setSelectedMember({
+          id: detail.id,
+          name: detail.fullName,
+          phone: detail.phone,
+          email: detail.email,
+          gender: detail.gender,
+          plan: getPlanNameById(detail.planId),
+          planId: detail.planId,
+          assignedPlans: detail.assignedPlans || [],
+          address: detail.address,
+          dob: detail.dateOfBirth,
+          planStart: detail.membershipFrom,
+          expiry: detail.membershipTo,
+          status: detail.status,
+          interestedIn: detail.interestedIn,
+          profileImage: detail.profileImage || "",
+          paymentMode: detail.paymentMode,
+          amountPaid: detail.amountPaid,
+          joinDate: detail.joinDate,
+          goal: detail.goal || "",
+          trainerName: detail.trainerName || member.trainerName || "",
+          trainerId: detail.trainerId || "",
+        });
+      }
+    } catch (err) {
+      console.error("Could not fetch fresh member details:", err);
+    }
   };
 
   const handleEditFormOpen = async (member) => {
@@ -803,6 +840,7 @@ const AdminMember = () => {
           renewPlan.paymentMode.charAt(0).toUpperCase() +
           renewPlan.paymentMode.slice(1),
         amountPaid: parseFloat(renewPlan.amountPaid),
+        membershipFrom: renewPlan.startDate,
       };
 
       const response = await axiosInstance.put(
@@ -819,15 +857,16 @@ const AdminMember = () => {
           plan: "",
           paymentMode: "cash",
           amountPaid: "",
+          startDate: new Date().toISOString().split("T")[0],
         });
         setShowRenewForm(false);
         alert("Membership renewed successfully!");
       } else {
-        alert("Failed to renew membership. Please try again.");
+        alert(response.data?.message || "Failed to renew membership. Please try again.");
       }
     } catch (error) {
       console.error("Error renewing membership:", error);
-      alert("Failed to renew membership. Please try again.");
+      alert(error.response?.data?.message || "Failed to renew membership. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -835,9 +874,11 @@ const AdminMember = () => {
 
   const handleRenewFormOpen = (member) => {
     setRenewPlan({
-      ...renewPlan,
       memberId: member.id.toString(),
-      plan: member.planId, // Use planId here as well
+      plan: member.planId || "",
+      paymentMode: "cash",
+      amountPaid: "",
+      startDate: new Date().toISOString().split("T")[0],
     });
     setShowRenewForm(true);
   };
@@ -2938,6 +2979,19 @@ const handleDownloadReceipt = async (member) => {
                 </select>
               </div>
               <div className="mb-3">
+                <label className="form-label">Start Date <span className="text-danger">*</span></label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={renewPlan.startDate}
+                  onChange={(e) =>
+                    setRenewPlan({ ...renewPlan, startDate: e.target.value })
+                  }
+                  required
+                />
+                <small className="text-muted">Renewal start date (defaults to today)</small>
+              </div>
+              <div className="mb-3">
                 <label className="form-label">Amount Paid</label>
                 <input
                   type="number"
@@ -2964,8 +3018,9 @@ const handleDownloadReceipt = async (member) => {
                   type="submit"
                   className="btn text-white"
                   style={{ backgroundColor: "#6EB2CC" }}
+                  disabled={loading}
                 >
-                  Renew Plan
+                  {loading ? "Renewing..." : "Renew Plan"}
                 </button>
               </div>
             </form>
@@ -3083,9 +3138,17 @@ const handleDownloadReceipt = async (member) => {
                     <strong>Goal:</strong>
                     <div>{selectedMember.goal || "Not Specified"}</div>
                   </div>
+                  <div className="col-12 col-sm-6">
+                    <strong>Assigned Trainer:</strong>
+                    <div>{selectedMember.trainerName || "Not Assigned"}</div>
+                  </div>
+                  <div className="col-12 col-sm-6">
+                    <strong>Payment Mode:</strong>
+                    <div>{selectedMember.paymentMode || "N/A"}</div>
+                  </div>
                   <div className="col-12">
                     <strong>Address:</strong>
-                    <div>{selectedMember.address}</div>
+                    <div>{selectedMember.address || "N/A"}</div>
                   </div>
                 </div>
               </div>

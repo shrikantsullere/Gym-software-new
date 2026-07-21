@@ -340,7 +340,7 @@ export const createMemberService = async (data) => {
 //   };
 // };
 export const renewMembershipService = async (memberId, body) => {
-  const { planId, paymentMode, amountPaid, adminId } = body;
+  const { planId, paymentMode, amountPaid, adminId, membershipFrom } = body;
 
   // 1️⃣ Member check
   const [[member]] = await pool.query("SELECT * FROM member WHERE id = ?", [
@@ -357,11 +357,20 @@ export const renewMembershipService = async (memberId, body) => {
   if (!plan) throw { status: 404, message: "Invalid Plan" };
 
   // 3️⃣ Calculate new membership dates
-  let startDate = member.membershipTo
-    ? new Date(member.membershipTo)
-    : new Date();
-
-  startDate.setDate(startDate.getDate() + 1); // next day after previous expiry
+  // If admin provided a specific start date, use it. Otherwise auto-calculate.
+  let startDate;
+  if (membershipFrom) {
+    startDate = new Date(membershipFrom);
+  } else {
+    const today = new Date();
+    startDate = member.membershipTo ? new Date(member.membershipTo) : today;
+    // If membership has already expired, start from today
+    if (startDate < today) {
+      startDate = today;
+    } else {
+      startDate.setDate(startDate.getDate() + 1); // next day after previous expiry
+    }
+  }
 
   let endDate = new Date(startDate);
 
@@ -369,7 +378,8 @@ export const renewMembershipService = async (memberId, body) => {
   const validityDays = plan.validityDays ?? 30; // default to 30 if not defined
   endDate.setDate(endDate.getDate() + validityDays);
 
-  // 5️⃣ Update member table and set status to ACTIVE
+
+  // 5️⃣ Update member table and set status to Active ✅ FIXED (was 'Inactive')
   await pool.query(
     `UPDATE member SET 
         planId = ?, 
@@ -378,7 +388,7 @@ export const renewMembershipService = async (memberId, body) => {
         paymentMode = ?, 
         amountPaid = ?, 
         adminId = ?, 
-        status = 'Inactive'  
+        status = 'Active'
      WHERE id = ?`,
     [
       planId,
@@ -390,6 +400,29 @@ export const renewMembershipService = async (memberId, body) => {
       memberId,
     ]
   );
+
+  // 6️⃣ Insert into member_plan_assignment so plan appears in history ✅ NEW
+  const [existingAssign] = await pool.query(
+    "SELECT id FROM member_plan_assignment WHERE memberId = ? AND planId = ? AND DATE(membershipFrom) = DATE(?)",
+    [memberId, planId, startDate]
+  );
+
+  if (existingAssign.length === 0) {
+    await pool.query(
+      `INSERT INTO member_plan_assignment 
+        (memberId, planId, membershipFrom, membershipTo, paymentMode, amountPaid, status, assignedBy, assignedAt)
+       VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, NOW())`,
+      [
+        memberId,
+        planId,
+        startDate,
+        endDate,
+        paymentMode || null,
+        amountPaid || plan.price,
+        adminId || member.adminId || null,
+      ]
+    );
+  }
 
   const [[updatedMember]] = await pool.query(
     `SELECT id, status, membershipFrom, membershipTo, planId, paymentMode, amountPaid, adminId, branchId 
@@ -404,7 +437,7 @@ export const renewMembershipService = async (memberId, body) => {
     membershipTo: updatedMember.membershipTo,
     paymentMode: updatedMember.paymentMode,
     amountPaid: updatedMember.amountPaid,
-    status: updatedMember.status, // Return ACTIVE status in the response
+    status: updatedMember.status,
   };
 };
 /**************************************
@@ -926,21 +959,19 @@ export const deleteMemberService = async (id) => {
   }
 
   const userId = rows[0].userId;
+
+  // Delete all related data first to avoid FK constraint errors
   await pool.query("DELETE FROM booking WHERE memberId = ?", [id]);
-
-  // 1️⃣ Delete Attendance
   await pool.query("DELETE FROM memberattendance WHERE memberId = ?", [id]);
-
-  // 2️⃣ Delete Payments (if exists)
   await pool.query("DELETE FROM payment WHERE memberId = ?", [id]);
-
-  // 3️⃣ Delete Bookings (if exists)
   await pool.query("DELETE FROM booking_requests WHERE memberId = ?", [id]);
+  // ✅ Also delete plan assignments
+  await pool.query("DELETE FROM member_plan_assignment WHERE memberId = ?", [id]);
 
-  // 4️⃣ Finally delete member
+  // Delete member record
   await pool.query("DELETE FROM member WHERE id = ?", [id]);
 
-  // 5️⃣ Delete user account
+  // Delete user account
   await pool.query("DELETE FROM user WHERE id = ?", [userId]);
 
   return { message: "Member deleted permanently" };
@@ -968,14 +999,14 @@ export const getMembersByAdminIdService = async (adminId) => {
       m.interestedIn,
       m.amountPaid,
       u.profileImage,
-      p.trainerId,
-      p.trainerType,
+      COALESCE(m.trainerId, p.trainerId) AS trainerId,
+      COALESCE(m.trainerType, p.trainerType) AS trainerType,
       trainerUser.fullName AS trainerName
 
     FROM member m
     LEFT JOIN user u ON u.id = m.userId
     LEFT JOIN memberplan p ON m.planId = p.id
-    LEFT JOIN user trainerUser ON p.trainerId = trainerUser.id
+    LEFT JOIN user trainerUser ON COALESCE(m.trainerId, p.trainerId) = trainerUser.id
     WHERE m.adminId = ?
     ORDER BY m.id DESC
     `,
@@ -1051,10 +1082,10 @@ export const getMembersByTrainerIdService = async (trainerId) => {
     LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
     LEFT JOIN memberplan p1 ON mpa.planId = p1.id
     LEFT JOIN memberplan p2 ON m.planId = p2.id
-    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
+    WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
     ORDER BY m.fullName
     `,
-    [realStaffId, realUserId, realStaffId, realUserId]
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
 
   if (rows.length > 0) {
@@ -1773,9 +1804,10 @@ export const importMembersService = async (adminId, branchId, fileBuffer) => {
 };
 
 export const assignTrainerToMemberService = async ({ memberId, trainerId, trainerType }) => {
+  const actualTrainerType = trainerType || "personal";
   const [result] = await pool.query(
     "UPDATE member SET trainerId = ?, trainerType = ? WHERE id = ?",
-    [trainerId, trainerType, memberId]
+    [trainerId, actualTrainerType, memberId]
   );
   
   if (result.affectedRows === 0) {

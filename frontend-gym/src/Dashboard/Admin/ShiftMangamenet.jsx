@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calendar, Plus, Check, X
 } from 'react-bootstrap-icons';
-import BaseUrl from '../../Api/BaseUrl';
+import axiosInstance from '../../Api/axiosInstance';
 import GetAdminId from '../../Api/GetAdminId';
 import CustomTimePicker from '../../Components/CustomTimePicker';
 
@@ -16,12 +16,10 @@ const ShiftManagement = () => {
   const [error, setError] = useState(null);
   const [staffSearch, setStaffSearch] = useState("");
 
-
-
-
-  const filteredStaff = staffMembers.filter(staff =>
-    staff.fullName.toLowerCase().includes(staffSearch.toLowerCase())
-  );
+  const filteredStaff = staffMembers.filter(staff => {
+    const name = staff.fullName || staff.name || staff.userName || staff.email || '';
+    return name.toLowerCase().includes(staffSearch.toLowerCase());
+  });
 
   // Fetch data from APIs
   useEffect(() => {
@@ -30,44 +28,41 @@ const ShiftManagement = () => {
         setLoading(true);
 
         // Fetch staff data based on admin ID
-        const staffResponse = await fetch(`${BaseUrl}staff/admin/${adminId}`);
-        const staffData = await staffResponse.json();
+        const staffResponse = await axiosInstance.get(`staff/admin/${adminId}`);
+        const staffData = staffResponse.data;
 
         // Fetch branches data
-        const branchesResponse = await fetch(`${BaseUrl}branches/by-admin/${adminId}`);
-        const branchesData = await branchesResponse.json();
+        const branchesResponse = await axiosInstance.get(`branches/by-admin/${adminId}`);
+        const branchesData = branchesResponse.data;
 
         // Fetch shifts data
-        const shiftsResponse = await fetch(`${BaseUrl}shift/all/${adminId}`);
-        const shiftsData = await shiftsResponse.json();
+        const shiftsResponse = await axiosInstance.get(`shift/all/${adminId}`);
+        const shiftsData = shiftsResponse.data;
 
-        if (staffData.success) {
-          setStaffMembers(staffData.staff);
+        if (staffData && staffData.success) {
+          setStaffMembers(staffData.staff || staffData.data || []);
         } else {
-          throw new Error('Failed to fetch data');
+          setStaffMembers([]);
         }
 
-        if (branchesData.success) {
-          setBranches(branchesData.branches);
-        } else {
-          throw new Error('Failed to fetch branches data');
+        if (branchesData && branchesData.success) {
+          setBranches(branchesData.branches || branchesData.data || []);
         }
 
-        if (shiftsData.success) {
-          setShifts(shiftsData.data || []);
-        } else {
-          throw new Error('Failed to fetch shifts data');
+        if (shiftsData && shiftsData.success) {
+          setShifts(shiftsData.data || shiftsData.shifts || []);
         }
 
         setLoading(false);
       } catch (err) {
+        console.error("Error fetching shift data:", err);
         setError(err.message);
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [BaseUrl, adminId]);
+    if (adminId) fetchData();
+  }, [adminId]);
 
   const [shiftForm, setShiftForm] = useState({
     staffIds: [],
@@ -82,22 +77,23 @@ const ShiftManagement = () => {
   const getStaffName = (ids) => {
     if (!ids) return 'Not Assigned';
 
-    // Handle case where ids is a string
     if (typeof ids === 'string') {
-      ids = parseInt(ids);
+      try {
+        ids = JSON.parse(ids);
+      } catch(e) {
+        ids = parseInt(ids);
+      }
     }
 
-    // Handle case where ids is a single number
     if (typeof ids === 'number') {
-      const staff = staffMembers.find(s => s.staffId === ids);
-      return staff ? staff.fullName : 'Unknown';
+      const staff = staffMembers.find(s => (s.staffId || s.id) === ids);
+      return staff ? (staff.fullName || staff.name || staff.userName || 'Unknown') : 'Unknown';
     }
 
-    // Handle case where ids is an array
     if (Array.isArray(ids)) {
       const names = ids.map(id => {
-        const staff = staffMembers.find(s => s.staffId === id);
-        return staff ? staff.fullName : 'Unknown';
+        const staff = staffMembers.find(s => (s.staffId || s.id) === id);
+        return staff ? (staff.fullName || staff.name || staff.userName || 'Unknown') : 'Unknown';
       });
       return names.join(', ');
     }
@@ -137,42 +133,33 @@ const ShiftManagement = () => {
   };
 
   const handleStaffCheckboxChange = (staffId, isChecked) => {
+    const numericId = parseInt(staffId);
     setShiftForm(prev => {
       if (isChecked) {
-        // Add staffId to array
-        return { ...prev, staffIds: [...prev.staffIds, parseInt(staffId)] };
+        return { ...prev, staffIds: [...prev.staffIds, numericId] };
       } else {
-        // Remove staffId from array
-        return { ...prev, staffIds: prev.staffIds.filter(id => id !== parseInt(staffId)) };
+        return { ...prev, staffIds: prev.staffIds.filter(id => id !== numericId) };
       }
     });
   };
 
   const handleCreateShift = async () => {
     try {
-      console.log(shiftForm)
       if (!shiftForm.staffIds || !shiftForm.staffIds.length || !shiftForm.shiftDate ||
         !shiftForm.startTime || !shiftForm.endTime || !shiftForm.shiftType) {
         alert('Please fill all required fields');
         return;
       }
 
-      const response = await fetch(`${BaseUrl}shift/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(shiftForm)
-      });
-
-      const data = await response.json();
+      const response = await axiosInstance.post('shift/create', shiftForm);
+      const data = response.data;
 
       if (data.success) {
-        const shiftsResponse = await fetch(`${BaseUrl}shift/all/${adminId}`);
-        const shiftsData = await shiftsResponse.json();
+        const shiftsResponse = await axiosInstance.get(`shift/all/${adminId}`);
+        const shiftsData = shiftsResponse.data;
 
         if (shiftsData.success) {
-          setShifts(shiftsData.data || []);
+          setShifts(shiftsData.data || shiftsData.shifts || []);
         }
 
         setShiftForm({
@@ -190,28 +177,21 @@ const ShiftManagement = () => {
       }
     } catch (err) {
       console.error('Error creating shift:', err);
-      alert('Error creating shift: ' + err.message);
+      alert('Error creating shift: ' + (err.response?.data?.message || err.message));
     }
   };
 
   // FIXED: Added staffIds to the payload when approving a shift
   const handleApproveShift = async (shiftId) => {
     try {
-      // Find the shift to get the staff IDs
       const shift = shifts.find(s => s.id === shiftId);
 
-      const response = await fetch(`${BaseUrl}shift/status/${shiftId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'Approved',
-          staffIds: shift.staffIds // Add staff IDs to the payload
-        })
+      const response = await axiosInstance.put(`shift/status/${shiftId}`, {
+        status: 'Approved',
+        staffIds: shift ? shift.staffIds : []
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         setShifts(shifts.map(shift =>
@@ -223,28 +203,21 @@ const ShiftManagement = () => {
       }
     } catch (err) {
       console.error('Error approving shift:', err);
-      alert('Error approving shift: ' + err.message);
+      alert('Error approving shift: ' + (err.response?.data?.message || err.message));
     }
   };
 
   // FIXED: Added staffIds to the payload when rejecting a shift
   const handleRejectShift = async (shiftId) => {
     try {
-      // Find the shift to get the staff IDs
       const shift = shifts.find(s => s.id === shiftId);
 
-      const response = await fetch(`${BaseUrl}shift/status/${shiftId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'Rejected',
-          staffIds: shift.staffIds // Add staff IDs to the payload
-        })
+      const response = await axiosInstance.put(`shift/status/${shiftId}`, {
+        status: 'Rejected',
+        staffIds: shift ? shift.staffIds : []
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         setShifts(shifts.map(shift =>
@@ -256,7 +229,7 @@ const ShiftManagement = () => {
       }
     } catch (err) {
       console.error('Error rejecting shift:', err);
-      alert('Error rejecting shift: ' + err.message);
+      alert('Error rejecting shift: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -315,29 +288,34 @@ const ShiftManagement = () => {
                           }}
                         >
                           {filteredStaff.length > 0 ? (
-                            filteredStaff.map(staff => (
-                              <div
-                                className="form-check"
-                                key={staff.staffId}
-                                style={{ minWidth: "250px" }} // 👈 horizontal scroll ke liye
-                              >
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  id={`staff-${staff.staffId}`}
-                                  checked={shiftForm.staffIds.includes(staff.staffId)}
-                                  onChange={(e) =>
-                                    handleStaffCheckboxChange(staff.staffId, e.target.checked)
-                                  }
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor={`staff-${staff.staffId}`}
+                            filteredStaff.map(staff => {
+                              const sId = staff.staffId || staff.id;
+                              const sName = staff.fullName || staff.name || staff.userName || staff.email || `Staff #${sId}`;
+                              const sRole = staff.roleName ? ` (${staff.roleName})` : '';
+                              return (
+                                <div
+                                  className="form-check"
+                                  key={sId}
+                                  style={{ minWidth: "250px" }}
                                 >
-                                  {staff.fullName}
-                                </label>
-                              </div>
-                            ))
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`staff-${sId}`}
+                                    checked={shiftForm.staffIds.includes(sId)}
+                                    onChange={(e) =>
+                                      handleStaffCheckboxChange(sId, e.target.checked)
+                                    }
+                                  />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor={`staff-${sId}`}
+                                  >
+                                    {sName}{sRole}
+                                  </label>
+                                </div>
+                              );
+                            })
                           ) : (
                             <p className="text-muted mb-0">No staff members found</p>
                           )}

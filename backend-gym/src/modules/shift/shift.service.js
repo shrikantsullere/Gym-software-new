@@ -35,18 +35,18 @@ export const createShiftService = async (data) => {
 export const getAllShiftsService = async (adminId) => {
   const [rows] = await pool.query(
     `
-    SELECT 
+    SELECT DISTINCT
       s.*,
       st.userId,
       st.gender,
       st.branchId
     FROM shifts s
-    INNER JOIN staff st 
-      ON st.id = s.staffIds
-    WHERE st.adminId = ?
+    LEFT JOIN staff st 
+      ON st.id = s.staffIds OR FIND_IN_SET(st.id, s.staffIds)
+    WHERE st.adminId = ? OR s.createdById = ? OR s.createdById IN (SELECT userId FROM user WHERE adminId = ?)
     ORDER BY s.id DESC
     `,
-    [adminId]
+    [adminId, adminId, adminId]
   );
 
   return rows;

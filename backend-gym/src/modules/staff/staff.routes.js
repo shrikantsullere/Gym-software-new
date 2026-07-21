@@ -31,7 +31,7 @@ router.get(
 
 router.get(
   "/admin/:adminId",
-  verifyToken(["Superadmin", "Admin", "receptionist", "sales_agent", "personal trainer", "general trainer", "manager", "housekeeping", "Staff"]),
+  verifyToken(["Superadmin", "Admin", "receptionist", "sales_agent", "personal trainer", "general trainer", "manager", "Staff"]),
   listStaff
 );
 

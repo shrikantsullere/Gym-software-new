@@ -12,6 +12,8 @@ const PersonalTraining = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobileViewModalOpen, setIsMobileViewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [trainerFilter, setTrainerFilter] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState('');
 
   const customColor = "#6EB2CC";
 
@@ -248,6 +250,40 @@ const PersonalTraining = () => {
       alert('An error occurred while fetching the booking');
     }
   };
+  const filteredData = trainingData.filter((data) => {
+    const matchesTrainer = trainerFilter ? data.trainerName?.toLowerCase().includes(trainerFilter.toLowerCase()) : true;
+    // Map Paid to Completed for filtering or handle both
+    const normalizedPaymentStatus = data.paymentStatus === "Paid" ? "Completed" : data.paymentStatus;
+    const normalizedPaymentFilter = paymentFilter === "Paid" ? "Completed" : paymentFilter;
+    const matchesPayment = paymentFilter ? normalizedPaymentStatus?.toLowerCase() === normalizedPaymentFilter.toLowerCase() : true;
+    return matchesTrainer && matchesPayment;
+  });
+
+  const handleExport = () => {
+    const headers = ['ID', 'Member Name', 'Trainer', 'Type', 'Date', 'Time', 'Price', 'Payment Status', 'Booking Status'];
+    const csvData = filteredData.map(row => [
+      row.id,
+      `"${row.memberName || ''}"`,
+      `"${row.trainerName || ''}"`,
+      `"${row.type || ''}"`,
+      `"${row.date || ''}"`,
+      `"${row.time || ''}"`,
+      `"${(row.price || '').replace('₹', '')}"`,
+      `"${row.paymentStatus || ''}"`,
+      `"${row.bookingStatus || ''}"`
+    ]);
+    
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...csvData.map(e => e.join(','))].join('\n');
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "personal_training_details.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="container-fluid p-2 p-md-4">
@@ -274,16 +310,16 @@ const PersonalTraining = () => {
         </div>
       )}
 
-      {/* Search by ID */}
+      {/* Filters and Export */}
       {!loading && !error && (
-        <div className="row mb-3">
-          <div className="col-md-6">
+        <div className="row mb-3 g-3">
+          <div className="col-md-3">
             <div className="input-group">
-              <span className="input-group-text">Search by ID</span>
+              <span className="input-group-text">ID</span>
               <input
                 type="number"
                 className="form-control"
-                placeholder="Enter booking ID"
+                placeholder="Search ID"
                 id="bookingIdSearch"
               />
               <button 
@@ -298,9 +334,35 @@ const PersonalTraining = () => {
                   }
                 }}
               >
-                <i className="bi bi-search"></i> Search
+                <i className="bi bi-search"></i>
               </button>
             </div>
+          </div>
+          <div className="col-md-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Filter by Trainer Name"
+              value={trainerFilter}
+              onChange={(e) => setTrainerFilter(e.target.value)}
+            />
+          </div>
+          <div className="col-md-3">
+            <select
+              className="form-select"
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+            >
+              <option value="">All Payment Statuses</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+              <option value="Failed">Failed</option>
+            </select>
+          </div>
+          <div className="col-md-3 text-md-end">
+            <button className="btn btn-success" onClick={handleExport}>
+              <i className="bi bi-file-earmark-excel me-2"></i> Export CSV
+            </button>
           </div>
         </div>
       )}
@@ -325,7 +387,7 @@ const PersonalTraining = () => {
                 </tr>
               </thead>
               <tbody>
-                {trainingData.map((data, index) => (
+                {filteredData.map((data, index) => (
                   <tr key={data.id}>
                     <td>{data.id}</td>
                     <td>{data.memberName}</td>
@@ -387,14 +449,14 @@ const PersonalTraining = () => {
       {/* Mobile view */}
       {!loading && !error && (
         <div className="d-md-none">
-          {trainingData.map((booking, index) => (
+          {filteredData.map((booking, index) => (
             <MobileBookingCard key={booking.id} booking={booking} index={index} />
           ))}
         </div>
       )}
 
       {/* Empty state */}
-      {!loading && !error && trainingData.length === 0 && (
+      {!loading && !error && filteredData.length === 0 && (
         <div className="text-center py-5">
           <i className="bi bi-calendar-x" style={{ fontSize: '3rem', color: customColor }}></i>
           <h5 className="mt-3">No personal training bookings found</h5>

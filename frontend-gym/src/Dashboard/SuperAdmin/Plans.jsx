@@ -373,30 +373,29 @@ const MembershipPlans = () => {
                     />
 
                     <label className="form-label">Duration</label>
-                    <select
-                      className="form-select mb-2"
+                    <input
+                      className="form-control mb-2"
+                      list="duration-options"
                       value={duration}
                       onChange={(e) => setDuration(e.target.value)}
-                    >
-                      <option value="Monthly">Monthly</option>
-                      <option value="Yearly">Yearly</option>
-                      <option value="7 Days">7 Days</option>
-                    </select>
+                      placeholder="Select or type duration (e.g., 6 Months)"
+                    />
+                    <datalist id="duration-options">
+                      <option value="Monthly" />
+                      <option value="Yearly" />
+                      <option value="7 Days" />
+                    </datalist>
 
-                    {duration === "Yearly" && (
-                      <>
-                        <label className="form-label">Discount (%)</label>
-                        <input
-                          className="form-control mb-2"
-                          type="number"
-                          value={discountPercent}
-                          onChange={(e) => setDiscountPercent(e.target.value)}
-                          placeholder="e.g., 15"
-                          min="0"
-                          max="100"
-                        />
-                      </>
-                    )}
+                    <label className="form-label">Discount (%)</label>
+                    <input
+                      className="form-control mb-2"
+                      type="number"
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(e.target.value)}
+                      placeholder="e.g., 15 (Optional)"
+                      min="0"
+                      max="100"
+                    />
 
                     <label className="form-label">Category</label>
                     <select

@@ -1,5 +1,6 @@
 .leaderboard-wrapper {
-  max-width: 900px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -98,7 +99,26 @@
   object-fit: cover;
 }
 
-.score-badge {
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
+/* Table Horizontal Scrollbar Styling */
+.table-responsive {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #2f6a87;
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #1e4b61;
 }

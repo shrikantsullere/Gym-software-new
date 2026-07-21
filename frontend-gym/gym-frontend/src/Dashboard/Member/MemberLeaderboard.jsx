@@ -241,8 +241,8 @@ const MemberLeaderboard = () => {
           </span>
         </div>
 
-        <div className="table-responsive shadow-sm rounded-3 overflow-hidden border">
-          <table className="table table-hover align-middle mb-0 text-nowrap">
+        <div className="table-responsive shadow-sm rounded-3 border" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table className="table table-hover align-middle mb-0 text-nowrap" style={{ minWidth: '1250px' }}>
             <thead className="table-light">
               <tr style={{ fontSize: '13px', letterSpacing: '0.3px' }}>
                 <th className="px-3 py-3">Rank</th>
@@ -372,7 +372,7 @@ const MemberLeaderboard = () => {
   ];
 
   return (
-    <div className="leaderboard-wrapper pb-5" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <div className="leaderboard-wrapper pb-5" style={{ width: '100%', maxWidth: '100%', margin: '0 auto' }}>
       {/* Header */}
       <div className="text-center mb-4 mt-2">
         <div className="d-inline-flex align-items-center justify-content-center bg-white rounded-pill px-3 py-1 mb-2 border shadow-sm">

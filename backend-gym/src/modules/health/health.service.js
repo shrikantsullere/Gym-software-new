@@ -131,11 +131,13 @@ export const getMemberHealthLogsService = async (memberIdParam) => {
     combinedLogs.push({
       id: `h_${h.id}`,
       memberId: h.memberId,
+      fullName: h.fullName || null,
+      phone: h.phone || null,
       recordedAt: h.recordedAt || h.createdAt,
       weight: h.weight,
       height: h.height,
       bmi: h.bmi,
-      bmiStatus: h.bmiStatus || formatBmiStatus(h.bmi),
+      bmiStatus: h.bmiStatus || h.status || formatBmiStatus(h.bmi),
       notes: h.notes || null,
       dietChart: h.dietChart || null,
       source: 'health_log'
@@ -149,9 +151,11 @@ export const getMemberHealthLogsService = async (memberIdParam) => {
     combinedLogs.push({
       id: `a_${a.id}`,
       memberId: a.memberId,
+      fullName: a.fullName || null,
+      phone: a.phone || null,
       recordedAt: recordedAt,
-      weight: a.weight,
-      height: a.height,
+      weight: a.weight_kg || a.weight,
+      height: a.height_cm || a.height,
       bmi: !isNaN(bmiVal) ? bmiVal.toFixed(2) : '-',
       bmiStatus: formatBmiStatus(a.bmi),
       notes: a.fitness_goal ? `Fitness Goal: ${a.fitness_goal.replace('_', ' ').toUpperCase()}${a.activity_level ? ` | Activity: ${a.activity_level}` : ''}` : null,
@@ -160,44 +164,7 @@ export const getMemberHealthLogsService = async (memberIdParam) => {
     });
   }
 
-  // 4. Fallback: If no logs exist, generate an initial baseline record from member profile / branch info
-  if (combinedLogs.length === 0 && realMemberId) {
-    try {
-      const [mInfo] = await pool.query(
-        `SELECT id, fullName, gender, joinDate, branchId FROM member WHERE id = ?`,
-        [realMemberId]
-      );
-      if (mInfo.length) {
-        const m = mInfo[0];
-        const [bLogs] = await pool.query(
-          `SELECT ma.weight_kg AS weight, ma.height_cm AS height, ma.bmi
-           FROM member_assessments ma
-           JOIN member m2 ON ma.memberId = m2.id
-           WHERE m2.branchId = ? ORDER BY ma.id DESC LIMIT 1`,
-          [m.branchId || 0]
-        );
-        
-        const fallbackWeight = bLogs.length ? bLogs[0].weight : '70.00';
-        const fallbackHeight = bLogs.length ? bLogs[0].height : '175.00';
-        const fallbackBmi = bLogs.length ? bLogs[0].bmi : '22.86';
-
-        combinedLogs.push({
-          id: `b_1`,
-          memberId: m.id,
-          recordedAt: m.joinDate || new Date(),
-          weight: parseFloat(fallbackWeight).toFixed(2),
-          height: parseFloat(fallbackHeight).toFixed(2),
-          bmi: parseFloat(fallbackBmi).toFixed(2),
-          bmiStatus: formatBmiStatus(fallbackBmi),
-          notes: 'Initial Baseline Health Record',
-          dietChart: null,
-          source: 'baseline'
-        });
-      }
-    } catch (e) {
-      console.error("Error creating fallback health log:", e);
-    }
-  }
+  // 4. No fallback dummy data - return empty if no real logs exist
 
   // Sort descending by date
   combinedLogs.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));

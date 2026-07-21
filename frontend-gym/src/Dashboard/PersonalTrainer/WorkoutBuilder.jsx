@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../Api/axiosInstance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDumbbell, faPlus, faTrash, faSave, faUser } from '@fortawesome/free-solid-svg-icons';
+import { getCurrentStaffId } from '../../utils/staffUtils';
 
 const predefinedExercises = [
   "Pushups",
@@ -18,6 +19,7 @@ const predefinedExercises = [
   "Other"
 ];
 
+
 const WorkoutBuilder = () => {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
@@ -30,21 +32,45 @@ const WorkoutBuilder = () => {
 
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const branchId = user.branchId;
+  const adminId = user.adminId || user.id;
+  const roleId = Number(user.roleId);
+  const roleName = (user.roleName || user.role || '').toLowerCase().replace(/\s+/g, '');
 
-  // Fetch members for assignment
+  const isPersonalTrainer = roleId === 5 || roleName.includes('personaltrainer');
+  const isGeneralTrainer = roleId === 6 || roleName.includes('generaltrainer');
+
+  // Fetch members for assignment — based on role
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await axiosInstance.get(`/members/branch/${branchId}`);
-        if (res.data.success) {
-          setMembers(res.data.items || []);
+        let endpoint;
+        if (isPersonalTrainer || isGeneralTrainer) {
+          // Trainer: show only their type of assigned members
+          const staffId = getCurrentStaffId(user);
+          endpoint = `/members/trainer/${staffId}`;
+        } else if (adminId) {
+          // Admin / Subadmin: show all members for this gym
+          endpoint = `/members/admin/${adminId}`;
+        } else if (branchId) {
+          // Fallback: branch members
+          endpoint = `/members/branch/${branchId}`;
+        } else {
+          return;
+        }
+
+        const res = await axiosInstance.get(endpoint);
+        if (res.data && res.data.success) {
+          setMembers(res.data.data || res.data.items || []);
+        } else if (Array.isArray(res.data)) {
+          setMembers(res.data);
         }
       } catch (err) {
         console.error("Error fetching members:", err);
       }
     };
-    if (branchId) fetchMembers();
-  }, [branchId]);
+    fetchMembers();
+  }, []);
+
 
   const handleAddExercise = () => {
     setExercises([...exercises, { name: '', customName: '', reps: '', sets: '', notes: '' }]);

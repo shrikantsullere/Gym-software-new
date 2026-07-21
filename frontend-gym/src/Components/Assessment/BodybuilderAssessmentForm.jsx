@@ -102,7 +102,19 @@ const BodybuilderAssessmentForm = () => {
               }
             }
 
-            return { ...prev, gender_at_assessment: newGender, age_at_assessment: newAge };
+            let newGoal = prev.fitness_goal;
+            const memberGoal = (selectedMember.goal || selectedMember.interestedIn || "").toLowerCase();
+            if (memberGoal) {
+              if (memberGoal.includes("weight gain") || memberGoal.includes("muscle") || memberGoal.includes("body building") || memberGoal.includes("bodybuilding")) {
+                newGoal = "muscle_gain";
+              } else if (memberGoal.includes("fat loss") || memberGoal.includes("weight loss")) {
+                newGoal = "fat_loss";
+              } else if (memberGoal.includes("strength")) {
+                newGoal = "strength";
+              }
+            }
+
+            return { ...prev, gender_at_assessment: newGender, age_at_assessment: newAge, fitness_goal: newGoal };
           });
           
           // Fetch previous assessment logs to auto-fill measurements
@@ -123,6 +135,22 @@ const BodybuilderAssessmentForm = () => {
                 calves_cm: latestLog.calves_cm || prev.calves_cm,
                 coach_notes: latestLog.notes || prev.coach_notes
               }));
+              }));
+            } else {
+              // Fallback to fetch general health log for basic measurements if no bodybuilding log
+              try {
+                const healthRes = await axiosInstance.get(`/v1/health/${formData.memberId}`);
+                if (healthRes.data && healthRes.data.success !== false && healthRes.data.data && healthRes.data.data.length > 0) {
+                  const latestHealth = healthRes.data.data[0];
+                  setFormData(prev => ({
+                    ...prev,
+                    weight_kg: latestHealth.weight || prev.weight_kg,
+                    height_cm: latestHealth.height || prev.height_cm
+                  }));
+                }
+              } catch (hErr) {
+                console.error("Failed to fetch health log fallback", hErr);
+              }
             }
           } catch (err) {
             console.error("Failed to fetch past logs", err);

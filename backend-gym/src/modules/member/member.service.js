@@ -498,10 +498,12 @@ export const memberDetailService = async (id) => {
       mp.name AS planName,
       mp.sessions AS totalSessions,
       mp.validityDays,
-      mp.trainerType
+      mp.trainerType,
+      t.fullName AS trainerName
     FROM member m
     JOIN user u ON u.id = m.userId
     LEFT JOIN memberplan mp ON m.planId = mp.id
+    LEFT JOIN user t ON m.trainerId = t.id
     WHERE m.id = ?
     `,
     [id]
@@ -1110,9 +1112,9 @@ export const getMembersByTrainerIdService = async (trainerId) => {
      LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
-     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
      ORDER BY m.fullName`,
-    [realStaffId, realUserId, realStaffId, realUserId]
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
 
   if (directRows.length > 0) {

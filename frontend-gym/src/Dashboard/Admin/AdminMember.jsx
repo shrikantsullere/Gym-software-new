@@ -2277,11 +2277,10 @@ const handleDownloadReceipt = async (member) => {
                         </div>
                       </div>
                     </div>
-                    {newMember.interestedIn === "Personal Training" && (
-                      <div className="col-12 mt-2">
-                        <label className="form-label fw-semibold">
-                          Select Personal Trainer
-                        </label>
+                    <div className="col-12 mt-2">
+                      <label className="form-label fw-semibold">
+                        Select Trainer (Optional)
+                      </label>
                         <select
                           className="form-select"
                           value={newMember.trainerId}
@@ -2294,13 +2293,12 @@ const handleDownloadReceipt = async (member) => {
                         >
                           <option value="">-- Select Trainer --</option>
                           {personalTrainers.map((t) => (
-                            <option key={t.staffId} value={t.staffId}>
+                            <option key={t.id || t.staffId} value={t.userId || t.id}>
                               {t.fullName || t.name} ({t.phone || "No phone"})
                             </option>
                           ))}
                         </select>
                       </div>
-                    )}
                     <div className="col-12">
                       <label className="form-label">Address</label>
                       <textarea
@@ -2715,11 +2713,10 @@ const handleDownloadReceipt = async (member) => {
                         </div>
                       </div>
               </div>
-              {editMember.interestedIn === "Personal Training" && (
-                <div className="col-12 mt-2">
-                  <label className="form-label fw-semibold">
-                    Select Personal Trainer
-                  </label>
+              <div className="col-12 mt-2">
+                <label className="form-label fw-semibold">
+                  Select Trainer (Optional)
+                </label>
                   <select
                     className="form-select"
                     value={editMember.trainerId}
@@ -2732,13 +2729,12 @@ const handleDownloadReceipt = async (member) => {
                   >
                     <option value="">-- Select Trainer --</option>
                     {personalTrainers.map((t) => (
-                      <option key={t.staffId} value={t.userId}>
+                      <option key={t.id || t.staffId} value={t.userId || t.id}>
                         {t.fullName || t.name} ({t.phone || "No phone"})
                       </option>
                     ))}
                   </select>
                 </div>
-              )}
               <div className="col-12">
                 <label className="form-label">
                   Plans <span className="text-danger">*</span>

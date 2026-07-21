@@ -401,7 +401,7 @@ const Attendance = () => {
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleDelete(member.attendance_id)}
-                            disabled={member.deleting}
+                            disabled={member.deleting || member.checkin_time === "-"}
                           >
                             {member.deleting ? (
                               <Spinner as="span" animation="border" size="sm" />
@@ -541,7 +541,7 @@ const Attendance = () => {
                         variant="outline-danger"
                         size="sm"
                         onClick={() => handleDelete(member.attendance_id)}
-                        disabled={member.deleting}
+                        disabled={member.deleting || member.checkin_time === "-"}
                       >
                         {member.deleting ? (
                           <Spinner as="span" animation="border" size="sm" />

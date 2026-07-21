@@ -15,8 +15,15 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     [adminId]
   );
 
-  // 3. Pending payments (payments with status pending or unpaid)
-  const pendingPayments = [{ count: 0, totalAmount: 0 }];
+  // 3. Pending payments (members without full payment recorded or unpaid)
+  const [pendingPayments] = await pool.query(
+    `SELECT COUNT(DISTINCT m.id) as count, 0 as totalAmount
+     FROM member m
+     LEFT JOIN payment p ON p.memberId = m.id
+     WHERE (m.adminId = ? OR ? IS NULL)
+       AND (m.amountPaid = 0 OR m.amountPaid IS NULL OR p.id IS NULL)`,
+    [adminId, adminId]
+  );
 
   // 4. Members with expiring/recently expired plans
   const [expiringPlans] = await pool.query(
@@ -29,13 +36,29 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     [adminId, adminId]
   );
 
-  // 5. Low stock inventory alerts (products with currentStock <= 5)
-  const [lowStockItems] = await pool.query(
-    `SELECT id, name, currentStock, category FROM product
-     WHERE currentStock <= 5 AND isActive = 1 AND branchId = ?
-     ORDER BY currentStock ASC LIMIT 5`,
-    [branchId]
+  // 5. Low stock inventory & gym equipment alerts
+  const [eqItems] = await pool.query(
+    `SELECT id, name, quantity AS currentStock, COALESCE(category, 'Equipment') AS category 
+     FROM gym_equipment
+     WHERE (branchId = ? OR ? IS NULL OR branchId = 0) AND quantity <= 5 AND isActive = 1`,
+    [branchId, branchId]
   );
+  const [reqItems] = await pool.query(
+    `SELECT id, itemName AS name, quantity AS currentStock, COALESCE(category, 'Equipment Request') AS category 
+     FROM equipment_requests
+     WHERE (adminId = ? OR ? IS NULL) AND status = 'PENDING'`,
+    [adminId, adminId]
+  );
+  const [prodItems] = await pool.query(
+    `SELECT id, name, currentStock, COALESCE(category, 'General') AS category 
+     FROM product
+     WHERE currentStock <= 5 AND isActive = 1 AND (branchId = ? OR ? IS NULL OR branchId = 0)`,
+    [branchId, branchId]
+  );
+
+  const lowStockItems = [...eqItems, ...reqItems, ...prodItems]
+    .sort((a, b) => a.currentStock - b.currentStock)
+    .slice(0, 5);
 
   // 6. Recent walk-in members today (list)
   const [recentCheckins] = await pool.query(

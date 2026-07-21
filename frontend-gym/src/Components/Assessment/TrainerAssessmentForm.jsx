@@ -311,7 +311,6 @@ const TrainerAssessmentForm = () => {
                       <option value="fat_loss">Fat Loss</option>
                       <option value="maintenance">Maintenance</option>
                       <option value="muscle_gain">Muscle Gain</option>
-                      <option value="competition_prep">Competition Prep</option>
                     </select>
                   </div>
                 </div>

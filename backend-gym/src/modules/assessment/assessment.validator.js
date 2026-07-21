@@ -73,15 +73,21 @@ export const validateAssessmentInputs = (data) => {
     if (data.hip_cm < 10 || data.hip_cm > 300) errors.push("Hip circumference out of reasonable bounds");
   }
 
-  // Enum validations
+  // Enum validations & goal normalization
   const validActivities = ['sedentary', 'light', 'moderate', 'active'];
   if (!validActivities.includes(data.activity_level)) {
-    errors.push(`activity_level must be one of: ${validActivities.join(', ')}`);
+    data.activity_level = 'moderate';
   }
 
-  const validGoals = ['fat_loss', 'maintenance', 'muscle_gain'];
-  if (!validGoals.includes(data.fitness_goal)) {
-    errors.push(`fitness_goal must be one of: ${validGoals.join(', ')}`);
+  let goal = (data.fitness_goal || '').toLowerCase();
+  if (goal.includes('loss') || goal.includes('fat') || goal.includes('weight_loss')) {
+    data.fitness_goal = 'fat_loss';
+  } else if (goal.includes('gain') || goal.includes('muscle') || goal.includes('competition') || goal.includes('prep') || goal.includes('body')) {
+    data.fitness_goal = 'muscle_gain';
+  } else if (goal.includes('maintain') || goal.includes('fitness')) {
+    data.fitness_goal = 'maintenance';
+  } else {
+    data.fitness_goal = 'fat_loss';
   }
   
   // Zero Division Pre-Checks

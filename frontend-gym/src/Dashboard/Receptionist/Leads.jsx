@@ -41,10 +41,26 @@ const Leads = () => {
     status: "New",
     followUpDate: "",
     notes: "",
-    assignedToStaffId: ""
+    assignedToStaffId: "",
+    gymName: "",
+    city: "",
+    interestedPlan: ""
   });
   
   const navigate = useNavigate();
+
+  const parseNotesForSaaS = (notes) => {
+    if (!notes) return { gymName: "", city: "" };
+    const parts = notes.split('|');
+    let city = "";
+    let gymName = "";
+    parts.forEach(p => {
+      if (p.includes('City:')) city = p.replace('City:', '').trim();
+      if (p.includes('Gym:')) gymName = p.replace('Gym:', '').trim();
+    });
+    if (!gymName && !city) gymName = notes;
+    return { gymName, city };
+  };
 
   const fetchCRMStats = async () => {
     if (userRole !== "SUPERADMIN" && userRole !== "SUBADMIN") return;
@@ -151,13 +167,27 @@ const Leads = () => {
   const handleAddNew = () => {
     setModalType('add');
     setSelectedLeadId(null);
-    setFormData({ fullName: "", phone: "", email: "", gender: "", source: "Walk-in", status: "New", followUpDate: "", notes: "", assignedToStaffId: "" });
+    setFormData({
+      fullName: "",
+      phone: "",
+      email: "",
+      gender: "",
+      source: (userRole === "SUPERADMIN" || userRole === "SUBADMIN") ? "Start Free Trial" : "Walk-in",
+      status: "New",
+      followUpDate: "",
+      notes: "",
+      assignedToStaffId: "",
+      gymName: "",
+      city: "",
+      interestedPlan: (userRole === "SUPERADMIN" || userRole === "SUBADMIN") ? "7-Day Free Trial" : ""
+    });
     setShowModal(true);
   };
 
   const handleView = (lead) => {
     setModalType('view');
     setSelectedLeadId(lead.id);
+    const { gymName, city } = parseNotesForSaaS(lead.notes);
     setFormData({
       fullName: lead.fullName || "",
       phone: lead.phone || "",
@@ -167,7 +197,10 @@ const Leads = () => {
       status: lead.status || "New",
       followUpDate: lead.followUpDate ? lead.followUpDate.split('T')[0] : "",
       notes: lead.notes || "",
-      assignedToStaffId: lead.assignedToStaffId || ""
+      assignedToStaffId: lead.assignedToStaffId || "",
+      gymName: gymName,
+      city: city,
+      interestedPlan: lead.interestedPlan || ""
     });
     setShowModal(true);
   };
@@ -175,6 +208,7 @@ const Leads = () => {
   const handleEdit = (lead) => {
     setModalType('edit');
     setSelectedLeadId(lead.id);
+    const { gymName, city } = parseNotesForSaaS(lead.notes);
     setFormData({
       fullName: lead.fullName || "",
       phone: lead.phone || "",
@@ -184,7 +218,10 @@ const Leads = () => {
       status: lead.status || "New",
       followUpDate: lead.followUpDate ? lead.followUpDate.split('T')[0] : "",
       notes: lead.notes || "",
-      assignedToStaffId: lead.assignedToStaffId || ""
+      assignedToStaffId: lead.assignedToStaffId || "",
+      gymName: gymName,
+      city: city,
+      interestedPlan: lead.interestedPlan || ""
     });
     setShowModal(true);
   };
@@ -221,8 +258,16 @@ const Leads = () => {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const adminId = user.adminId || user.id || 1;
       
+      let finalNotes = formData.notes;
+      if (userRole === "SUPERADMIN" || userRole === "SUBADMIN") {
+        const gymStr = formData.gymName ? `Gym: ${formData.gymName}` : '';
+        const cityStr = formData.city ? `City: ${formData.city}` : '';
+        finalNotes = [gymStr, cityStr].filter(Boolean).join(' | ');
+      }
+
       const payload = {
         ...formData,
+        notes: finalNotes,
         adminId: adminId,
         branchId: user.branchId || null,
         leadType: (userRole === "SUPERADMIN" || userRole === "SUBADMIN") ? "SAAS" : "GYM"
@@ -797,83 +842,157 @@ const Leads = () => {
                 </div>
                 <div className="modal-body pt-4">
                   <form onSubmit={handleSubmit}>
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Full Name</label>
-                        <input type="text" className="form-control" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={modalType === 'view'} />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Phone Number</label>
-                        <input type="tel" className="form-control" name="phone" value={formData.phone} onChange={handleChange} required disabled={modalType === 'view'} />
-                      </div>
-                    </div>
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Email (Optional)</label>
-                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} disabled={modalType === 'view'} />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Gender</label>
-                        <select className="form-select" name="gender" value={formData.gender || ""} onChange={handleChange} disabled={modalType === 'view'}>
-                          <option value="">Select Gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Source</label>
-                        <select className="form-select" name="source" value={formData.source} onChange={handleChange} disabled={modalType === 'view'}>
-                          <option value="Walk-in">Walk-in</option>
-                          <option value="Website">Website</option>
-                          <option value="Phone">Phone</option>
-                          <option value="Referral">Referral</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Assign To Staff</label>
-                        <select className="form-select" name="assignedToStaffId" value={formData.assignedToStaffId || ""} onChange={handleChange} disabled={modalType === 'view'}>
-                          <option value="">Unassigned</option>
-                          {staffList.map(staff => {
-                             const roleName = 
-                               staff.roleId === 5 ? "Personal Trainer" : 
-                               staff.roleId === 6 ? "General Trainer" : 
-                               staff.roleId === 7 ? "Receptionist" : 
-                               staff.roleId === 8 ? "Housekeeping" : 
-                               staff.roleId === 10 ? "Sales Agent" : 
-                               staff.roleId === 3 ? "Trainer" : 
-                               "Staff";
-                             return (
-                               <option key={staff.staffId} value={staff.staffId}>
-                                 {staff.fullName} ({roleName})
-                               </option>
-                             );
-                           })}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Status</label>
-                        <select className="form-select" name="status" value={formData.status} onChange={handleChange} disabled={modalType === 'view'}>
-                          <option value="New">New</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Converted">Converted</option>
-                          <option value="Dead">Dead</option>
-                        </select>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Follow Up Date</label>
-                        <input type="date" className="form-control" name="followUpDate" value={formData.followUpDate} onChange={handleChange} disabled={modalType === 'view'} />
-                      </div>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Notes / Discussion</label>
-                      <textarea className="form-control" name="notes" rows="3" value={formData.notes} onChange={handleChange} disabled={modalType === 'view'}></textarea>
-                    </div>
+                    {(userRole === "SUPERADMIN" || userRole === "SUBADMIN") ? (
+                      <>
+                        {/* Client Contact Info */}
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Client Name *</label>
+                            <input type="text" className="form-control" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={modalType === 'view'} placeholder="e.g. Raj Shekar" />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Phone Number *</label>
+                            <input type="tel" className="form-control" name="phone" value={formData.phone} onChange={handleChange} required disabled={modalType === 'view'} placeholder="e.g. 9876543210" />
+                          </div>
+                        </div>
+
+                        {/* Email & Gym Name */}
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Email</label>
+                            <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} disabled={modalType === 'view'} placeholder="e.g. client@gmail.com" />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Gym Name</label>
+                            <input type="text" className="form-control" name="gymName" value={formData.gymName} onChange={handleChange} disabled={modalType === 'view'} placeholder="e.g. Power Fitness Gym" />
+                          </div>
+                        </div>
+
+                        {/* City/Location & Source */}
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">City / Location</label>
+                            <input type="text" className="form-control" name="city" value={formData.city} onChange={handleChange} disabled={modalType === 'view'} placeholder="e.g. Delhi" />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Inquiry Source</label>
+                            <select className="form-select" name="source" value={formData.source} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="Start Free Trial">Start Free Trial</option>
+                              <option value="Schedule Demo">Schedule Demo</option>
+                              <option value="Landing Page">Landing Page</option>
+                              <option value="Walk-in">Walk-in</option>
+                              <option value="Website">Website</option>
+                              <option value="Phone">Phone</option>
+                              <option value="Referral">Referral</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Interested Plan & Status */}
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Interested Plan</label>
+                            <select className="form-select" name="interestedPlan" value={formData.interestedPlan} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="">Select Plan</option>
+                              <option value="7-Day Free Trial">7-Day Free Trial</option>
+                              <option value="Basic Plan">Basic Plan</option>
+                              <option value="Pro Plan">Pro Plan</option>
+                              <option value="Enterprise Plan">Enterprise Plan</option>
+                            </select>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label fw-bold">Status</label>
+                            <select className="form-select" name="status" value={formData.status} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="New">New</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Converted">Converted</option>
+                              <option value="Dead">Dead</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Full Name</label>
+                            <input type="text" className="form-control" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={modalType === 'view'} />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Phone Number</label>
+                            <input type="tel" className="form-control" name="phone" value={formData.phone} onChange={handleChange} required disabled={modalType === 'view'} />
+                          </div>
+                        </div>
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Email (Optional)</label>
+                            <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} disabled={modalType === 'view'} />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Gender</label>
+                            <select className="form-select" name="gender" value={formData.gender || ""} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="">Select Gender</option>
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Source</label>
+                            <select className="form-select" name="source" value={formData.source} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="Walk-in">Walk-in</option>
+                              <option value="Website">Website</option>
+                              <option value="Phone">Phone</option>
+                              <option value="Referral">Referral</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Assign To Staff</label>
+                            <select className="form-select" name="assignedToStaffId" value={formData.assignedToStaffId || ""} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="">Unassigned</option>
+                              {staffList.map(staff => {
+                                 const roleName = 
+                                   staff.roleId === 5 ? "Personal Trainer" : 
+                                   staff.roleId === 6 ? "General Trainer" : 
+                                   staff.roleId === 7 ? "Receptionist" : 
+                                   staff.roleId === 8 ? "Housekeeping" : 
+                                   staff.roleId === 10 ? "Sales Agent" : 
+                                   staff.roleId === 3 ? "Trainer" : 
+                                   "Staff";
+                                 return (
+                                   <option key={staff.staffId} value={staff.staffId}>
+                                     {staff.fullName} ({roleName})
+                                   </option>
+                                 );
+                               })}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="row mb-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Status</label>
+                            <select className="form-select" name="status" value={formData.status} onChange={handleChange} disabled={modalType === 'view'}>
+                              <option value="New">New</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Converted">Converted</option>
+                              <option value="Dead">Dead</option>
+                            </select>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Follow Up Date</label>
+                            <input type="date" className="form-control" name="followUpDate" value={formData.followUpDate} onChange={handleChange} disabled={modalType === 'view'} />
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Notes / Discussion</label>
+                          <textarea className="form-control" name="notes" rows="3" value={formData.notes} onChange={handleChange} disabled={modalType === 'view'}></textarea>
+                        </div>
+                      </>
+                    )}
                     
                     {modalType !== 'view' ? (
                       <button type="submit" className="btn btn-primary w-100 mt-2" style={{ background: "#4318FF", border: "none", borderRadius: "10px", padding: "10px" }}>

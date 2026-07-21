@@ -227,11 +227,6 @@ const AdminDashboard = () => {
     const months = data.memberGrowth.map((item) => item.month);
     const values = data.memberGrowth.map((item) => item.count);
 
-    while (months.length < 6) {
-      months.push(`Month ${months.length + 1}`);
-      values.push(0);
-    }
-
     return { months, values };
   };
 
@@ -245,11 +240,6 @@ const AdminDashboard = () => {
 
     const months = data.revenueGrowth.map((item) => item.month);
     const values = data.revenueGrowth.map((item) => item.totalRevenue || 0);
-
-    while (months.length < 6) {
-      months.push(`Month ${months.length + 1}`);
-      values.push(0);
-    }
 
     return { months, values };
   };
@@ -462,13 +452,23 @@ const AdminDashboard = () => {
         </div>
 
         {/* Financial & Profitability Overview (Month-by-Month) */}
+        <div className="d-flex justify-content-between align-items-center mb-3 mt-4">
+          <h4 className="fw-semibold m-0" style={{fontSize: "1.2rem"}}>Financial Overview</h4>
+          <input 
+            type="month" 
+            className="form-control form-control-sm shadow-sm border-0" 
+            style={{ width: 'auto', borderRadius: '8px', cursor: 'pointer', background: '#f8f9fa' }}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          />
+        </div>
         <div className="row g-3 mb-4">
           <div className="col-12 col-md-4">
             <div className="card shadow-sm border-0 h-100" style={{ borderLeft: "4px solid #10b981" }}>
               <div className="card-body">
-                <span className="text-muted small fw-semibold text-uppercase">Total Monthly Revenue</span>
+                <span className="text-muted small fw-semibold text-uppercase">This Month Revenue</span>
                 <h3 className="fw-bold text-success mt-1 mb-0">
-                  ₹{(dashboardData?.monthlyRevenue || dashboardData?.totalRevenue || 0).toLocaleString()}
+                  ₹{(dashboardData?.monthlyRevenue || 0).toLocaleString()}
                 </h3>
                 <small className="text-muted">Membership fees &amp; plan purchases</small>
               </div>
@@ -478,9 +478,9 @@ const AdminDashboard = () => {
           <div className="col-12 col-md-4">
             <div className="card shadow-sm border-0 h-100" style={{ borderLeft: "4px solid #ef4444" }}>
               <div className="card-body">
-                <span className="text-muted small fw-semibold text-uppercase">Total Monthly Expenses</span>
+                <span className="text-muted small fw-semibold text-uppercase">This Month Expenses</span>
                 <h3 className="fw-bold text-danger mt-1 mb-0">
-                  ₹{(dashboardData?.monthlyExpenses || dashboardData?.totalExpenses || 0).toLocaleString()}
+                  ₹{(dashboardData?.monthlyExpenses || 0).toLocaleString()}
                 </h3>
                 <small className="text-muted">Auto Salaries + Rent, Utilities &amp; Misc</small>
               </div>
@@ -497,8 +497,7 @@ const AdminDashboard = () => {
                   }`}
                 >
                   ₹{(
-                    dashboardData?.monthlyProfit ??
-                    (dashboardData?.monthlyRevenue || 0) - (dashboardData?.monthlyExpenses || 0)
+                    dashboardData?.monthlyProfit ?? 0
                   ).toLocaleString()}
                 </h3>
                 <small className="text-muted">Month-by-Month Net Profitability</small>
@@ -524,8 +523,19 @@ const AdminDashboard = () => {
           {/* Revenue Chart */}
           <div className="col-12 col-lg-6">
             <div className="card shadow-sm h-100" data-testid="revenue-growth-chart">
-              <div className="card-header bg-white border-0 pt-4 pb-0">
-                <h3 className="h5 fw-semibold">Revenue (Last 6 Months)</h3>
+              <div className="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h3 className="h5 fw-semibold mb-0">Revenue Chart</h3>
+                <select 
+                  className="form-select form-select-sm shadow-sm border-0"
+                  style={{ width: 'auto', borderRadius: '8px', cursor: 'pointer', background: '#f8f9fa' }}
+                  value={chartPeriod}
+                  onChange={(e) => setChartPeriod(Number(e.target.value))}
+                >
+                  <option value={1}>1 Month</option>
+                  <option value={3}>3 Months</option>
+                  <option value={6}>6 Months</option>
+                  <option value={12}>1 Year</option>
+                </select>
               </div>
               <div className="card-body">
                 <div ref={revenueChartRef} style={{ height: "300px", width: "100%" }}></div>

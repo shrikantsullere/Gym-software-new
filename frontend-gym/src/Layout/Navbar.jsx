@@ -277,6 +277,7 @@ const Navbar = ({ toggleSidebar }) => {
         style={{
           backgroundColor: "#2f6a87",
           boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          zIndex: 1050,
         }}
       >
         <div className="d-flex align-items-center gap-2 gap-md-3">

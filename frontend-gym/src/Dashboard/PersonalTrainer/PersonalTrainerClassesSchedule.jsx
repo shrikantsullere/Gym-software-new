@@ -178,7 +178,7 @@ const PersonalTrainerClassesSchedule = () => {
 
     setSelectedClass({
       ...gymClass,
-      members: [], // API doesn't return members, so leave empty
+      members: gymClass.members || [], 
       trainerId,
       trainerName, // Store the trainer name directly
       startTime,
@@ -627,6 +627,22 @@ const PersonalTrainerClassesSchedule = () => {
                         />
                       </div>
                     </div>
+                    {/* View members list */}
+                    {(selectedClass.members || []).length > 0 && (
+                      <div className="mt-3">
+                        <label className="form-label fw-semibold text-muted small uppercase">Enrolled Members List</label>
+                        <div className="border rounded-3 p-3 bg-light d-flex flex-wrap gap-2">
+                          {selectedClass.members.map((member) => (
+                            <span
+                              key={member.id}
+                              className="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm"
+                            >
+                              {member.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   // Add/Edit mode

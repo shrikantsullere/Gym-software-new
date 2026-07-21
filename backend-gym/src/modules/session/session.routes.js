@@ -20,10 +20,10 @@ router.post(
 // ➤ List sessions (Superadmin + Admin + Staff)
 router.get("/:adminId/:trainerId?", verifyToken(["Superadmin", "Admin", "Staff"]), listSessions);
 
-// ➤ Edit full session (Only Superadmin + Admin)
+// ➤ Edit full session (Superadmin + Admin + Staff)
 router.put(
   "/update/:sessionId",
-  verifyToken(["Superadmin", "Admin"]),
+  verifyToken(["Superadmin", "Admin", "Staff"]),
   updateSession
 );
 
@@ -34,10 +34,10 @@ router.put(
   updateSessionStatus
 );
 
-// ➤ Delete session (Only Superadmin + Admin)
+// ➤ Delete session (Superadmin + Admin + Staff)
 router.delete(
   "/delete/:sessionId",
-  verifyToken(["Superadmin", "Admin"]),
+  verifyToken(["Superadmin", "Admin", "Staff"]),
   deleteSession
 );
 

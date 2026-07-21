@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
 import { FaEye, FaTrash, FaTimesCircle } from "react-icons/fa";
 import BaseUrl from '../../Api/BaseUrl';
+import * as XLSX from "xlsx";
 
 const PersonalAttendance = () => {
   const [search, setSearch] = useState("");
@@ -185,6 +186,32 @@ const PersonalAttendance = () => {
     );
   });
 
+  const handleExport = () => {
+    if (filteredAttendance.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    
+    // Prepare data for export
+    const exportData = filteredAttendance.map(item => ({
+      "Attendance ID": item.attendance_id,
+      "Member ID": item.member_id,
+      "Name": item.name,
+      "Check-In": item.checkin_time || "--",
+      "Check-Out": item.checkout_time || "--",
+      "Mode": item.mode || "N/A",
+      "Notes": item.notes || ""
+    }));
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+    // Download file
+    XLSX.writeFile(workbook, `Attendance_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   return (
     <div className="p-3 p-md-4 bg-white rounded shadow">
       <h2 className="mb-2 mb-md-3 fw-bold">Attendance Management</h2>
@@ -231,8 +258,7 @@ const PersonalAttendance = () => {
               />
             </Col>
             <Col xs={12} sm={6} md={4} className="d-flex justify-content-start justify-content-md-end">
-              <Button variant="outline-secondary me-2">Filter</Button>
-              <Button variant="outline-secondary">Export</Button>
+              <Button variant="outline-secondary" onClick={handleExport}>Export</Button>
             </Col>
           </Row>
 
@@ -308,8 +334,16 @@ const PersonalAttendance = () => {
                           >
                             <FaEye />
                           </Button>
-                          {/* Checkout button - show only if not checked out */}
-                          {!member.checkedOut ? (
+                          {/* Checkout button - show only if checked in and not checked out */}
+                          {member.checkin_time === "-" ? (
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              disabled
+                            >
+                              <span className="ms-1">Not Checked In</span>
+                            </Button>
+                          ) : !member.checkedOut ? (
                             <Button
                               variant="outline-success"
                               size="sm"
@@ -341,7 +375,7 @@ const PersonalAttendance = () => {
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleDelete(member.attendance_id)}
-                            disabled={member.deleting}
+                            disabled={member.deleting || member.checkin_time === "-"}
                           >
                             {member.deleting ? (
                               <Spinner as="span" animation="border" size="sm" />
@@ -436,8 +470,16 @@ const PersonalAttendance = () => {
                       >
                         <FaEye />
                       </Button>
-                      {/* Checkout button - show only if not checked out */}
-                      {!member.checkedOut ? (
+                       {/* Checkout button - show only if checked in and not checked out */}
+                      {member.checkin_time === "-" ? (
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          disabled
+                        >
+                          <span className="ms-1">Not Checked In</span>
+                        </Button>
+                      ) : !member.checkedOut ? (
                         <Button
                           variant="outline-success"
                           size="sm"
@@ -469,7 +511,7 @@ const PersonalAttendance = () => {
                         variant="outline-danger"
                         size="sm"
                         onClick={() => handleDelete(member.attendance_id)}
-                        disabled={member.deleting}
+                        disabled={member.deleting || member.checkin_time === "-"}
                       >
                         {member.deleting ? (
                           <Spinner as="span" animation="border" size="sm" />

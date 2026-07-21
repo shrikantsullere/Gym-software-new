@@ -110,7 +110,7 @@ const PersonsalTrainerShiftManagement = () => {
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                  <th className="px-4 py-3">Staff ID</th>
+                  <th className="px-4 py-3">Shift ID</th>
                   <th className="py-3">Date</th>
                   <th className="py-3">Start Time</th>
                   <th className="py-3">End Time</th>
@@ -122,7 +122,7 @@ const PersonsalTrainerShiftManagement = () => {
                 {shifts.length > 0 ? (
                   shifts.map((shift) => (
                     <tr key={shift.id}>
-                      <td className="px-4 py-3 fw-bold">{shift.staffIds || staffId}</td>
+                      <td className="px-4 py-3 fw-bold">{shift.id}</td>
                       <td className="py-3">{formatDate(shift.shiftDate)}</td>
                       <td className="py-3">{shift.startTime}</td>
                       <td className="py-3">{shift.endTime}</td>

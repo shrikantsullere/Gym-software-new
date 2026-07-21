@@ -86,7 +86,7 @@ const ClientAssessmentList = () => {
                               <img src={`https://ui-avatars.com/api/?name=${m.fullName}&background=random`} alt={m.fullName} className="rounded-circle me-3" width="40" height="40" />
                               <div>
                                 <h6 className="mb-0 fw-bold">{m.fullName}</h6>
-                                <small className="text-muted">ID: {m.userId || m.id}</small>
+                                <small className="text-muted">ID: {m.id || m.userId}</small>
                               </div>
                             </div>
                           </td>
@@ -101,14 +101,14 @@ const ClientAssessmentList = () => {
                             <div className="d-flex flex-column flex-sm-row justify-content-end gap-1">
                               <button 
                                 className="btn btn-sm btn-outline-primary" 
-                                onClick={() => navigate(`/personaltrainer/member-assessment/${m.userId || m.id}`)}
+                                onClick={() => navigate(`/personaltrainer/member-assessment/${m.id || m.userId}`)}
                                 title="View Assessment Dashboard"
                               >
                                 <i className="bi bi-graph-up me-1"></i>View Progress
                               </button>
                               <button 
                                 className="btn btn-sm btn-outline-success" 
-                                onClick={() => navigate('/personaltrainer/assessment-form', { state: { preselectMember: m.userId || m.id } })}
+                                onClick={() => navigate('/personaltrainer/assessment-form', { state: { preselectMember: m.id || m.userId } })}
                                 title="Log New Assessment"
                               >
                                 <i className="bi bi-plus me-1"></i>Log New

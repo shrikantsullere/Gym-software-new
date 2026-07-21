@@ -35,7 +35,6 @@ import RolesPermissions from "./Dashboard/Admin/Staff/RolesPermissions";
 import StaffAttendance from "./Dashboard/Admin/Staff/StaffAttendance";
 import DutyRoster from "./Dashboard/Admin/Staff/DutyRoster";
 import SalaryCalculator from "./Dashboard/Admin/Staff/SalaryCalculator";
-import HouseKeepingDashboard from "./Dashboard/HouseKeeping/HouseKeepingDashboard";
 import GeneralTrainerDashboard from "./Dashboard/GeneralTrainer/GeneralTrainerDashboard";
 import GeneralQrCheckin from "./Dashboard/GeneralTrainer/GeneralQrCheckin";
 import MemberDashboard from "./Dashboard/Member/MemberDashboard";
@@ -63,16 +62,8 @@ import Attendance from "./Dashboard/GeneralTrainer/Attendance";
 // import MemberInteraction from "./Dashboard/GeneralTrainer/MemberInteraction";
 import DailyScedule from "./Dashboard/GeneralTrainer/DailyScedule";
 
-import HouseKeepingDutyRoster from "./Dashboard/HouseKeeping/HouseKeepingDutyRoster";
-import HouseKeepingAttendance from "./Dashboard/HouseKeeping/HouseKeepingAttendance";
-import HouseKeepingTaskChecklist from "./Dashboard/HouseKeeping/HouseKeepingTaskChecklist";
-import HouseKeepingNotifications from "./Dashboard/HouseKeeping/HouseKeepingNotifications";
-import HouseKeepingQrCheckin from "./Dashboard/HouseKeeping/HouseKeepingQrCheckin";
-// import HouseKeepingDutyRosters from "./Dashboard/HouseKeeping/HouseKeepingQDutyRoster";
 import ReceptionistWalkinMember from "./Dashboard/Receptionist/ReceptionistWalkinMember"
 import ReceptionistMembershipSignups from "./Dashboard/Receptionist/ReceptionistMembershipSignups";
-import HousekeepingShiftView from "./Dashboard/HouseKeeping/HousekeepingShiftView";
-import HousekeepingTask from "./Dashboard/HouseKeeping/HousekeepingTask";
 
 import ReceptionistQrCheckin from "./Dashboard/Receptionist/ReceptionistQrCheckin";
 import ReceptionistQRCode from "./Dashboard/Receptionist/ReceptionistQRCode";
@@ -137,12 +128,10 @@ import PersonalSessionBooking from "./Dashboard/PersonalTrainer/PersonalSessionB
 import GeneralSessionBooking from "./Dashboard/GeneralTrainer/GeneralSessionBooking";
 import PersonsalTrainerShiftManagement from "./Dashboard/PersonalTrainer/PersonsalTrainerShiftManagement";
 import GeneralTrainerShiftManagement from "./Dashboard/GeneralTrainer/GeneralTrainerShiftManagement";
-import HouseKeepingShiftManagement from "./Dashboard/HouseKeeping/HouseKeepingShiftManagement";
 import MemberAttendance from "./Dashboard/Member/MemberAttendance";
 import ReportsAttendance from "./Dashboard/Receptionist/ReportsAttendance";
 import ReportsClasses from "./Dashboard/Receptionist/ReportsClasses";
 import PersonsalReportsClasses from "./Dashboard/PersonalTrainer/PersonsalReportsClasses";
-import ReceptionistHouseKeepingAttendanceCheckOut from "./Dashboard/Receptionist/ReceptionistHouseKeepingAttendanceCheckOut";
 import MemberAllPlans from "./Dashboard/Member/MemberAllPlans";
 import Leads from "./Dashboard/Receptionist/Leads";
 import MemberHealthLog from "./Dashboard/Member/MemberHealthLog";
@@ -402,7 +391,6 @@ function App() {
                   <Route path="/manager/class-schedule" element={<ProtectedRoute allowedRoles={["MANAGER", "ADMIN", "SUPERADMIN"]}><ClassScheduling /></ProtectedRoute>} />
                   <Route path="/manager/reports" element={<ProtectedRoute allowedRoles={["MANAGER", "ADMIN", "SUPERADMIN"]}><Reports /></ProtectedRoute>} />
                   <Route path="/manager/communication" element={<ProtectedRoute allowedRoles={["MANAGER", "ADMIN", "SUPERADMIN"]}><Communication /></ProtectedRoute>} />
-                  <Route path="/housekeeping/dashboard" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HouseKeepingDashboard /></ProtectedRoute>} />
 
                   <Route path="/generaltrainer/dashboard" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><GeneralTrainerDashboard /></ProtectedRoute>} />
                   <Route path="/generaltrainer/health-log" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><TrainerHealthLog /></ProtectedRoute>} />
@@ -467,7 +455,6 @@ function App() {
                   <Route path="/sales/payment" element={<ProtectedRoute allowedRoles={["SALES_AGENT", "ADMIN", "SUPERADMIN"]}><ReceptionistPaymentCollection /></ProtectedRoute>} />
                   <Route path="/sales/payemnet" element={<Navigate to="/sales/payment" replace />} />
                   <Route path="/sales/reportattendance" element={<ProtectedRoute allowedRoles={["SALES_AGENT", "ADMIN", "SUPERADMIN"]}><ReportsAttendance /></ProtectedRoute>} />
-                  <Route path="/sales/report-attendance-checkout" element={<ProtectedRoute allowedRoles={["SALES_AGENT", "ADMIN", "SUPERADMIN"]}><ReceptionistHouseKeepingAttendanceCheckOut /></ProtectedRoute>} />
                   <Route path="/sales/report" element={<ProtectedRoute allowedRoles={["SALES_AGENT", "ADMIN", "SUPERADMIN"]}><ReportsClasses /></ProtectedRoute>} />
 
                   <Route path="/personaltrainer/dashboard" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalTrainerDashboard /></ProtectedRoute>} />
@@ -489,16 +476,8 @@ function App() {
                   <Route path="/personaltrainer/shift-managment" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonsalTrainerShiftManagement /></ProtectedRoute>} />
                   <Route path="/personaltrainer/report" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonsalReportsClasses /></ProtectedRoute>} />
 
-                  <Route path="/housekeeping/dashboard" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HouseKeepingDashboard /></ProtectedRoute>} />
-                  <Route path="/housekeeping/qrcheckin" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HouseKeepingQrCheckin /></ProtectedRoute>} />
-                  <Route path="/housekeeping/members" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HousekeepingShiftView /></ProtectedRoute>} />
-                  <Route path="/housekeeping/membership-plan" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HouseKeepingAttendance /></ProtectedRoute>} />
-                  <Route path="/housekeeping/duty-roster" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HousekeepingTask /></ProtectedRoute>} />
-                  <Route path="/housekeeping/class-schedule" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HouseKeepingNotifications /></ProtectedRoute>} />
-                  <Route path="/housekeeping/shift-management" element={<ProtectedRoute allowedRoles={["HOUSEKEEPING", "ADMIN", "SUPERADMIN"]}><HouseKeepingShiftManagement /></ProtectedRoute>} />
-
                   {/* Staff Announcements */}
-                  <Route path="/staff/announcements" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "PERSONALTRAINER", "RECEPTIONIST", "HOUSEKEEPING", "MANAGER", "ADMIN"]}><AnnouncementsList roleGroup="STAFF" /></ProtectedRoute>} />
+                  <Route path="/staff/announcements" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "PERSONALTRAINER", "RECEPTIONIST", "MANAGER", "ADMIN"]}><AnnouncementsList roleGroup="STAFF" /></ProtectedRoute>} />
 
                   {/* Public Test Routes for Assessment Validation */}
                   <Route path="/test-assessment-form" element={<TrainerAssessmentForm />} />

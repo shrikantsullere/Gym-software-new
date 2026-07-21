@@ -154,15 +154,105 @@ export const createAssessment = async (data, createdBy) => {
 };
 
 export const getMemberAssessments = async (memberId) => {
+  const parsedId = parseInt(memberId);
+  if (isNaN(parsedId)) return [];
   return await prisma.member_assessments.findMany({
-    where: { memberId: parseInt(memberId) },
+    where: { memberId: parsedId },
     orderBy: { assessment_date: 'desc' }
   });
 };
 
 export const getLatestAssessment = async (memberId) => {
-  return await prisma.member_assessments.findFirst({
-    where: { memberId: parseInt(memberId) },
+  const parsedId = parseInt(memberId);
+  if (isNaN(parsedId)) {
+    const error = new Error('Invalid member ID');
+    error.status = 400;
+    throw error;
+  }
+
+  const result = await prisma.member_assessments.findFirst({
+    where: { memberId: parsedId },
     orderBy: { assessment_date: 'desc' }
   });
+
+  if (!result) {
+    const error = new Error('No assessment records found.');
+    error.status = 404;
+    throw error;
+  }
+
+  let dashboardData = {};
+  if (result.metrics_output) {
+    try {
+      dashboardData = typeof result.metrics_output === 'string'
+        ? JSON.parse(result.metrics_output)
+        : result.metrics_output;
+    } catch (e) {
+      console.error("Error parsing metrics_output:", e);
+    }
+  }
+
+  return {
+    ...result,
+    metrics: {
+      bmi: result.bmi,
+      body_fat_percentage: result.body_fat_percentage,
+      lean_body_mass: result.lean_body_mass,
+      ideal_body_weight: result.ideal_body_weight,
+      waist_to_hip_ratio: result.waist_to_hip_ratio,
+      bmr: result.bmr,
+      tdee: result.tdee,
+      target_calories: result.target_calories
+    },
+    inputs: {
+      fitness_goal: result.fitness_goal,
+      weight_kg: result.weight_kg,
+      height_cm: result.height_cm,
+      neck_cm: result.neck_cm,
+      waist_cm: result.waist_cm,
+      hip_cm: result.hip_cm,
+      resting_hr: result.resting_hr,
+      activity_level: result.activity_level
+    },
+    macros: {
+      protein_grams: result.protein_grams,
+      fat_grams: result.fat_grams,
+      carb_grams: result.carb_grams
+    },
+    dashboard_data: dashboardData
+  };
+};
+
+export const getAssessmentHistory = async (memberId) => {
+  const parsedId = parseInt(memberId);
+  if (isNaN(parsedId)) return [];
+
+  const records = await prisma.member_assessments.findMany({
+    where: { memberId: parsedId },
+    orderBy: { assessment_date: 'asc' }
+  });
+
+  return records.map(record => ({
+    ...record,
+    metrics: {
+      bmi: record.bmi,
+      body_fat_percentage: record.body_fat_percentage,
+      lean_body_mass: record.lean_body_mass,
+      ideal_body_weight: record.ideal_body_weight,
+      waist_to_hip_ratio: record.waist_to_hip_ratio,
+      bmr: record.bmr,
+      tdee: record.tdee,
+      target_calories: record.target_calories
+    },
+    inputs: {
+      fitness_goal: record.fitness_goal,
+      weight_kg: record.weight_kg,
+      height_cm: record.height_cm
+    },
+    macros: {
+      protein_grams: record.protein_grams,
+      fat_grams: record.fat_grams,
+      carb_grams: record.carb_grams
+    }
+  }));
 };

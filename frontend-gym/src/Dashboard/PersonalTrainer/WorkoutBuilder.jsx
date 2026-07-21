@@ -247,7 +247,7 @@ const WorkoutBuilder = () => {
         </div>
 
         <div className="col-lg-4 mb-4">
-          <div className="card border-0 shadow-sm rounded-4 sticky-top" style={{ top: '20px' }}>
+          <div className="card border-0 shadow-sm rounded-4 sticky-top" style={{ top: '80px', zIndex: 10 }}>
             <div className="card-body p-4">
               <h5 className="fw-bold mb-4 d-flex align-items-center">
                 <FontAwesomeIcon icon={faUser} className="me-2 text-primary" /> Assignment

@@ -225,6 +225,50 @@ const AdminTaskManagement = () => {
     }
   };
 
+  const handleExport = () => {
+    if (tasks.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    // Define CSV headers
+    const headers = ["Assigned To", "Task", "Description", "Due Date", "Priority", "Status"];
+
+    // Map data rows
+    const rows = tasks.map(task => {
+      // Find assigned to label
+      let assignedToLabel = 'Unknown';
+      if (task.roleId && task.role) {
+        assignedToLabel = `${task.role.name || task.role} Department`;
+      } else {
+        const staff = staffMembers.find(s => s.staffId === task.assignedTo);
+        assignedToLabel = staff ? staff.fullName : 'Unknown';
+      }
+
+      return [
+        assignedToLabel,
+        task.title || '',
+        task.description || '',
+        task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '',
+        task.priority || '',
+        task.status || ''
+      ];
+    });
+
+    // Create CSV content
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+
+    // Download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Tasks_Report_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const renderTaskModal = () => {
     if (!showTaskModal) return null;
 
@@ -353,12 +397,20 @@ const AdminTaskManagement = () => {
     <div className="container-fluid py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">Task Management</h2>
-        <button
-          className="btn btn-primary d-flex align-items-center"
-          onClick={() => setShowTaskModal(true)}
-        >
-          <Plus size={18} className="me-1" /> Create Task
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-success d-flex align-items-center"
+            onClick={handleExport}
+          >
+            Export CSV
+          </button>
+          <button
+            className="btn btn-primary d-flex align-items-center"
+            onClick={() => setShowTaskModal(true)}
+          >
+            <Plus size={18} className="me-1" /> Create Task
+          </button>
+        </div>
       </div>
 
       {/* All Tasks Table */}

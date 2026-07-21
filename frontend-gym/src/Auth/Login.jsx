@@ -21,7 +21,6 @@ const Login = () => {
     { role: "Personal Trainer", email: "personal@gmail.com", password: "123456" },
     { role: "Receptionist", email: "receptionist@gmail.com", password: "123456" },
     { role: "Sales Agent", email: "salesagent@gmail.com", password: "123456" },
-    { role: "Housekeeping", email: "housekeeping@gmail.com", password: "123456" },
   ];
 
   const fillCredentials = (testEmail, testPwd) => {
@@ -35,7 +34,6 @@ const Login = () => {
     GENERALTRAINER: "/generaltrainer/dashboard",
     PERSONALTRAINER: "/personaltrainer/dashboard",
     MEMBER: "/member/dashboard",
-    HOUSEKEEPING: "/housekeeping/dashboard",
     RECEPTIONIST: "/receptionist/dashboard",
     SALES_AGENT: "/sales/dashboard",
     SUBADMIN: "/superadmin/dashboard",

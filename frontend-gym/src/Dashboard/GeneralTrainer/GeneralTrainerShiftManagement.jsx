@@ -115,7 +115,7 @@ const GeneralTrainerShiftManagement = () => {
         <table className="table table-striped">
           <thead>
             <tr>
-              <th>Staff ID</th>
+              <th>Shift ID</th>
               <th>Date</th>
               <th>Start Time</th>
               <th>End Time</th>
@@ -127,7 +127,7 @@ const GeneralTrainerShiftManagement = () => {
             {shifts.length > 0 ? (
               shifts.map((shiftItem) => (
                 <tr key={shiftItem.id}>
-                  <td>{shiftItem.staffIds || staffId}</td>
+                  <td>{shiftItem.id}</td>
                   <td>{formatDate(shiftItem.shiftDate)}</td>
                   <td>{shiftItem.startTime}</td>
                   <td>{shiftItem.endTime}</td>

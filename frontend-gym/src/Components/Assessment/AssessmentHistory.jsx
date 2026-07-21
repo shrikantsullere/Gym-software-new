@@ -26,8 +26,8 @@ const AssessmentHistory = ({ memberId }) => {
       const chart = echarts.init(chartRef.current);
       
       const dates = history.map(item => new Date(item.assessment_date).toLocaleDateString());
-      const weights = history.map(item => item.inputs.weight_kg);
-      const bodyFats = history.map(item => item.metrics.body_fat_percentage);
+      const weights = history.map(item => item.inputs?.weight_kg ?? item.weight_kg ?? 0);
+      const bodyFats = history.map(item => item.metrics?.body_fat_percentage ?? item.body_fat_percentage ?? 0);
 
       const option = {
         tooltip: { trigger: 'axis' },
@@ -98,15 +98,21 @@ const AssessmentHistory = ({ memberId }) => {
               </tr>
             </thead>
             <tbody>
-              {history.map((record, idx) => (
-                <tr key={idx}>
-                  <td className="fw-medium text-dark">{new Date(record.assessment_date).toLocaleDateString()}</td>
-                  <td>{record.inputs.weight_kg} kg</td>
-                  <td><span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{record.metrics.body_fat_percentage}%</span></td>
-                  <td>{record.metrics.lean_body_mass} kg</td>
-                  <td className="text-capitalize text-muted">{record.inputs.fitness_goal.replace('_', ' ')}</td>
-                </tr>
-              ))}
+              {history.map((record, idx) => {
+                const weight = record.inputs?.weight_kg ?? record.weight_kg ?? '-';
+                const bodyFat = record.metrics?.body_fat_percentage ?? record.body_fat_percentage ?? '-';
+                const leanMass = record.metrics?.lean_body_mass ?? record.lean_body_mass ?? '-';
+                const goal = record.inputs?.fitness_goal ?? record.fitness_goal ?? '';
+                return (
+                  <tr key={idx}>
+                    <td className="fw-medium text-dark">{new Date(record.assessment_date).toLocaleDateString()}</td>
+                    <td>{weight} kg</td>
+                    <td><span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{bodyFat}%</span></td>
+                    <td>{leanMass} kg</td>
+                    <td className="text-capitalize text-muted">{goal.replace(/_/g, ' ')}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

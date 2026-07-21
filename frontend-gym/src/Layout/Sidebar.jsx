@@ -178,7 +178,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         ]
       },
       { name: "Settings",                 icon: faTools,              path: "/admin/settings" },
-      { name: "Notification Credits",     icon: faComments,           path: "/admin/notification-credits" },
       { name: "My Subscription",          icon: faTags,               path: "/admin/my-subscription" }
     ],
 

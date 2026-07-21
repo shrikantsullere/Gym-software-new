@@ -22,13 +22,6 @@ export const createPlanService = async (data) => {
 
   if (!data.name) throw { status: 400, message: "Plan name is required" };
 
-  if (data.duration && !allowedDurations.includes(data.duration)) {
-    throw {
-      status: 400,
-      message: "Invalid duration. Allowed: Monthly, Yearly, 7 Days",
-    };
-  }
-
   // Duplicate check
   const [exists] = await pool.query("SELECT id FROM plan WHERE name = ?", [
     data.name,
@@ -73,7 +66,7 @@ export const listPlansService = async (duration) => {
   let query = "SELECT * FROM plan";
   const params = [];
 
-  if (duration && ["Monthly", "Yearly", "7 Days"].includes(duration)) {
+  if (duration) {
     query += " WHERE duration = ?";
     params.push(duration);
   }
@@ -103,13 +96,6 @@ export const updatePlanService = async (id, data) => {
     "duration",
     "discountPercent",
   ];
-
-  if (data.duration && !allowedDurations.includes(data.duration)) {
-    throw {
-      status: 400,
-      message: "Invalid duration. Allowed: Monthly, Yearly, 7 Days",
-    };
-  }
 
   // Check if plan exists
   const [existingRows] = await pool.query("SELECT * FROM plan WHERE id = ?", [id]);

@@ -203,19 +203,19 @@ Please log in and begin managing your gym!`;
       if (superAdmins && superAdmins.length > 0) {
         const superAdmin = superAdmins[0];
         const dateStr = purchase.startDate ? new Date(purchase.startDate).toLocaleDateString('en-GB') : "N/A";
-        const message = \`🔔 New \${isTrialPlan ? 'Free Trial' : 'Purchase'} Registration Alert!
-Gym Name: \${purchase.companyName || "N/A"}
-Email: \${purchase.email || "N/A"}
-Plan: \${purchase.selectedPlan || "N/A"}
-Billing Duration: \${purchase.billingDuration || "N/A"}
-Start Date: \${dateStr}\`;
+        const message = `🔔 New ${isTrialPlan ? 'Free Trial' : 'Purchase'} Registration Alert!
+Gym Name: ${purchase.companyName || "N/A"}
+Email: ${purchase.email || "N/A"}
+Plan: ${purchase.selectedPlan || "N/A"}
+Billing Duration: ${purchase.billingDuration || "N/A"}
+Start Date: ${dateStr}`;
 
         await dispatchNotification({
           category: "free_trial_alert",
           toEmail: superAdmin.email,
           toPhone: superAdmin.phone,
           toUserId: superAdmin.id,
-          subject: \`New \${isTrialPlan ? 'Free Trial' : 'Purchase'} Registration Request\`,
+          subject: `New ${isTrialPlan ? 'Free Trial' : 'Purchase'} Registration Request`,
           message: message,
         });
       }
@@ -421,6 +421,16 @@ Please log in and change your password immediately under settings.`;
         );
       } catch (leadErr) {
         console.error("Failed to auto-convert lead on manual purchase approval:", leadErr);
+      }
+    } else if (status && status.toLowerCase() === "rejected") {
+      // Auto-reject lead
+      try {
+        await pool.query(
+          "UPDATE leads SET status = 'Rejected' WHERE email = ? AND leadType = 'SAAS'",
+          [data.email]
+        );
+      } catch (leadErr) {
+        console.error("Failed to auto-reject lead on manual purchase rejection:", leadErr);
       }
     }
 

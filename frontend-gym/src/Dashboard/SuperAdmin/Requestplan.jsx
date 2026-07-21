@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaCheck, FaTimes, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaCheck, FaTimes, FaChevronDown, FaChevronUp, FaEye } from "react-icons/fa";
 import axiosInstance from "../../Api/axiosInstance"; // ✅ Adjust path if needed
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -15,9 +15,6 @@ const RequestedPlans = () => {
   const [selectedRequestIndex, setSelectedRequestIndex] = useState(null);
   const [onboardPassword, setOnboardPassword] = useState("");
   const [onboardError, setOnboardError] = useState("");
-
-  const [saasLeads, setSaasLeads] = useState([]);
-  const [saasLoading, setSaasLoading] = useState({});
 
   // 🔹 EXPORT REQUESTED PLANS TO EXCEL
   const exportRequestsToExcel = () => {
@@ -130,19 +127,7 @@ const RequestedPlans = () => {
       }
     };
 
-    const fetchSaasLeads = async () => {
-      try {
-        const response = await axiosInstance.get("/leads/superadmin/all");
-        if (response.data && response.data.leads) {
-          setSaasLeads(response.data.leads.filter(l => l.source === 'Start Free Trial' || l.source === 'Schedule Demo' || l.source === 'SaaS Lead'));
-        }
-      } catch (error) {
-        console.error("Failed to fetch saas leads:", error);
-      }
-    };
-
     fetchPurchases();
-    fetchSaasLeads();
   }, []);
 
   // ✅ Update status with API call
@@ -176,25 +161,6 @@ const RequestedPlans = () => {
         delete newState[purchaseId];
         return newState;
       });
-    }
-  };
-
-  // ✅ SaaS Lead Status Update
-  const handleSaasLeadStatus = async (leadId, newStatus) => {
-    if (!window.confirm(`Are you sure you want to mark this lead as "${newStatus}"?`)) return;
-    setSaasLoading(prev => ({ ...prev, [leadId]: newStatus }));
-    try {
-      const res = await axiosInstance.put(`leads/${leadId}`, { status: newStatus });
-      if (res.data && res.data.success) {
-        setSaasLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
-      } else {
-        alert("Failed to update status.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error updating lead status.");
-    } finally {
-      setSaasLoading(prev => { const s = { ...prev }; delete s[leadId]; return s; });
     }
   };
 
@@ -397,7 +363,14 @@ const RequestedPlans = () => {
                                 </button>
                               </>
                             ) : (
-                              <span className="text-muted" style={{ fontSize: "12px" }}>Processed</span>
+                              <button
+                                className="btn btn-sm btn-outline-secondary"
+                                title="View Details"
+                                onClick={() => alert(`View details for ${item.admin}`)}
+                                style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
+                              >
+                                <FaEye size={14} />
+                              </button>
                             )}
                           </div>
                         </td>
@@ -620,143 +593,21 @@ const RequestedPlans = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-3 text-center">
-                      <span className="text-muted small">Processed</span>
+                    <div className="mt-3 d-flex justify-content-center">
+                      <button
+                        className="btn btn-outline-secondary w-100 rounded-pill py-2 d-flex align-items-center justify-content-center gap-2"
+                        title="View Details"
+                        style={{ fontSize: "13px" }}
+                        onClick={() => alert(`View details for ${item.admin}`)}
+                      >
+                        <FaEye size={14} /> View Details
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
             ))
           )}
-        </div>
-      </div>
-
-      {/* SAAS LEADS SECTION */}
-      <div className="container-fluid p-3 p-md-4 mt-4">
-        <div className="row align-items-center mb-4 g-3">
-          <div className="col-12">
-            <div className="d-flex align-items-center gap-3">
-              <div className="rounded-circle bg-dark d-flex align-items-center justify-content-center text-white" 
-                   style={{ width: "40px", height: "40px", fontSize: "18px", fontWeight: "600" }}>
-                🌍
-              </div>
-              <div>
-                <h2 className="mb-0 fw-bold fs-4 fs-md-3">Landing Page Inquiries (SaaS Leads)</h2>
-                <small className="text-muted">Gym owners who showed interest via the landing page</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card border-0 shadow-sm">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead className="bg-light">
-                <tr>
-                  <th className="py-3 px-3 border-0">Client Info</th>
-                  <th className="py-3 px-3 border-0">Gym Details</th>
-                  <th className="py-3 px-3 border-0">Inquiry Details</th>
-                  <th className="py-3 px-3 border-0">Status</th>
-                  <th className="py-3 px-3 border-0">Date</th>
-                  <th className="py-3 px-3 border-0 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {saasLeads.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4 text-muted">No landing page inquiries found</td>
-                  </tr>
-                ) : (
-                  saasLeads.map((lead) => {
-                    const parseNotes = (notes) => {
-                      if (!notes) return { gym: '—', city: '—' };
-                      const parts = notes.split('|');
-                      let city = '—';
-                      let gym = '—';
-                      parts.forEach(p => {
-                        if (p.includes('City:')) city = p.replace('City:', '').trim();
-                        if (p.includes('Gym:')) gym = p.replace('Gym:', '').trim();
-                      });
-                      if (gym === '—' && city === '—') gym = notes;
-                      return { gym, city };
-                    };
-                    const { gym, city } = parseNotes(lead.notes);
-
-                    return (
-                      <tr key={lead.id} className="border-bottom">
-                        <td className="py-3 px-3">
-                          <div className="fw-bold">{lead.fullName}</div>
-                          <div className="text-muted small">✉ {lead.email || '—'}</div>
-                          <div className="text-muted small">📞 {lead.phone}</div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="fw-bold">🏢 {gym}</div>
-                          <div className="text-muted small">📍 {city}</div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`badge ${lead.source === 'Schedule Demo' ? 'bg-primary' : lead.source === 'Start Free Trial' ? 'bg-info text-dark' : 'bg-secondary'}`}>
-                            {lead.source || 'Landing Page'}
-                          </span>
-                          {lead.interestedPlan && (
-                            <div className="mt-1">
-                              <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                Plan: {lead.interestedPlan}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`badge ${lead.status === 'New' ? 'bg-info' : lead.status === 'Converted' ? 'bg-success' : lead.status === 'In Progress' ? 'bg-primary' : 'bg-warning'}`}>
-                            {lead.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="text-muted small">{new Date(lead.createdAt).toLocaleDateString('en-GB')}</span>
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          <div className="d-flex flex-wrap gap-2 justify-content-center">
-                            {lead.status !== 'Converted' && (
-                              <button
-                                className="btn btn-sm btn-success"
-                                title="Approve (Mark as Converted)"
-                                disabled={saasLoading[lead.id] === 'Converted'}
-                                onClick={() => handleSaasLeadStatus(lead.id, 'Converted')}
-                                style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px' }}
-                              >
-                                {saasLoading[lead.id] === 'Converted' ? '...' : '✅ Approve'}
-                              </button>
-                            )}
-                            {lead.status !== 'In Progress' && lead.status !== 'Converted' && (
-                              <button
-                                className="btn btn-sm btn-warning"
-                                title="Mark as In Progress"
-                                disabled={saasLoading[lead.id] === 'In Progress'}
-                                onClick={() => handleSaasLeadStatus(lead.id, 'In Progress')}
-                                style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px' }}
-                              >
-                                {saasLoading[lead.id] === 'In Progress' ? '...' : '🔄 In Progress'}
-                              </button>
-                            )}
-                            {lead.status !== 'Rejected' && (
-                              <button
-                                className="btn btn-sm btn-danger"
-                                title="Reject Lead"
-                                disabled={saasLoading[lead.id] === 'Rejected'}
-                                onClick={() => handleSaasLeadStatus(lead.id, 'Rejected')}
-                                style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px' }}
-                              >
-                                {saasLoading[lead.id] === 'Rejected' ? '...' : '❌ Reject'}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>

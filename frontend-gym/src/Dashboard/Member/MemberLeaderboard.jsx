@@ -456,22 +456,7 @@ const MemberLeaderboard = () => {
               onChange={(e) => setSelectedMonth(e.target.value)}
               title="Click to select month from calendar"
             />
-            {availableMonths.length > 0 && (
-              <select
-                className="form-select form-select-sm border shadow-none rounded-pill fw-semibold text-muted px-3 py-2 bg-light"
-                style={{ width: 'auto', cursor: 'pointer', fontSize: '13px' }}
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                title="Or choose from months with data"
-              >
-                <option value="">-- Months with Data --</option>
-                {availableMonths.map(m => (
-                  <option key={m.monthKey || m.key} value={m.monthKey || m.key}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            )}
+
           </div>
         </div>
 

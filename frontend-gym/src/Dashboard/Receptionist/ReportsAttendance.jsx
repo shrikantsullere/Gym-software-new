@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FaPlus,
-  FaTrashAlt,
-  FaEdit,
-  FaEye,
   FaSearch,
-  FaFileExport,
-  FaExclamationTriangle,
-  FaFilter
+  FaFilter,
+  FaFileDownload,
+  FaUserPlus,
+  FaCheck,
+  FaTimes,
+  FaEye,
+  FaEdit,
+  FaTrashAlt,
+  FaQrcode,
+  FaCalendarAlt,
+  FaClock,
+  FaDownload
 } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import axiosInstance from '../../Api/axiosInstance';
 import BaseUrl from '../../Api/BaseUrl';
 
@@ -402,6 +410,54 @@ const ReportsAttendance = () => {
     </div>
   );
 
+  const exportToExcel = () => {
+    if (filteredRecords.length === 0) {
+      alert("No attendance records available to export.");
+      return;
+    }
+    const dataToExport = filteredRecords.map((r) => ({
+      "Date": formatDate(r.date),
+      "Staff Name": r.staff_name || '—',
+      "Role": r.role || '—',
+      "Check-In": formatTime(r.checkin_time),
+      "Check-Out": formatTime(r.checkout_time),
+      "Work Hours": calculateWorkHours(r.checkin_time, r.checkout_time),
+      "Mode": r.mode || '—',
+      "Shift": r.shift_name || '—',
+      "Status": r.status || '—',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Staff Attendance");
+    XLSX.writeFile(workbook, `Staff_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    if (filteredRecords.length === 0) {
+      alert("No attendance records available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("Staff Attendance Report", 14, 15);
+    const tableColumn = ["Date", "Staff Name", "Role", "Check-In", "Check-Out", "Work Hours", "Mode", "Status"];
+    const tableRows = filteredRecords.map((r) => [
+      formatDate(r.date),
+      r.staff_name || '—',
+      r.role || '—',
+      formatTime(r.checkin_time),
+      formatTime(r.checkout_time),
+      calculateWorkHours(r.checkin_time, r.checkout_time),
+      r.mode || '—',
+      r.status || '—',
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`Staff_Attendance_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   // --- JSX Rendering ---
   return (
     <div className="container-fluid p-2 p-md-4">
@@ -410,6 +466,32 @@ const ReportsAttendance = () => {
         <div className="col-12 col-md-8 mb-2 mb-md-0">
           <h2 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)' }}>Staff Attendance Records</h2>
           <p className="text-muted mb-0 d-none d-md-block">Track staff attendance via QR scan or manual entry.</p>
+        </div>
+        <div className="col-12 col-md-4 text-md-end">
+          {/* Export Data Dropdown */}
+          <div className="dropdown">
+            <button
+              className="btn btn-success fw-semibold dropdown-toggle d-inline-flex align-items-center gap-2"
+              style={{ borderRadius: '8px', padding: '8px 16px', fontWeight: '500' }}
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaDownload /> Export Data
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                  <strong className="text-success">XLSX</strong> Export to Excel
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportToPDF}>
+                  <strong className="text-danger">PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 

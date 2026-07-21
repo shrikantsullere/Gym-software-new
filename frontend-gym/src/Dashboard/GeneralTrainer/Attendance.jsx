@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
 import { FaEye, FaTrash, FaTimesCircle } from "react-icons/fa";
+import axiosInstance from "../../Api/axiosInstance";
 import BaseUrl from '../../Api/BaseUrl';
 import * as XLSX from 'xlsx';
 
@@ -36,15 +37,8 @@ const Attendance = () => {
       setLoading(true);
       setError(null);
       
-      // Using API endpoint for member attendance
-      const response = await fetch(`${BaseUrl}memberattendence/${memberId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      const data = await response.json();
+      const response = await axiosInstance.get(`memberattendence/${memberId}`);
+      const data = response.data;
       
       console.log('API Response:', data);
       
@@ -108,14 +102,8 @@ const Attendance = () => {
             : member
         ));
 
-        const response = await fetch(`${BaseUrl}memberattendence/delete/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        
-        const data = await response.json();
+        const response = await axiosInstance.delete(`memberattendence/delete/${id}`);
+        const data = response.data;
         
         if (data.success) {
           // Refresh attendance data after successful deletion
@@ -153,14 +141,8 @@ const Attendance = () => {
           : member
       ));
 
-      const response = await fetch(`${BaseUrl}memberattendence/checkout/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      const data = await response.json();
+      const response = await axiosInstance.put(`memberattendence/checkout/${id}`);
+      const data = response.data;
       
       if (data.success) {
         await fetchAttendanceData();

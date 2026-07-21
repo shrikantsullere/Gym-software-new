@@ -343,16 +343,17 @@ const AttendanceAlerts = () => {
             </ul>
           </div>
 
-        {selectedIds.length > 0 && (
-          <button
-            type="button"
-            className="btn btn-sm btn-primary shadow-sm fw-semibold"
-            onClick={handleBulkMessageClick}
-          >
-            <FontAwesomeIcon icon={faEnvelope} className="me-2" />
-            Send Bulk Message ({selectedIds.length} Selected)
-          </button>
-        )}
+          {selectedIds.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-sm btn-primary shadow-sm fw-semibold"
+              onClick={handleBulkMessageClick}
+            >
+              <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+              Send Bulk Message ({selectedIds.length} Selected)
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden">

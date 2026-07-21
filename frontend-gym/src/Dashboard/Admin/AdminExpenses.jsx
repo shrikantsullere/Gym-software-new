@@ -192,7 +192,7 @@ const AdminExpenses = () => {
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-4">
           <div className="card border-0 shadow-sm rounded-4 p-3 h-100" style={{ borderLeft: "4px solid #ef4444" }}>
-            <span className="text-muted small fw-semibold text-uppercase">TOTAL MONTHLY EXPENSES</span>
+            <span className="text-muted small fw-semibold text-uppercase">THIS MONTH EXPENSES</span>
             <h2 className="fw-bold text-danger mt-1 mb-1">
               ₹{totalExpenses.toLocaleString()}
             </h2>

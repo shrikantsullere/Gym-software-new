@@ -10,7 +10,11 @@ import {
   FaChalkboardTeacher,
   FaMoneyBillWave,
   FaTrash,
+  FaDownload,
 } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import axiosInstance from '../../Api/axiosInstance';
 import { toast } from 'react-toastify';
 import CustomTimePicker from '../../Components/CustomTimePicker';
@@ -515,19 +519,89 @@ const ReceptionistBookGroupClasses = () => {
     if (adminId) fetchGroupPlans();
   }, [adminId]);
 
+  const exportToExcel = () => {
+    if (filteredBookings.length === 0) {
+      toast.warning("No bookings available to export.");
+      return;
+    }
+    const dataToExport = filteredBookings.map((b) => ({
+      "Member Name": b.member_name || '—',
+      "Booking Type": b.type === 'group' ? 'Group Class' : 'PT Session',
+      "Class / Trainer": b.type === 'group' ? b.class_name : b.trainer_name,
+      "Date": b.date ? new Date(b.date).toLocaleDateString() : '—',
+      "Time": `${b.start_time || ''} - ${b.end_time || ''}`,
+      "Booking Status": b.status || '—',
+      "Payment Status": b.payment_status || '—',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Bookings");
+    XLSX.writeFile(workbook, `Session_Bookings_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    if (filteredBookings.length === 0) {
+      toast.warning("No bookings available to export.");
+      return;
+    }
+    const doc = new jsPDF();
+    doc.text("Session Bookings Report", 14, 15);
+    const tableColumn = ["Member", "Type", "Class/Trainer", "Date", "Time", "Booking Status", "Payment Status"];
+    const tableRows = filteredBookings.map((b) => [
+      b.member_name || '—',
+      b.type === 'group' ? 'Group Class' : 'PT Session',
+      b.type === 'group' ? b.class_name : b.trainer_name,
+      b.date ? new Date(b.date).toLocaleDateString() : '—',
+      `${b.start_time || ''} - ${b.end_time || ''}`,
+      b.status || '—',
+      b.payment_status || '—',
+    ]);
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`Session_Bookings_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   if (loading) return <div className="text-center mt-5">Loading bookings...</div>;
 
   return (
     <div className="">
       {/* Header */}
       <div className="row mb-4 align-items-center">
-        <div className="col-12 col-lg-8">
+        <div className="col-12 col-lg-7">
           <h2 className="fw-bold">Book Group Classes & PT Sessions</h2>
           <p className="text-muted mb-0">Manage bookings for group classes and personal training sessions.</p>
         </div>
-        <div className="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <div className="col-12 col-lg-5 text-lg-end mt-3 mt-lg-0 d-flex align-items-center justify-content-lg-end gap-2">
+          {/* Export Data Dropdown */}
+          <div className="dropdown">
+            <button
+              className="btn btn-success fw-semibold dropdown-toggle d-flex align-items-center gap-2"
+              style={{ borderRadius: '8px', padding: '10px 16px', fontWeight: '500' }}
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaDownload /> Export Data
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                  <strong className="text-success">XLSX</strong> Export to Excel
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportToPDF}>
+                  <strong className="text-danger">PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
+
           <button
-            className="btn d-flex align-items-center ms-auto col-lg-6 col-12"
+            className="btn d-flex align-items-center"
             style={{
               backgroundColor: '#6EB2CC',
               color: 'white',

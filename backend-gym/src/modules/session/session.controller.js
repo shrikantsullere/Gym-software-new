@@ -83,3 +83,34 @@ export const deleteSession = async (req, res, next) => {
     next(err);
   }
 };
+
+// ➤ Get Member Sessions
+export const getMemberSessions = async (req, res, next) => {
+  try {
+    const data = await getMemberSessionsService(req.params.memberId);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ➤ Join Session
+export const joinSession = async (req, res, next) => {
+  try {
+    const { memberId, sessionId } = req.body;
+    const data = await joinSessionService(memberId, sessionId);
+    res.json({ success: true, ...data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ➤ Get Session Members
+export const getSessionMembers = async (req, res, next) => {
+  try {
+    const data = await getSessionMembersService(req.params.sessionId);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};

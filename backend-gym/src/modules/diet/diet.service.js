@@ -1,4 +1,5 @@
 import { pool } from "../../config/db.js";
+import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 
 // ----- CREATE DIET PLAN -----
 export const createDietPlanService = async ({ title, notes, branchId, createdBy, meals, dietType }) => {
@@ -106,6 +107,39 @@ export const assignDietPlanService = async (memberId, dietPlanId) => {
     "INSERT INTO dietplanassignment (memberId, dietPlanId) VALUES (?, ?)",
     [memberId, dietPlanId]
   );
+
+  // Fetch member & diet plan details to dispatch notifications
+  try {
+    const [memberRows] = await pool.query(
+      "SELECT m.id, m.fullName, m.email, m.phone, m.userId FROM member m WHERE m.id = ?",
+      [memberId]
+    );
+    const member = memberRows[0];
+
+    const [planRows] = await pool.query(
+      "SELECT title FROM dietplan WHERE id = ?",
+      [dietPlanId]
+    );
+    const planTitle = planRows[0]?.title || "Diet Plan";
+
+    if (member) {
+      const messageText = `Hi ${member.fullName},\n\nA new diet plan "${planTitle}" has been assigned to you. Please check your dashboard to view the details.\n\nRegards,\nGym Management`;
+      
+      dispatchNotification({
+        category: "templates",
+        toEmail: member.email,
+        toPhone: member.phone,
+        toUserId: member.userId,
+        memberId: member.id,
+        subject: "New Diet Plan Assigned",
+        message: messageText,
+      }).catch((err) =>
+        console.error("Failed to dispatch diet plan assignment notification:", err.message)
+      );
+    }
+  } catch (err) {
+    console.error("Error fetching notification details for diet assignment:", err.message);
+  }
 
   return getDietPlanByIdService(dietPlanId);
 };

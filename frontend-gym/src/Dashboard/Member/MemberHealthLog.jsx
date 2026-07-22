@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../Api/axiosInstance";
+import * as XLSX from "xlsx";
 
 const MemberHealthLog = () => {
   const [logs, setLogs] = useState([]);
@@ -23,6 +24,31 @@ const MemberHealthLog = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const exportToExcel = () => {
+    if (logs.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    
+    // Format logs for Excel export
+    const dataToExport = logs.map((log) => ({
+      "Date": new Date(log.recordedAt || log.createdAt || new Date()).toLocaleDateString(),
+      "Weight (kg)": log.weight ? `${log.weight} kg` : '-',
+      "Height (cm)": log.height ? `${log.height} cm` : '-',
+      "BMI": log.bmi || '-',
+      "Status": log.bmiStatus || '-',
+      "Diet Chart": log.dietChart || 'None',
+      "Trainer Notes / Notes": log.notes || 'None'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Health & BMI Logs");
+    
+    // Save file
+    XLSX.writeFile(workbook, `My_Health_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   useEffect(() => {
@@ -56,11 +82,23 @@ const MemberHealthLog = () => {
       </h2>
 
       <div className="card shadow-sm border-0" style={{ borderRadius: "15px" }}>
-        <div className="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-          <h5 style={{ fontWeight: "600", color: "#2f6a87" }}>Health & Assessment History</h5>
-          <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '12px' }}>
-            {logs.length} Log{logs.length !== 1 ? 's' : ''} Recorded
-          </span>
+        <div className="card-header bg-white border-0 pt-4 pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+          <h5 className="mb-0" style={{ fontWeight: "600", color: "#2f6a87" }}>Health & Assessment History</h5>
+          <div className="d-flex align-items-center gap-2">
+            <button 
+              className="btn btn-sm btn-success d-flex align-items-center gap-2 rounded-pill px-3 py-1.5 fw-semibold shadow-sm"
+              onClick={exportToExcel}
+              disabled={logs.length === 0}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="bi bi-file-earmark-excel-fill" viewBox="0 0 16 16">
+                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L9.293 0zM9.5 3.5v-2l3 3h-2a.5.5 0 0 1-.5-.5zM5.884 6.68 8 9.219l2.116-2.538a.5.5 0 1 1 .768.64L8.783 9.896l2.096 2.513a.5.5 0 1 1-.768.64L8 10.518l-2.11 2.531a.5.5 0 1 1-.768-.64l2.096-2.513-2.096-2.513a.5.5 0 1 1 .768-.64z"/>
+              </svg>
+              Export Excel
+            </button>
+            <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '12px' }}>
+              {logs.length} Log{logs.length !== 1 ? 's' : ''} Recorded
+            </span>
+          </div>
         </div>
 
         <div className="card-body">

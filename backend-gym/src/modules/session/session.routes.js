@@ -4,7 +4,10 @@ import {
   listSessions,
   updateSession,
   updateSessionStatus,
-  deleteSession
+  deleteSession,
+  getMemberSessions,
+  joinSession,
+  getSessionMembers
 } from "./session.controller.js";
 import { verifyToken } from "../../middlewares/auth.js";
 
@@ -40,5 +43,12 @@ router.delete(
   verifyToken(["Superadmin", "Admin", "Staff"]),
   deleteSession
 );
+
+// ➤ Member routes
+router.get("/member/:memberId", verifyToken(["Member"]), getMemberSessions);
+router.post("/join", verifyToken(["Member"]), joinSession);
+
+// ➤ View Session Members (Admin/Trainer)
+router.get("/:sessionId/members", verifyToken(["Superadmin", "Admin", "Staff"]), getSessionMembers);
 
 export default router;

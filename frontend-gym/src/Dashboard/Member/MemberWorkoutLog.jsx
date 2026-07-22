@@ -80,7 +80,6 @@ const MemberWorkoutLog = () => {
                           <th className="ps-3 py-3">Exercise</th>
                           <th className="py-3 text-center">Sets</th>
                           <th className="py-3 text-center">Reps</th>
-                          <th className="py-3">Duration / Tips</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -101,18 +100,11 @@ const MemberWorkoutLog = () => {
                                   {ex.reps ? `${ex.reps} Reps` : '-'}
                                 </span>
                               </td>
-                              <td className="py-3 text-muted small">
-                                {ex.duration ? (
-                                  <span className="text-primary fw-semibold"><FontAwesomeIcon icon={faClock} className="me-1" />{ex.duration}</span>
-                                ) : (
-                                  ex.notes || '-'
-                                )}
-                              </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="4" className="text-center py-4 text-muted">No exercises added to this plan.</td>
+                            <td colSpan="3" className="text-center py-4 text-muted">No exercises added to this plan.</td>
                           </tr>
                         )}
                       </tbody>

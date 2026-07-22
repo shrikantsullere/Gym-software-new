@@ -990,6 +990,14 @@ export const getAdminDashboardData = async (adminId, branchId = null, monthStr =
   const groupByRevenue = isOneMonth ? "DATE(p.paymentDate)" : "YEAR(p.paymentDate), MONTH(p.paymentDate)";
   const orderByRevenue = isOneMonth ? "DATE(p.paymentDate)" : "YEAR(p.paymentDate), MONTH(p.paymentDate)";
 
+  const dateFormatExpense = isOneMonth ? "DATE_FORMAT(date, '%d %b')" : "DATE_FORMAT(MIN(date), '%b')";
+  const groupByExpense = isOneMonth ? "DATE(date)" : "YEAR(date), MONTH(date)";
+  const orderByExpense = isOneMonth ? "DATE(date)" : "YEAR(date), MONTH(date)";
+
+  const dateFormatSalary = isOneMonth ? "DATE_FORMAT(periodEnd, '%d %b')" : "DATE_FORMAT(MIN(periodEnd), '%b')";
+  const groupBySalary = isOneMonth ? "DATE(periodEnd)" : "YEAR(periodEnd), MONTH(periodEnd)";
+  const orderBySalary = isOneMonth ? "DATE(periodEnd)" : "YEAR(periodEnd), MONTH(periodEnd)";
+
   // 5 CARDS
   const statsQuery = `
     SELECT 
@@ -1087,6 +1095,7 @@ const recentActivitiesQuery = `
   const revenueGrowthQuery = `
     SELECT 
       ${dateFormatRevenue} AS month,
+      MIN(p.paymentDate) AS rawDate,
       SUM(p.amount) AS totalRevenue
     FROM payment p
     JOIN member m ON p.memberId = m.id
@@ -1095,6 +1104,34 @@ const recentActivitiesQuery = `
       AND p.paymentDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
     GROUP BY ${groupByRevenue}
     ORDER BY ${orderByRevenue};
+  `;
+
+  // EXPENSE GROWTH
+  const expenseGrowthQuery = `
+    SELECT 
+      ${dateFormatExpense} AS month,
+      MIN(date) AS rawDate,
+      SUM(amount) AS totalExpense
+    FROM expense
+    WHERE adminId = ?
+      ${bId ? "AND branchId = ?" : ""}
+      AND date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY ${groupByExpense}
+    ORDER BY ${orderByExpense};
+  `;
+
+  // SALARY GROWTH
+  const salaryGrowthQuery = `
+    SELECT 
+      ${dateFormatSalary} AS month,
+      MIN(periodEnd) AS rawDate,
+      SUM(netPay) AS totalSalary
+    FROM salary
+    WHERE adminId = ?
+      ${bId ? "AND branchId = ?" : ""}
+      AND periodEnd >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY ${groupBySalary}
+    ORDER BY ${orderBySalary};
   `;
 
   // RECENT PAYMENTS
@@ -1137,6 +1174,26 @@ const recentActivitiesQuery = `
   if (bId) revenueParams.push(bId);
   revenueParams.push(chartPeriod);
   const [revenueGrowth] = await pool.query(revenueGrowthQuery, revenueParams);
+  const [expenseGrowth] = await pool.query(expenseGrowthQuery, revenueParams);
+  const [salaryGrowth] = await pool.query(salaryGrowthQuery, revenueParams);
+
+  // Calculate profitGrowth
+  const profitMap = {};
+  revenueGrowth.forEach(r => profitMap[r.month] = { month: r.month, rawDate: r.rawDate, revenue: Number(r.totalRevenue || 0), expense: 0 });
+  
+  expenseGrowth.forEach(e => {
+    if (!profitMap[e.month]) profitMap[e.month] = { month: e.month, rawDate: e.rawDate, revenue: 0, expense: 0 };
+    profitMap[e.month].expense += Number(e.totalExpense || 0);
+  });
+  
+  salaryGrowth.forEach(s => {
+    if (!profitMap[s.month]) profitMap[s.month] = { month: s.month, rawDate: s.rawDate, revenue: 0, expense: 0 };
+    profitMap[s.month].expense += Number(s.totalSalary || 0);
+  });
+
+  const profitGrowth = Object.values(profitMap)
+    .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate))
+    .map(p => ({ month: p.month, totalProfit: p.revenue - p.expense }));
 
   const paymentParams = [adminId];
   if (bId) paymentParams.push(bId);
@@ -1183,6 +1240,7 @@ const recentActivitiesQuery = `
     memberGrowth,
     recentActivities,
     revenueGrowth,
+    profitGrowth,
     recentPayments,
     monthlyRevenue,
     monthlyExpenses,

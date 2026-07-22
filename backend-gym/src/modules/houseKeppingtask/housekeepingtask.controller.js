@@ -9,6 +9,8 @@ import {
   getTaskAsignedService,
   getTasksByAdminIdService,
 } from "./housekeepingtask.service.js";
+import { pool } from "../../config/db.js";
+import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 
 export const createTask = async (req, res) => {
   try {
@@ -40,6 +42,41 @@ export const createTask = async (req, res) => {
       priority,
       description,
     });
+
+    // 🚀 Handle Notifications
+    try {
+      let targetUsers = [];
+      if (assignedTo) {
+        // Fetch specific staff member's user details
+        const [userRows] = await pool.query(
+          "SELECT u.id, u.email, u.phone, u.fullName FROM staff s JOIN user u ON s.userId = u.id WHERE s.id = ?",
+          [assignedTo]
+        );
+        targetUsers = userRows;
+      } else if (roleId) {
+        // Fetch all staff members in that department for this admin
+        const [userRows] = await pool.query(
+          "SELECT u.id, u.email, u.phone, u.fullName FROM staff s JOIN user u ON s.userId = u.id WHERE s.adminId = ? AND u.roleId = ?",
+          [adminId, roleId]
+        );
+        targetUsers = userRows;
+      }
+
+      // Send notifications to all targets
+      for (const u of targetUsers) {
+        await dispatchNotification({
+          category: "welcome_note", // Fallback category that is likely enabled
+          toEmail: u.email,
+          toPhone: u.phone,
+          toUserId: u.id,
+          adminIdForCredits: adminId,
+          subject: `New Task Assigned: ${taskTitle}`,
+          message: `Hello ${u.fullName},\n\nYou have been assigned a new task: "${taskTitle}".\nDue Date: ${dueDate}\nPriority: ${priority}\nDescription: ${description || 'N/A'}\n\nPlease check your dashboard to review it.`,
+        });
+      }
+    } catch (notifErr) {
+      console.error("Error sending task notifications:", notifErr.message);
+    }
 
     return res.status(201).json({
       success: true,

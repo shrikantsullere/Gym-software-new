@@ -20,6 +20,10 @@ router.post(
   createSession
 );
 
+// ➤ Member routes
+router.get("/member/:memberId", verifyToken(["Member", "Admin", "Superadmin", "Staff"]), getMemberSessions);
+router.post("/join", verifyToken(["Member", "Admin", "Superadmin", "Staff"]), joinSession);
+
 // ➤ List sessions (Superadmin + Admin + Staff)
 router.get("/:adminId/:trainerId?", verifyToken(["Superadmin", "Admin", "Staff"]), listSessions);
 
@@ -43,10 +47,6 @@ router.delete(
   verifyToken(["Superadmin", "Admin", "Staff"]),
   deleteSession
 );
-
-// ➤ Member routes
-router.get("/member/:memberId", verifyToken(["Member", "Admin", "Superadmin", "Staff"]), getMemberSessions);
-router.post("/join", verifyToken(["Member", "Admin", "Superadmin", "Staff"]), joinSession);
 
 // ➤ View Session Members (Admin/Trainer)
 router.get("/:sessionId/members", verifyToken(["Superadmin", "Admin", "Staff"]), getSessionMembers);

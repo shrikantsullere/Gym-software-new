@@ -917,6 +917,17 @@ model member_bodybuilding_logs {
   back_photo_url   String?   @db.VarChar(255)
   side_photo_url   String?   @db.VarChar(255)
   notes            String?   @db.Text
+  gender           String?   @db.VarChar(50)
+  age              Int?
+  height_cm        Decimal?  @db.Decimal(5, 2)
+  neck_cm          Decimal?  @db.Decimal(4, 1)
+  hip_cm           Decimal?  @db.Decimal(5, 2)
+  activity_level   String?   @db.VarChar(50)
+  fitness_goal     String?   @db.VarChar(50)
+  biceps_cm        Decimal?  @db.Decimal(5, 2)
+  forearms_cm      Decimal?  @db.Decimal(5, 2)
+  assessment_date  DateTime? @default(now()) @db.DateTime(0)
+  resting_hr       Int?
   member           member    @relation(fields: [memberId], references: [id], onUpdate: Restrict, map: "member_bodybuilding_logs_ibfk_1")
 
   @@index([memberId], map: "memberId")

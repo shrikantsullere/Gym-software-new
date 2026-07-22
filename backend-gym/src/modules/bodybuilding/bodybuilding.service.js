@@ -1,33 +1,91 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { pool } from "../../config/db.js";
 
 export const logBodybuildingMetrics = async (memberId, data) => {
-  const newLog = await prisma.member_bodybuilding_logs.create({
-    data: {
-      memberId: parseInt(memberId),
-      weight_kg: data.weight_kg ? parseFloat(data.weight_kg) : null,
-      chest_cm: data.chest_cm ? parseFloat(data.chest_cm) : null,
-      shoulders_cm: data.shoulders_cm ? parseFloat(data.shoulders_cm) : null,
-      left_arm_cm: data.left_arm_cm ? parseFloat(data.left_arm_cm) : null,
-      right_arm_cm: data.right_arm_cm ? parseFloat(data.right_arm_cm) : null,
-      left_forearm_cm: data.left_forearm_cm ? parseFloat(data.left_forearm_cm) : null,
-      right_forearm_cm: data.right_forearm_cm ? parseFloat(data.right_forearm_cm) : null,
-      waist_cm: data.waist_cm ? parseFloat(data.waist_cm) : null,
-      thighs_cm: data.thighs_cm ? parseFloat(data.thighs_cm) : null,
-      calves_cm: data.calves_cm ? parseFloat(data.calves_cm) : null,
-      front_photo_url: data.front_photo_url || null,
-      back_photo_url: data.back_photo_url || null,
-      side_photo_url: data.side_photo_url || null,
-      notes: data.notes || null,
-    }
-  });
+  // Validate basic required inputs
+  const parsedAge = parseInt(data.age);
+  const parsedWeight = parseFloat(data.weight_kg);
+  const parsedHeight = parseFloat(data.height_cm);
+  const parsedNeck = parseFloat(data.neck_cm);
+  const parsedWaist = parseFloat(data.waist_cm);
+  const parsedHip = parseFloat(data.hip_cm);
+  const isFemale = (data.gender || "").toLowerCase() === "female";
+
+  if (!memberId || isNaN(parsedAge) || isNaN(parsedWeight) || isNaN(parsedHeight) || isNaN(parsedNeck) || isNaN(parsedWaist)) {
+    throw new Error("Missing or invalid required fields");
+  }
+
+  if (isFemale && isNaN(parsedHip)) {
+    throw new Error("Hip measurement is required for female members");
+  }
+
+  const [result] = await pool.query(
+    `INSERT INTO member_bodybuilding_logs (
+      memberId,
+      weight_kg,
+      chest_cm,
+      shoulders_cm,
+      left_arm_cm,
+      right_arm_cm,
+      left_forearm_cm,
+      right_forearm_cm,
+      waist_cm,
+      thighs_cm,
+      calves_cm,
+      front_photo_url,
+      back_photo_url,
+      side_photo_url,
+      notes,
+      gender,
+      age,
+      height_cm,
+      neck_cm,
+      hip_cm,
+      activity_level,
+      fitness_goal,
+      biceps_cm,
+      forearms_cm,
+      assessment_date
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      parseInt(memberId),
+      parsedWeight,
+      data.chest_cm ? parseFloat(data.chest_cm) : null,
+      data.shoulders_cm ? parseFloat(data.shoulders_cm) : null,
+      data.biceps_cm ? parseFloat(data.biceps_cm) : null, // left_arm_cm
+      data.biceps_cm ? parseFloat(data.biceps_cm) : null, // right_arm_cm
+      data.forearms_cm ? parseFloat(data.forearms_cm) : null, // left_forearm_cm
+      data.forearms_cm ? parseFloat(data.forearms_cm) : null, // right_forearm_cm
+      parsedWaist,
+      data.thighs_cm ? parseFloat(data.thighs_cm) : null,
+      data.calves_cm ? parseFloat(data.calves_cm) : null,
+      data.front_photo_url || null,
+      data.back_photo_url || null,
+      data.side_photo_url || null,
+      data.notes || null,
+      data.gender || null,
+      parsedAge,
+      parsedHeight,
+      parsedNeck,
+      isNaN(parsedHip) ? null : parsedHip,
+      data.activity_level || null,
+      data.fitness_goal || null,
+      data.biceps_cm ? parseFloat(data.biceps_cm) : null,
+      data.forearms_cm ? parseFloat(data.forearms_cm) : null,
+      data.assessment_date ? new Date(data.assessment_date) : new Date()
+    ]
+  );
+
+  const [[newLog]] = await pool.query(
+    `SELECT * FROM member_bodybuilding_logs WHERE id = ?`,
+    [result.insertId]
+  );
   return newLog;
 };
 
 export const getBodybuildingLogs = async (memberId) => {
-  return await prisma.member_bodybuilding_logs.findMany({
-    where: { memberId: parseInt(memberId) },
-    orderBy: { log_date: 'desc' }
-  });
+  const [rows] = await pool.query(
+    `SELECT * FROM member_bodybuilding_logs WHERE memberId = ? ORDER BY assessment_date DESC, log_date DESC`,
+    [parseInt(memberId)]
+  );
+  return rows;
 };

@@ -152,6 +152,9 @@ import AnnouncementsList from "./Components/AnnouncementsList";
 import AutomationSettings from "./Dashboard/SuperAdmin/AutomationSettings";
 import NotificationCredits from "./Dashboard/Admin/NotificationCredits";
 import Notifications from "./Pages/Notifications";
+import ViewAdminAssessmentForm from "./Dashboard/Admin/ViewAdminAssessmentForm";
+import AdminNotifications from "./Pages/Notifications";
+import BookingDetailsList from "./Dashboard/Admin/Bookings/BookingDetailsList";
 
 // Wrapper to extract memberId from URL params
 const MemberAssessmentWrapper = () => {
@@ -342,8 +345,10 @@ function App() {
 
                   {/* booking */}
                   <Route path="/admin/booking/attendance" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><AttendanceReport /></ProtectedRoute>} />
-                  <Route path="/admin/booking/personal-training" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTraining /></ProtectedRoute>} />
-                  <Route path="/admin/AdminBranches" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "SUBADMIN"]}><SuperAdminBranches /></ProtectedRoute>} />
+                  <Route path="/admin/personaltrainings" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTraining /></ProtectedRoute>} />
+                  <Route path="/admin/sessionsbookings" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTrainerSessionBookings /></ProtectedRoute>} />
+                  <Route path="/admin/booking-details" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><BookingDetailsList /></ProtectedRoute>} />
+                  <Route path="/admin/inventory" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><InventoryManagement /></ProtectedRoute>} />
                   <Route path="/admin/ClassesSchedule" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><ClassesSchedule /></ProtectedRoute>} />
                   <Route path="/admin/classesSchedule" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><ClassesSchedule /></ProtectedRoute>} />
                   <Route path="/admin/bookings" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTrainerSessionBookings /></ProtectedRoute>} />
@@ -397,6 +402,7 @@ function App() {
                   <Route path="/generaltrainer/diet-builder" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><DietBuilder /></ProtectedRoute>} />
                   <Route path="/generaltrainer/workout-builder" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><WorkoutBuilder /></ProtectedRoute>} />
                   <Route path="/generaltrainer/classesschedule" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><GeneralClassesSchedule /></ProtectedRoute>} />
+                  <Route path="/generaltrainer/booking-details" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><BookingDetailsList /></ProtectedRoute>} />
                   <Route path="/generaltrainer/bookings" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><GeneralSessionBooking /></ProtectedRoute>} />
                   <Route path="/GeneralTrainer/attendance" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><Attendance /></ProtectedRoute>} />
                   <Route path="/generaltrainer/attendance" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><Attendance /></ProtectedRoute>} />
@@ -468,6 +474,7 @@ function App() {
                   <Route path="/personaltrainer/diet-builder" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><DietBuilder /></ProtectedRoute>} />
                   <Route path="/personaltrainer/workout-builder" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><WorkoutBuilder /></ProtectedRoute>} />
                   <Route path="/personaltrainer/classesschedule" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalTrainerClassesSchedule /></ProtectedRoute>} />
+                  <Route path="/personaltrainer/booking-details" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><BookingDetailsList /></ProtectedRoute>} />
                   <Route path="/personaltrainer/messages" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalTrainerMessages /></ProtectedRoute>} />
                   <Route path="/personaltrainer/group-classes" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalTrainerGroupClasses /></ProtectedRoute>} />
                   <Route path="/personaltrainer/bookings" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalSessionBooking /></ProtectedRoute>} />

@@ -99,7 +99,6 @@ export const getAdminDashboardService = async (adminId) => {
     recentActivities,
   };
 };
-
 export const getTrainerDashboardService = async (trainerId) => {
   // 0) Find staffId, userId, and adminId for trainerId (which could be userId or staff.id)
   const [staffRows] = await pool.query(
@@ -134,14 +133,6 @@ export const getTrainerDashboardService = async (trainerId) => {
   );
   let totalMembers = totalRow?.totalMembers || 0;
 
-  if (totalMembers === 0 && adminId) {
-    const [[adminTotalRow]] = await pool.query(
-      `SELECT COUNT(*) AS totalMembers FROM member WHERE adminId = ? AND status = 'Active'`,
-      [adminId]
-    );
-    totalMembers = adminTotalRow?.totalMembers || 0;
-  }
-
   // 2) Today's check-ins
   const [[checkRow]] = await pool.query(
     `SELECT COUNT(DISTINCT ma.id) AS todaysCheckIns
@@ -155,17 +146,6 @@ export const getTrainerDashboardService = async (trainerId) => {
     [realStaffId, realUserId, realStaffId, realUserId]
   );
   let todaysCheckIns = checkRow?.todaysCheckIns || 0;
-
-  if (todaysCheckIns === 0 && adminId) {
-    const [[adminCheckRow]] = await pool.query(
-      `SELECT COUNT(DISTINCT ma.id) AS todaysCheckIns
-       FROM memberattendance ma
-       JOIN member m ON ma.memberId = m.id
-       WHERE m.adminId = ? AND DATE(ma.checkIn) = CURDATE()`,
-      [adminId]
-    );
-    todaysCheckIns = adminCheckRow?.todaysCheckIns || 0;
-  }
 
   // 3) Earnings Overview (last 7 days)
   let earningsOverview = [];
@@ -186,25 +166,7 @@ export const getTrainerDashboardService = async (trainerId) => {
       total: Number(r.totalEarnings || 0)
     }));
   } catch (e) {
-    // fallback
-  }
-
-  if (earningsOverview.length === 0 && adminId) {
-    const [earningRows] = await pool.query(
-      `SELECT 
-          DATE(membershipFrom) AS date,
-          SUM(amountPaid)      AS totalEarnings
-       FROM member
-       WHERE adminId = ?
-         AND membershipFrom >= CURDATE() - INTERVAL 6 DAY
-       GROUP BY DATE(membershipFrom)
-       ORDER BY date`,
-      [adminId]
-    );
-    earningsOverview = earningRows.map((r) => ({
-      date: r.date,
-      total: Number(r.totalEarnings || 0)
-    }));
+    // ignore
   }
 
   // 4) Sessions Overview
@@ -225,27 +187,7 @@ export const getTrainerDashboardService = async (trainerId) => {
       if (s === "cancelled") sessionsOverview.cancelled = row.count;
     });
   } catch (e) {
-    // fallback
-  }
-
-  if (sessionsOverview.completed === 0 && sessionsOverview.upcoming === 0 && sessionsOverview.cancelled === 0 && adminId) {
-    try {
-      const [sessionRows] = await pool.query(
-        `SELECT status, COUNT(*) AS count
-         FROM session
-         WHERE adminId = ?
-         GROUP BY status`,
-        [adminId]
-      );
-      sessionRows.forEach((row) => {
-        const s = (row.status || "").toLowerCase();
-        if (s === "completed") sessionsOverview.completed = row.count;
-        if (s === "upcoming") sessionsOverview.upcoming += row.count;
-        if (s === "cancelled") sessionsOverview.cancelled = row.count;
-      });
-    } catch (e) {
-      // ignore
-    }
+    // ignore
   }
 
   // 5) Recent Activities
@@ -279,34 +221,6 @@ export const getTrainerDashboardService = async (trainerId) => {
     mode: row.mode,
     notes: row.notes,
   }));
-
-  if (recentActivities.length === 0 && adminId) {
-    const [adminActivities] = await pool.query(
-      `SELECT 
-          ma.id,
-          ma.memberId,
-          m.fullName,
-          ma.checkIn,
-          ma.status,
-          ma.mode,
-          ma.notes
-       FROM memberattendance ma
-       JOIN member m ON ma.memberId = m.id
-       WHERE m.adminId = ?
-       ORDER BY ma.checkIn DESC
-       LIMIT 5`,
-      [adminId]
-    );
-    recentActivities = adminActivities.map((row) => ({
-      id: row.id,
-      memberId: row.memberId,
-      memberName: row.fullName,
-      time: row.checkIn,
-      status: row.status,
-      mode: row.mode,
-      notes: row.notes,
-    }));
-  }
 
   return {
     totalMembers,

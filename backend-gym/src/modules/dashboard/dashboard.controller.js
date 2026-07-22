@@ -205,7 +205,7 @@ export const getSalesDashboard = async (req, res, next) => {
       });
     }
 
-    const bIdFilter = branchId ? "AND branchId = ?" : "";
+    const bIdFilter = branchId ? "AND (branchId = ? OR branchId IS NULL)" : "";
     const bIdParams = branchId ? [adminId, branchId] : [adminId];
 
     /* =========================
@@ -218,14 +218,14 @@ export const getSalesDashboard = async (req, res, next) => {
           SELECT SUM(p.amount)
           FROM payment p
           JOIN member m ON p.memberId = m.id
-          WHERE m.adminId = ? ${branchId ? "AND m.branchId = ?" : ""}
+          WHERE m.adminId = ? ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
             AND MONTH(p.paymentDate) = MONTH(CURDATE())
             AND YEAR(p.paymentDate) = YEAR(CURDATE())
         ), 0) +
         COALESCE((
           SELECT SUM(m.amountPaid)
           FROM member m
-          WHERE m.adminId = ? ${branchId ? "AND m.branchId = ?" : ""}
+          WHERE m.adminId = ? ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
             AND MONTH(m.joinDate) = MONTH(CURDATE())
             AND YEAR(m.joinDate) = YEAR(CURDATE())
         ), 0)
@@ -242,7 +242,7 @@ export const getSalesDashboard = async (req, res, next) => {
       SELECT COUNT(*) AS count
       FROM member m
       WHERE m.adminId = ?
-        ${branchId ? "AND m.branchId = ?" : ""}
+        ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
         AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
       `,
       bIdParams
@@ -270,7 +270,7 @@ export const getSalesDashboard = async (req, res, next) => {
       SELECT COUNT(*) AS count
       FROM member m
       WHERE m.adminId = ?
-        ${branchId ? "AND m.branchId = ?" : ""}
+        ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
         AND m.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
       `,
       bIdParams
@@ -288,7 +288,7 @@ export const getSalesDashboard = async (req, res, next) => {
         SUM(m.amountPaid) AS total
       FROM member m
       WHERE m.adminId = ?
-        ${branchId ? "AND m.branchId = ?" : ""}
+        ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
         AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
       GROUP BY year, month
       ORDER BY year, MONTH(m.joinDate)
@@ -306,7 +306,7 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM expense e
       JOIN branch b ON e.branchId = b.id
       WHERE b.adminId = ?
-        ${branchId ? "AND e.branchId = ?" : ""}
+        ${branchId ? "AND (e.branchId = ? OR e.branchId IS NULL)" : ""}
         AND e.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
       GROUP BY year, month
       `,
@@ -342,7 +342,7 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM member m
       LEFT JOIN plan pl ON m.planId = pl.id
       WHERE m.adminId = ?
-        ${branchId ? "AND m.branchId = ?" : ""}
+        ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
       ORDER BY m.joinDate DESC
       LIMIT 5
       `,

@@ -733,8 +733,23 @@ const Leads = () => {
           {/* Leads List */}
           <div className="col-12">
             <div className="card shadow-sm border-0" style={{ borderRadius: "15px" }}>
-              <div className="card-header bg-white border-0 pt-4 pb-0">
-                <h5 style={{ fontWeight: "600", color: "#2B3674" }}>Active Inquiries</h5>
+              <div className="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 style={{ fontWeight: "600", color: "#2B3674", margin: 0 }}>Active Inquiries</h5>
+                <div className="d-flex align-items-center gap-2">
+                  <label className="text-muted small fw-bold mb-0">Status Filter:</label>
+                  <select 
+                    className="form-select form-select-sm" 
+                    value={statusFilter} 
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{ width: "160px", borderRadius: "8px", border: "1px solid #cbd5e1", fontWeight: "500", fontSize: "14px" }}
+                  >
+                    <option value="all">Active (No Converted)</option>
+                    <option value="New">New</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Converted">Converted</option>
+                    <option value="Dead">Dead</option>
+                  </select>
+                </div>
               </div>
               <div className="card-body">
                 {loading ? (

@@ -24,18 +24,28 @@ export const createBookingRequest = async (req, res) => {
       branchId = null,
       planId,
       price,
-      upiId = null
+      upiId = null,
+      userId = null
     } = req.body;
 
     /* -------------------------
        1️⃣ BASIC VALIDATION
     ------------------------- */
-    if (!fullName || !phone || !gender || !adminId || !planId || !price) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "fullName, phone, gender, adminId, planId and price are required"
-      });
+    if (userId) {
+      if (!adminId || !planId || !price) {
+        return res.status(400).json({
+          success: false,
+          message: "adminId, planId and price are required"
+        });
+      }
+    } else {
+      if (!fullName || !phone || !gender || !adminId || !planId || !price) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "fullName, phone, gender, adminId, planId and price are required"
+        });
+      }
     }
 
     await connection.beginTransaction();
@@ -56,6 +66,61 @@ export const createBookingRequest = async (req, res) => {
       });
     }
 
+    if (userId) {
+      // EXISTING USER FLOW:
+      const [[existingUserCheck]] = await connection.query(
+        `SELECT id FROM user WHERE id = ?`,
+        [userId]
+      );
+
+      if (!existingUserCheck) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Check if they are already a member
+      const [[existingMember]] = await connection.query(
+        `SELECT id FROM member WHERE userId = ?`,
+        [userId]
+      );
+      const existingMemberId = existingMember ? existingMember.id : null;
+
+      const [bookingResult] = await connection.query(
+        `
+        INSERT INTO booking_requests
+          (adminId, userId, memberId, planId, price, branchId, upiId, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+        `,
+        [
+          adminId,
+          userId,
+          existingMemberId,
+          planId,
+          price,
+          branchId,
+          upiId
+        ]
+      );
+
+      await connection.commit();
+
+      return res.status(201).json({
+        success: true,
+        message: "Booking request submitted successfully",
+        data: {
+          bookingRequestId: bookingResult.insertId,
+          userId,
+          planName: plan.name,
+          price,
+          bookingStatus: "pending"
+        }
+      });
+    }
+
+    // GUEST USER FLOW (Original Flow):
     /* -------------------------
        3️⃣ PREVENT DUPLICATE USER
     ------------------------- */
@@ -96,7 +161,7 @@ export const createBookingRequest = async (req, res) => {
       ]
     );
 
-    const userId = userResult.insertId;
+    const insertedUserId = userResult.insertId;
 
     /* -------------------------
        5️⃣ CREATE BOOKING REQUEST
@@ -109,7 +174,7 @@ export const createBookingRequest = async (req, res) => {
       `,
       [
         adminId,
-        userId,
+        insertedUserId,
         planId,
         price,
         branchId,
@@ -124,7 +189,7 @@ export const createBookingRequest = async (req, res) => {
       message: "Booking request submitted successfully",
       data: {
         bookingRequestId: bookingResult.insertId,
-        userId,
+        userId: insertedUserId,
         userName: fullName,
         phone,
         email,
@@ -249,7 +314,7 @@ export const approveBookingRequest = async (req, res) => {
 
     /* 2️⃣ Fetch plan */
     const [[plan]] = await connection.query(
-      `SELECT validityDays FROM memberplan WHERE id = ?`,
+      `SELECT validityDays, price FROM memberplan WHERE id = ?`,
       [booking.planId]
     );
 
@@ -257,43 +322,116 @@ export const approveBookingRequest = async (req, res) => {
     const membershipTo = new Date();
     membershipTo.setDate(membershipFrom.getDate() + plan.validityDays);
 
-    /* 3️⃣ Generate new password */
-    const plainPassword = generate6DigitPassword();
-    const hashedPassword = await bcrypt.hash(plainPassword, 10);
-
-    /* 4️⃣ Create member */
-    const [memberResult] = await connection.query(
-      `
-      INSERT INTO member
-        (userId, adminId, fullName, email, phone, gender, planId, branchId,
-         password, membershipFrom, membershipTo, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
-      `,
-      [
-        booking.userId,
-        booking.adminId,
-        booking.fullName,
-        booking.email,
-        booking.phone,
-        booking.gender,
-        booking.planId,
-        booking.branchId,
-        hashedPassword,
-        membershipFrom,
-        membershipTo
-      ]
+    // Check if member already exists for this userId
+    const [[existingMember]] = await connection.query(
+      `SELECT id FROM member WHERE userId = ?`,
+      [booking.userId]
     );
 
-    /* 5️⃣ Update user */
-    await connection.query(
-      `UPDATE user SET status = 'Active', password = ? WHERE id = ?`,
-      [hashedPassword, booking.userId]
-    );
+    let activeMemberId;
+    let plainPassword = null;
 
-    /* 6️⃣ Update booking */
+    if (existingMember) {
+      // EXISTING MEMBER FLOW:
+      activeMemberId = existingMember.id;
+
+      // 1. Update existing member table
+      await connection.query(
+        `UPDATE member SET 
+            planId = ?, 
+            membershipFrom = ?, 
+            membershipTo = ?, 
+            paymentMode = ?, 
+            amountPaid = ?, 
+            status = 'Active'
+         WHERE id = ?`,
+        [
+          booking.planId,
+          membershipFrom,
+          membershipTo,
+          booking.upiId ? "UPI" : "Cash",
+          booking.price || plan.price,
+          activeMemberId
+        ]
+      );
+
+      // 2. Update user status to active (in case it was Inactive)
+      await connection.query(
+        `UPDATE user SET status = 'Active' WHERE id = ?`,
+        [booking.userId]
+      );
+
+      // 3. Create plan assignment
+      await connection.query(
+        `INSERT INTO member_plan_assignment 
+          (memberId, planId, membershipFrom, membershipTo, paymentMode, amountPaid, status, assignedBy, assignedAt)
+         VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, NOW())`,
+        [
+          activeMemberId,
+          booking.planId,
+          membershipFrom,
+          membershipTo,
+          booking.upiId ? "UPI" : "Cash",
+          booking.price || plan.price,
+          booking.adminId
+        ]
+      );
+
+    } else {
+      // NEW USER / VISITOR FLOW (Original Flow):
+      plainPassword = generate6DigitPassword();
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+      const [memberResult] = await connection.query(
+        `
+        INSERT INTO member
+          (userId, adminId, fullName, email, phone, gender, planId, branchId,
+           password, membershipFrom, membershipTo, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
+        `,
+        [
+          booking.userId,
+          booking.adminId,
+          booking.fullName,
+          booking.email,
+          booking.phone,
+          booking.gender,
+          booking.planId,
+          booking.branchId,
+          hashedPassword,
+          membershipFrom,
+          membershipTo
+        ]
+      );
+
+      activeMemberId = memberResult.insertId;
+
+      await connection.query(
+        `UPDATE user SET status = 'Active', password = ? WHERE id = ?`,
+        [hashedPassword, booking.userId]
+      );
+
+      // Create plan assignment for new member
+      await connection.query(
+        `INSERT INTO member_plan_assignment 
+          (memberId, planId, membershipFrom, membershipTo, paymentMode, amountPaid, status, assignedBy, assignedAt)
+         VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, NOW())`,
+        [
+          activeMemberId,
+          booking.planId,
+          membershipFrom,
+          membershipTo,
+          booking.upiId ? "UPI" : "Cash",
+          booking.price || plan.price,
+          booking.adminId
+        ]
+      );
+    }
+
+    /* Update booking_requests status */
     await connection.query(
       `UPDATE booking_requests SET status = 'approved', memberId = ? WHERE id = ?`,
-      [memberResult.insertId, bookingRequestId]
+      [activeMemberId, bookingRequestId]
     );
 
     await connection.commit();

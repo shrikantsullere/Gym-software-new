@@ -125,15 +125,12 @@ const GeneralTrainerDashboard = () => {
       
     const attendanceCounts = dashboardData.weeklyAttendanceTrend.length > 0
       ? dashboardData.weeklyAttendanceTrend.map(item => item.count)
-      : [85, 92, 78, 94, 88, 76, 82];
+      : [0, 0, 0, 0, 0, 0, 0];
 
     const classData = dashboardData.classDistribution.length > 0
       ? dashboardData.classDistribution
       : [
-          { value: 35, name: 'Cardio', itemStyle: { color: 'rgba(87, 181, 231, 1)' } },
-          { value: 25, name: 'Strength', itemStyle: { color: 'rgba(141, 211, 199, 1)' } },
-          { value: 20, name: 'Yoga', itemStyle: { color: 'rgba(251, 191, 114, 1)' } },
-          { value: 20, name: 'HIIT', itemStyle: { color: 'rgba(252, 141, 98, 1)' } }
+          { value: 1, name: 'No classes', itemStyle: { color: 'rgba(200, 200, 200, 0.5)' } }
         ];
 
     // 4. Set chart options

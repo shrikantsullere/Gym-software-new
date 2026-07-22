@@ -441,27 +441,27 @@ const MemberAllPlans = () => {
                 paymentObject.open();
                 
             } else {
-                // Cash/UPI Offline Assignment
-                const payload = {
-                    memberId: parseInt(bookingForm.memberId),
-                    plans: [
-                        {
-                            planId: parseInt(bookingForm.planId),
-                            membershipFrom: new Date().toISOString().split('T')[0], // Today's date
-                            paymentMode: bookingForm.paymentMethod === "upi" ? "UPI" : "Cash",
-                            amountPaid: planPrice
-                        }
-                    ],
-                    assignedBy: parseInt(adminId)
+                // Cash/UPI Offline Booking Request (Needs admin/staff approval)
+                const requestPayload = {
+                    fullName: name || user?.fullName || "Member",
+                    email: user?.email || "",
+                    phone: user?.phone || "",
+                    gender: user?.gender || "Male",
+                    adminId: parseInt(adminId),
+                    branchId: branchId ? parseInt(branchId) : null,
+                    planId: parseInt(bookingForm.planId),
+                    price: planPrice,
+                    upiId: bookingForm.paymentMethod === "upi" ? (bookingForm.upiId || "Offline UPI") : "Cash",
+                    userId: parseInt(userId) // Pass userId so backend knows it's an existing member
                 };
 
                 const response = await axiosInstance.post(
-                    `${BaseUrl}member-plan-assignments/assign`,
-                    payload
+                    `${BaseUrl}booking/create`,
+                    requestPayload
                 );
 
                 if (response.data.success) {
-                    alert("✅ Plan purchased successfully! Your plan has been activated.");
+                    alert("📝 Booking request submitted successfully! Your plan will be activated once the gym admin approves your offline payment.");
                     setShowBookingModal(false);
                     setSelectedPlan(null);
                     setBookingForm({
@@ -473,7 +473,7 @@ const MemberAllPlans = () => {
                     
                     window.location.reload(); 
                 } else {
-                    setError(response.data.message || "Failed to purchase plan.");
+                    setError(response.data.message || "Failed to submit booking request.");
                 }
             }
         } catch (err) {

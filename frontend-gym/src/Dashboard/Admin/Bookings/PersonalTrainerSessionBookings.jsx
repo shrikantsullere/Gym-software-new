@@ -37,6 +37,7 @@ const SessionBookingPage = () => {
     date: "",
     time: "",
     duration: 60,
+    capacity: 20,
     description: "",
     status: "Upcoming",
   });
@@ -137,12 +138,26 @@ const SessionBookingPage = () => {
 
   const handleViewSession = (session) => {
     setSelectedSession(session);
+    fetchSessionMembers(session.id);
     setShowViewSessionModal(true);
+  };
+
+  const [sessionMembers, setSessionMembers] = useState([]);
+  const fetchSessionMembers = async (sessionId) => {
+    try {
+      const res = await axiosInstance.get(`${BaseUrl}sessions/${sessionId}/members`);
+      if (res.data.success) {
+        setSessionMembers(res.data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching session members:", err);
+      setSessionMembers([]);
+    }
   };
 
   // ✅ FIXED: Validate trainer selection + send only trainerId (number)
   const handleAddSession = async () => {
-    const { sessionName, trainerId, date, time, duration, description } = newSession;
+    const { sessionName, trainerId, date, time, duration, capacity, description } = newSession;
 
     // ✅ Required field validation
     if (!sessionName || !date || !time || !description) {
@@ -173,6 +188,7 @@ const SessionBookingPage = () => {
         date,
         time,
         duration: numDuration,
+        capacity: Number(capacity) || 20,
         description: description.trim(),
         status: "Upcoming",
         adminId: adminId,
@@ -187,6 +203,7 @@ const SessionBookingPage = () => {
           date: "",
           time: "",
           duration: 60,
+          capacity: 20,
           description: "",
           status: "Upcoming",
         });
@@ -291,6 +308,9 @@ const SessionBookingPage = () => {
             </p>
             <p className="mb-1">
               <strong>Duration:</strong> {session.duration} min
+            </p>
+            <p className="mb-1">
+              <strong>Capacity:</strong> {session.joinedCount || 0} / {session.capacity || 20} Joined
             </p>
           </div>
         </div>
@@ -409,6 +429,7 @@ const SessionBookingPage = () => {
                         <th>Session Name</th>
                         <th>Trainer</th>
                         <th>Date & Time</th>
+                        <th>Capacity</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -428,6 +449,9 @@ const SessionBookingPage = () => {
                             <div className="text-muted small">
                               {formatTimeDisplay(s.time)}
                             </div>
+                          </td>
+                          <td>
+                            <strong>{s.joinedCount || 0}</strong> / {s.capacity || 20}
                           </td>
                           <td>
                             <span
@@ -594,6 +618,19 @@ const SessionBookingPage = () => {
                         }}
                       />
                     </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Capacity (Max Members)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-control"
+                        value={newSession.capacity}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewSession({ ...newSession, capacity: val === "" ? "" : Number(val) });
+                        }}
+                      />
+                    </div>
                     <div className="col-12">
                       <label className="form-label">Description *</label>
                       <textarea
@@ -695,6 +732,34 @@ const SessionBookingPage = () => {
                   <div className="mb-3">
                     <h6 className="text-muted">Description</h6>
                     <p>{selectedSession.description || "—"}</p>
+                  </div>
+                  <hr />
+                  <div className="mb-3">
+                    <h6 className="text-muted">Joined Members ({sessionMembers.length} / {selectedSession.capacity || 20})</h6>
+                    {sessionMembers.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Phone</th>
+                              <th>Joined At</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sessionMembers.map((m) => (
+                              <tr key={m.id}>
+                                <td>{m.fullName}</td>
+                                <td>{m.phone || "—"}</td>
+                                <td>{formatDate(m.createdAt)} {formatTimeDisplay(new Date(m.createdAt).toTimeString().substring(0, 8))}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted small">No members have joined this session yet.</p>
+                    )}
                   </div>
                 </div>
                 <div className="modal-footer">

@@ -55,7 +55,7 @@ export const calculateBodyBuilderMetrics = (data) => {
     target_calories = tdee - 500;
   } else if (fitness_goal === 'maintenance') {
     target_calories = tdee;
-  } else if (fitness_goal === 'muscle gain' || fitness_goal === 'muscle_gain') {
+  } else if (fitness_goal === 'muscle gain' || fitness_goal === 'muscle_gain' || fitness_goal === 'body builder' || fitness_goal === 'body_builder' || fitness_goal === 'bodybuilder' || fitness_goal === 'bodybuilding') {
     target_calories = tdee + 350;
   }
   // Safety boundary

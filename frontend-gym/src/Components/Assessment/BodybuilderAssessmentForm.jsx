@@ -148,7 +148,9 @@ const BodybuilderAssessmentForm = () => {
             let newGoal = prev.fitness_goal;
             const memberGoal = (selectedMember.goal || selectedMember.interestedIn || "").toLowerCase();
             if (memberGoal) {
-              if (memberGoal.includes("weight gain") || memberGoal.includes("muscle") || memberGoal.includes("body building") || memberGoal.includes("bodybuilding")) {
+              if (memberGoal.includes("body building") || memberGoal.includes("bodybuilding") || memberGoal.includes("bodybuilder")) {
+                newGoal = "Body Builder";
+              } else if (memberGoal.includes("weight gain") || memberGoal.includes("muscle")) {
                 newGoal = "Muscle Gain";
               } else if (memberGoal.includes("fat loss") || memberGoal.includes("weight loss")) {
                 newGoal = "Fat Loss";
@@ -422,6 +424,7 @@ const BodybuilderAssessmentForm = () => {
                       <option value="Fat Loss">Fat Loss</option>
                       <option value="Maintenance">Maintenance</option>
                       <option value="Muscle Gain">Muscle Gain</option>
+                      <option value="Body Builder">Body Builder</option>
                     </select>
                   </div>
                 </div>

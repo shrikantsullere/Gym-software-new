@@ -1,4 +1,5 @@
 import { pool } from "../../config/db.js";
+import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 
 // ➤ Create Session
 // export const createSessionService = async (data) => {
@@ -205,6 +206,25 @@ export const joinSessionService = async (memberId, sessionId) => {
      VALUES (?, ?, ?, ?, ?, ?, 'GROUP', 'Booked', 'Pending', ?)`,
     [memberId, session.trainerId, sessionId, session.date, session.time, endTime, session.branchId || null]
   );
+
+  try {
+    const [mRows] = await pool.query("SELECT id, fullName, email, phone FROM member WHERE id = ?", [memberId]);
+    if (mRows.length > 0) {
+      const member = mRows[0];
+      const sessDate = session.date ? new Date(session.date).toLocaleDateString() : '';
+      const msg = `Hi ${member.fullName},\n\nYour booking for session "${session.sessionName}" on ${sessDate} at ${session.time} has been confirmed. See you there!`;
+      dispatchNotification({
+        category: "templates",
+        toEmail: member.email,
+        toPhone: member.phone,
+        memberId: member.id,
+        subject: "Session Booking Confirmed",
+        message: msg
+      }).catch(err => console.error("Session notification err:", err));
+    }
+  } catch (err) {
+    console.error("Failed to fetch member for session notification:", err);
+  }
 
   return { message: "Successfully joined session" };
 };

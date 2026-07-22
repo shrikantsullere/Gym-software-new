@@ -273,30 +273,42 @@ const BodybuilderAssessmentForm = () => {
       errors.age = "Age must be an integer between 10 and 100.";
     }
 
+    const isBodyBuilderGoal = formData.fitness_goal === 'Body Builder';
+
     const stdWeight = getStandardValue(formData.weight_kg, units.weight, 'weight');
-    if (stdWeight === null || stdWeight < 30.00 || stdWeight > 250.00) {
-      errors.weight = "Weight must be between 30.00 kg and 250.00 kg (66.14 lb - 551.16 lb).";
+    if (!isBodyBuilderGoal || formData.weight_kg !== "") {
+      if (stdWeight === null || stdWeight < 30.00 || stdWeight > 250.00) {
+        errors.weight = "Weight must be between 30.00 kg and 250.00 kg (66.14 lb - 551.16 lb).";
+      }
     }
 
     const stdHeight = getStandardValue(formData.height_cm, units.height, 'length');
-    if (stdHeight === null || stdHeight < 100.00 || stdHeight > 250.00) {
-      errors.height = "Height must be between 100.00 cm and 250.00 cm (39.37 in - 98.43 in).";
+    if (!isBodyBuilderGoal || formData.height_cm !== "") {
+      if (stdHeight === null || stdHeight < 100.00 || stdHeight > 250.00) {
+        errors.height = "Height must be between 100.00 cm and 250.00 cm (39.37 in - 98.43 in).";
+      }
     }
 
     const stdNeck = getStandardValue(formData.neck_cm, units.neck, 'length');
-    if (stdNeck === null || stdNeck < 20.0 || stdNeck > 60.0) {
-      errors.neck = "Neck must be between 20.0 cm and 60.0 cm (7.87 in - 23.62 in).";
+    if (!isBodyBuilderGoal || formData.neck_cm !== "") {
+      if (stdNeck === null || stdNeck < 20.0 || stdNeck > 60.0) {
+        errors.neck = "Neck must be between 20.0 cm and 60.0 cm (7.87 in - 23.62 in).";
+      }
     }
 
     const stdWaist = getStandardValue(formData.waist_cm, units.waist, 'length');
-    if (stdWaist === null || stdWaist < 40.0 || stdWaist > 180.0) {
-      errors.waist = "Waist must be between 40.0 cm and 180.0 cm (15.75 in - 70.87 in).";
+    if (!isBodyBuilderGoal || formData.waist_cm !== "") {
+      if (stdWaist === null || stdWaist < 40.0 || stdWaist > 180.0) {
+        errors.waist = "Waist must be between 40.0 cm and 180.0 cm (15.75 in - 70.87 in).";
+      }
     }
 
     const stdHip = getStandardValue(formData.hip_cm, units.hip, 'length');
     if (formData.gender_at_assessment === 'female') {
-      if (stdHip === null || stdHip <= 0) {
-        errors.hip = "Hip is required for female members.";
+      if (!isBodyBuilderGoal) {
+        if (stdHip === null || stdHip <= 0) {
+          errors.hip = "Hip is required for female members.";
+        }
       }
     }
 
@@ -429,12 +441,12 @@ const BodybuilderAssessmentForm = () => {
                   </div>
                 </div>
 
-                <h5 className="mb-3 text-secondary border-bottom pb-2">Core Measurements</h5>
+                 <h5 className="mb-3 text-secondary border-bottom pb-2">Core Measurements</h5>
                 <div className="row g-3 mb-4">
                   <div className="col-md-4">
-                    <label className="form-label fw-semibold">Weight <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Weight {formData.fitness_goal !== 'Body Builder' && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required type="text" name="weight_kg" value={formData.weight_kg} onChange={handleChange} className={`form-control shadow-none ${validationErrors.weight ? 'is-invalid' : ''}`} placeholder="0.00" />
+                      <input required={formData.fitness_goal !== 'Body Builder'} type="text" name="weight_kg" value={formData.weight_kg} onChange={handleChange} className={`form-control shadow-none ${validationErrors.weight ? 'is-invalid' : ''}`} placeholder="0.00" />
                       <select name="weight" value={units.weight} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '80px' }}>
                         <option value="kg">kg</option>
                         <option value="lb">lb</option>
@@ -444,9 +456,9 @@ const BodybuilderAssessmentForm = () => {
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label fw-semibold">Height <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Height {formData.fitness_goal !== 'Body Builder' && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required type="text" name="height_cm" value={formData.height_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.height ? 'is-invalid' : ''}`} placeholder="0.00" />
+                      <input required={formData.fitness_goal !== 'Body Builder'} type="text" name="height_cm" value={formData.height_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.height ? 'is-invalid' : ''}`} placeholder="0.00" />
                       <select name="height" value={units.height} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '80px' }}>
                         <option value="cm">cm</option>
                         <option value="in">in</option>
@@ -467,9 +479,9 @@ const BodybuilderAssessmentForm = () => {
                 <h5 className="mb-3 text-secondary border-bottom pb-2">Muscle Group Circumferences</h5>
                 <div className="row g-3 mb-4 bg-light p-3 rounded-3">
                   <div className="col-md-3">
-                    <label className="form-label fw-semibold">Neck <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Neck {formData.fitness_goal !== 'Body Builder' && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required type="text" name="neck_cm" value={formData.neck_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.neck ? 'is-invalid' : ''}`} placeholder="0.0" />
+                      <input required={formData.fitness_goal !== 'Body Builder'} type="text" name="neck_cm" value={formData.neck_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.neck ? 'is-invalid' : ''}`} placeholder="0.0" />
                       <select name="neck" value={units.neck} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
                         <option value="cm">cm</option>
                         <option value="in">in</option>
@@ -495,9 +507,9 @@ const BodybuilderAssessmentForm = () => {
                   </div>
 
                   <div className="col-md-3">
-                    <label className="form-label fw-semibold">Waist <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Waist {formData.fitness_goal !== 'Body Builder' && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required type="text" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.waist ? 'is-invalid' : ''}`} placeholder="0.0" />
+                      <input required={formData.fitness_goal !== 'Body Builder'} type="text" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.waist ? 'is-invalid' : ''}`} placeholder="0.0" />
                       <select name="waist" value={units.waist} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
                         <option value="cm">cm</option>
                         <option value="in">in</option>
@@ -551,9 +563,9 @@ const BodybuilderAssessmentForm = () => {
                   </div>
 
                   <div className="col-md-3 mt-4">
-                    <label className="form-label fw-semibold">Hip {formData.gender_at_assessment === 'female' && <span className="text-danger">*</span>}</label>
+                    <label className="form-label fw-semibold">Hip {formData.fitness_goal !== 'Body Builder' && formData.gender_at_assessment === 'female' && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required={formData.gender_at_assessment === 'female'} type="text" name="hip_cm" value={formData.hip_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.hip ? 'is-invalid' : ''}`} placeholder="0.0" />
+                      <input required={formData.fitness_goal !== 'Body Builder' && formData.gender_at_assessment === 'female'} type="text" name="hip_cm" value={formData.hip_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.hip ? 'is-invalid' : ''}`} placeholder="0.0" />
                       <select name="hip" value={units.hip} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
                         <option value="cm">cm</option>
                         <option value="in">in</option>

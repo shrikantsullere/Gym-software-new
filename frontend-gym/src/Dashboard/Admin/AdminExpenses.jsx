@@ -149,6 +149,29 @@ const AdminExpenses = () => {
     }
   };
 
+  const handleExport = () => {
+    const headers = ['Expense Category', 'Description / Title', 'Source Type', 'Payment Mode', 'Date', 'Amount'];
+    const csvData = expenses.map(expense => [
+      `"${expense.expenseType || ''}"`,
+      `"${expense.name || ''}"`,
+      `"${expense.category || ''}"`,
+      `"${expense.paymentMode || ''}"`,
+      `"${expense.date ? new Date(expense.date).toLocaleDateString() : ''}"`,
+      `"${expense.amount || 0}"`
+    ]);
+    
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...csvData.map(e => e.join(','))].join('\n');
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `expenses_${selectedMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="container-fluid p-3 p-md-4" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       {/* Header */}
@@ -179,6 +202,13 @@ const AdminExpenses = () => {
             <FontAwesomeIcon icon={faSync} />
           </button>
           <button
+            className="btn btn-success shadow-sm fw-semibold"
+            onClick={handleExport}
+            title="Export CSV"
+          >
+            <i className="bi bi-file-earmark-excel me-2"></i> Export
+          </button>
+          <button
             className="btn btn-primary shadow-sm fw-semibold"
             onClick={() => setShowModal(true)}
           >
@@ -192,7 +222,7 @@ const AdminExpenses = () => {
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-4">
           <div className="card border-0 shadow-sm rounded-4 p-3 h-100" style={{ borderLeft: "4px solid #ef4444" }}>
-            <span className="text-muted small fw-semibold text-uppercase">TOTAL MONTHLY EXPENSES</span>
+            <span className="text-muted small fw-semibold text-uppercase">THIS MONTH EXPENSES</span>
             <h2 className="fw-bold text-danger mt-1 mb-1">
               ₹{totalExpenses.toLocaleString()}
             </h2>

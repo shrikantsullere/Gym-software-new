@@ -17,6 +17,8 @@ const ShiftManagement = () => {
   const [staffSearch, setStaffSearch] = useState("");
 
   const filteredStaff = staffMembers.filter(staff => {
+    // roleId 8 = housekeeping — exclude from shift creation dropdown
+    if (staff.roleId === 8) return false;
     const role = (staff.roleName || staff.role || '').toLowerCase();
     if (role.includes('housekeeping')) return false;
     const name = staff.fullName || staff.name || staff.userName || staff.email || '';

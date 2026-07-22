@@ -16,6 +16,11 @@ const AdminSettings = () => {
     email: '',
     phone: '',
     profilePhoto: null,
+    
+    // Business Details Section
+    gymName: '',
+    gymAddress: '',
+    gstNumber: '',
 
     // Password Section
     oldPassword: '',
@@ -60,6 +65,9 @@ const AdminSettings = () => {
           fullName: userData.fullName,
           email: userData.email,
           phone: userData.phone || '',
+          gymName: userData.gymName || '',
+          gymAddress: userData.gymAddress || '',
+          gstNumber: userData.gstNumber || '',
         }));
         
         if (userData.profileImage) {
@@ -182,6 +190,10 @@ const handleSubmit = async (e) => {
       formData.append("fullName", settingsData.fullName.trim());
       formData.append("email", settingsData.email.trim());
       formData.append("phone", (settingsData.phone || '').trim());
+      formData.append("gymName", (settingsData.gymName || '').trim());
+      formData.append("gymAddress", (settingsData.gymAddress || '').trim());
+      formData.append("gstNumber", (settingsData.gstNumber || '').trim());
+      
       if (settingsData.profilePhoto instanceof File) {
         formData.append("profileImage", settingsData.profilePhoto);
       }

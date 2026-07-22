@@ -45,8 +45,8 @@ router.delete(
 );
 
 // ➤ Member routes
-router.get("/member/:memberId", verifyToken(["Member"]), getMemberSessions);
-router.post("/join", verifyToken(["Member"]), joinSession);
+router.get("/member/:memberId", verifyToken(["Member", "Admin", "Superadmin", "Staff"]), getMemberSessions);
+router.post("/join", verifyToken(["Member", "Admin", "Superadmin", "Staff"]), joinSession);
 
 // ➤ View Session Members (Admin/Trainer)
 router.get("/:sessionId/members", verifyToken(["Superadmin", "Admin", "Staff"]), getSessionMembers);

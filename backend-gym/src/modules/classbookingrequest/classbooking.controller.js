@@ -2426,3 +2426,57 @@ export const getPTBookingsByAdminId = async (req, res) => {
 };
 
 
+
+// ➤ GET BOOKING DETAILS FOR ADMIN/TRAINER
+export const getBookingDetails = async (req, res) => {
+  try {
+    const { adminId, trainerId } = req.params;
+    const { type } = req.query; // 'class' or 'session'
+
+    let query = `
+      SELECT 
+        ub.id,
+        ub.memberId,
+        m.fullName AS memberName,
+        m.phone AS memberPhone,
+        m.email AS memberEmail,
+        ub.date,
+        ub.startTime,
+        ub.endTime,
+        ub.bookingStatus,
+        ub.createdAt,
+        ub.bookingType,
+        ub.classId,
+        c.class_name,
+        ub.sessionId,
+        s.sessionName
+      FROM unified_bookings ub
+      JOIN member m ON ub.memberId = m.id
+      LEFT JOIN class c ON ub.classId = c.id
+      LEFT JOIN session s ON ub.sessionId = s.id
+      WHERE m.adminId = ?
+    `;
+    
+    const params = [adminId];
+
+    if (trainerId) {
+      query += ' AND ub.trainerId = ?';
+      params.push(trainerId);
+    }
+
+    if (type === 'class') {
+      query += ' AND ub.classId IS NOT NULL';
+    } else if (type === 'session') {
+      query += ' AND ub.sessionId IS NOT NULL';
+    }
+
+    query += ' ORDER BY ub.createdAt DESC';
+
+    const [rows] = await pool.query(query, params);
+
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Error fetching booking details:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch booking details' });
+  }
+};

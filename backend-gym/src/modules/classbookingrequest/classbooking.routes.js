@@ -139,4 +139,14 @@ router.put("/unifiedupdate/:id", updateUnifiedBooking);
 router.delete("/deleteunified/:bookingId", deleteUnifiedBooking);
 
 router.get("/getptDetailsByAdminId/:adminId", getPTBookingsByAdminId);
+
+/* -----------------------------------------------------
+    ⭐ GET BOOKING DETAILS FOR ADMIN/TRAINER
+----------------------------------------------------- */
+import { getBookingDetails } from "./classbooking.controller.js";
+import { verifyToken } from "../../middlewares/auth.js";
+
+router.get("/admin-details/:adminId", verifyToken(["Superadmin", "Admin", "Staff"]), getBookingDetails);
+router.get("/admin-details/:adminId/:trainerId", verifyToken(["Superadmin", "Admin", "Staff"]), getBookingDetails);
+
 export default router;

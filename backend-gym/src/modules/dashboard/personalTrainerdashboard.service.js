@@ -121,15 +121,15 @@ export const getTrainerDashboardService = async (trainerId) => {
     if (uRows.length) adminId = uRows[0].adminId;
   }
 
-  // 1) Total active members assigned to this trainer (via their plan's trainerId)
+  // 1) Total active members assigned to this trainer (via their plan's trainerId or direct trainerId)
   const [[totalRow]] = await pool.query(
     `SELECT COUNT(DISTINCT m.id) AS totalMembers
      FROM member m
      LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
-     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?)) AND m.status = 'Active'`,
-    [realStaffId, realUserId, realStaffId, realUserId]
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?)) AND m.status = 'Active'`,
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
   let totalMembers = totalRow?.totalMembers || 0;
 
@@ -141,9 +141,9 @@ export const getTrainerDashboardService = async (trainerId) => {
      LEFT JOIN member_plan_assignment mpa ON m.id = mpa.memberId
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
-     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?))
+     WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
        AND DATE(ma.checkIn) = CURDATE()`,
-    [realStaffId, realUserId, realStaffId, realUserId]
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
   );
   let todaysCheckIns = checkRow?.todaysCheckIns || 0;
 

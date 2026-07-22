@@ -45,6 +45,10 @@ const AdminSetting = () => {
     companyDescription: "",
     companyWebsite: "",
     gymName: "",
+    gymAddress: "",
+    gstNumber: "",
+    phone: "",
+    email: "",
     razorpayKeyId: "",
     razorpayKeySecret: "",
     whatsappAccessToken: "",
@@ -143,6 +147,10 @@ const AdminSetting = () => {
             setFormData(prev => ({
               ...prev,
               gymName: adminRes.data.user?.gymName || adminRes.data.gymName || "",
+              gymAddress: adminRes.data.user?.gymAddress || adminRes.data.gymAddress || "",
+              gstNumber: adminRes.data.user?.gstNumber || adminRes.data.gstNumber || "",
+              phone: adminRes.data.user?.phone || adminRes.data.phone || "",
+              email: adminRes.data.user?.email || adminRes.data.email || "",
               razorpayKeyId: adminRes.data.user?.razorpayKeyId || "",
               razorpayKeySecret: adminRes.data.user?.razorpayKeySecret || "",
               whatsappAccessToken: adminRes.data.user?.whatsappAccessToken || "",
@@ -207,6 +215,10 @@ const AdminSetting = () => {
         try {
           await axiosInstance.put(`auth/user/${adminId}`, {
             gymName: formData.gymName,
+            gymAddress: formData.gymAddress,
+            gstNumber: formData.gstNumber,
+            phone: formData.phone,
+            email: formData.email,
             razorpayKeyId: formData.razorpayKeyId,
             razorpayKeySecret: formData.razorpayKeySecret,
             whatsappAccessToken: formData.whatsappAccessToken,
@@ -345,20 +357,76 @@ const AdminSetting = () => {
                   </div>
                 ) : (
                   <Form onSubmit={saveCompanyData}>
-                    {/* GYM NAME EDIT FIELD */}
+                    <div className="mb-4">
+                      <h5 className="fw-bold mb-1">Business Details</h5>
+                      <p className="text-muted small">These details will be printed on the invoices you generate for your members.</p>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <Form.Group className="mb-4">
+                          <Form.Label className="fw-bold">Business Name (Gym Name) *</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="gymName"
+                            value={formData.gymName}
+                            onChange={handleChange}
+                            placeholder="Enter business name"
+                            required
+                          />
+                        </Form.Group>
+                      </div>
+                      <div className="col-md-6">
+                        <Form.Group className="mb-4">
+                          <Form.Label className="fw-bold">GST Number</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="gstNumber"
+                            value={formData.gstNumber}
+                            onChange={handleChange}
+                            placeholder="e.g. 29ABCDE1234F1Z5"
+                          />
+                        </Form.Group>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <Form.Group className="mb-4">
+                          <Form.Label className="fw-bold">Business Phone</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="Enter phone number"
+                          />
+                        </Form.Group>
+                      </div>
+                      <div className="col-md-6">
+                        <Form.Group className="mb-4">
+                          <Form.Label className="fw-bold">Business Email</Form.Label>
+                          <Form.Control
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="Enter email address"
+                          />
+                        </Form.Group>
+                      </div>
+                    </div>
+
                     <Form.Group className="mb-4">
-                      <Form.Label className="fw-bold">Gym Name *</Form.Label>
+                      <Form.Label className="fw-bold">Business Address</Form.Label>
                       <Form.Control
-                        type="text"
-                        name="gymName"
-                        value={formData.gymName}
+                        as="textarea"
+                        rows={2}
+                        name="gymAddress"
+                        value={formData.gymAddress}
                         onChange={handleChange}
-                        placeholder="Enter gym name"
-                        required
+                        placeholder="Enter full business address"
                       />
-                      <Form.Text className="text-muted">
-                        This name will appear on invoices and receipts.
-                      </Form.Text>
                     </Form.Group>
                     
                     {/* LOGO */}

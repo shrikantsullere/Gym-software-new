@@ -188,12 +188,22 @@ export const joinSessionService = async (memberId, sessionId) => {
     throw { status: 400, message: "Session is full" };
   }
 
+  // Calculate endTime
+  let endTime = session.time;
+  if (session.time && session.duration) {
+    const [hours, minutes] = session.time.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + session.duration;
+    const endHours = String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0');
+    const endMins = String(totalMinutes % 60).padStart(2, '0');
+    endTime = `${endHours}:${endMins}`;
+  }
+
   // Join the session
   await pool.query(
     `INSERT INTO unified_bookings 
      (memberId, trainerId, sessionId, date, startTime, endTime, bookingType, bookingStatus, paymentStatus, branchId)
      VALUES (?, ?, ?, ?, ?, ?, 'GROUP', 'Booked', 'Pending', ?)`,
-    [memberId, session.trainerId, sessionId, session.date, session.time, null, session.branchId || null]
+    [memberId, session.trainerId, sessionId, session.date, session.time, endTime, session.branchId || null]
   );
 
   return { message: "Successfully joined session" };

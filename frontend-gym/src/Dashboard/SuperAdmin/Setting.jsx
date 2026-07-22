@@ -383,6 +383,56 @@ const handleSubmit = async (e) => {
               </div>
             </div>
 
+            {/* SECTION: Business Details */}
+            <div className="card shadow-sm border-0 mb-4">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">
+                  <span className="me-2">🏢</span> Business Details
+                </h5>
+              </div>
+              <div className="card-body">
+                <p className="text-muted small mb-3">
+                  These details will be printed on the SaaS Payment Invoices sent to your clients.
+                </p>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label htmlFor="gymName" className="form-label">Business Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="gymName"
+                      name="gymName"
+                      value={settingsData.gymName}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Speed Fitness Software"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="gstNumber" className="form-label">GST Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="gstNumber"
+                      name="gstNumber"
+                      value={settingsData.gstNumber}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label htmlFor="gymAddress" className="form-label">Business Address</label>
+                    <textarea
+                      className="form-control"
+                      id="gymAddress"
+                      name="gymAddress"
+                      rows="2"
+                      value={settingsData.gymAddress}
+                      onChange={handleInputChange}
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* SECTION 2: Change Password */}
             <div className="card shadow-sm border-0 mb-4">
               <div className="card-header bg-light">

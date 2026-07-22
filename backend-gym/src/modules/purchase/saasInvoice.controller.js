@@ -65,7 +65,7 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
     const logoBoxX = 50;
     const detailsX = logoBoxX + logoBoxSize + 15;
     const detailsWidth = 350;
-    const invoiceTitleX = 450;
+    const invoiceTitleX = 350;
 
     // Logo box placeholder
     doc
@@ -90,7 +90,6 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .text(`Address: ${companyAddress}`, detailsX, headerY + 50, { width: detailsWidth });
 
     // Invoice Title
-    const invoiceTitleX = 350;
     doc
       .fontSize(22)
       .font("Helvetica-Bold")
@@ -188,8 +187,8 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .fontSize(10)
       .fillColor("#000000")
       .text(purchase.billingDuration || "Monthly", 310, rowY + 12, { width: 60, align: "center" })
-      .text(`₹ ${taxAmount.toLocaleString("en-IN")}`, 390, rowY + 12, { width: 60, align: "right" })
-      .text(`₹ ${subtotal.toLocaleString("en-IN")}`, 470, rowY + 12, { width: 60, align: "right" });
+      .text(`INR ${taxAmount.toLocaleString("en-IN")}`, 390, rowY + 12, { width: 60, align: "right" })
+      .text(`INR ${subtotal.toLocaleString("en-IN")}`, 470, rowY + 12, { width: 60, align: "right" });
 
     doc.y = rowY + itemHeight + 30;
 
@@ -208,11 +207,11 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .fontSize(10)
       .font("Helvetica")
       .text("Taxable Value", summaryX + 10, summaryY + 5)
-      .text(`₹ ${taxableAmount.toLocaleString("en-IN")}`, summaryX, summaryY + 5, { width: summaryWidth - 10, align: "right" });
+      .text(`INR ${taxableAmount.toLocaleString("en-IN")}`, summaryX, summaryY + 5, { width: summaryWidth - 10, align: "right" });
 
     doc
       .text("IGST / CGST+SGST (18%)", summaryX + 10, summaryY + 25)
-      .text(`₹ ${taxAmount.toLocaleString("en-IN")}`, summaryX, summaryY + 25, { width: summaryWidth - 10, align: "right" });
+      .text(`INR ${taxAmount.toLocaleString("en-IN")}`, summaryX, summaryY + 25, { width: summaryWidth - 10, align: "right" });
 
     doc
       .rect(summaryX, summaryY + 48, summaryWidth, 25)
@@ -223,7 +222,7 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .font("Helvetica-Bold")
       .fontSize(11)
       .text("TOTAL AMOUNT", summaryX + 10, summaryY + 55)
-      .text(`₹ ${subtotal.toLocaleString("en-IN")}`, summaryX, summaryY + 55, { width: summaryWidth - 10, align: "right" });
+      .text(`INR ${subtotal.toLocaleString("en-IN")}`, summaryX, summaryY + 55, { width: summaryWidth - 10, align: "right" });
 
     doc.y = summaryY + 95;
 

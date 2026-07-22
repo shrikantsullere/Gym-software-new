@@ -110,7 +110,7 @@ const AdminDashboard = () => {
     if (memberGrowthChartRef.current) {
       const memberChart = echarts.getInstanceByDom(memberGrowthChartRef.current);
       if (memberChart) {
-        const memberGrowthData = generateMemberGrowthData(dashboardData);
+        const memberGrowthData = generateDenseData(dashboardData.memberGrowth, "count", chartPeriod);
         const memberGrowthOption = {
           animation: false,
           grid: { top: 20, right: 20, bottom: 40, left: 40 },
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
     if (revenueChartRef.current) {
       const revenueChart = echarts.getInstanceByDom(revenueChartRef.current);
       if (revenueChart) {
-        const revenueData = generateRevenueData(dashboardData);
+        const revenueData = generateDenseData(dashboardData.revenueGrowth, "totalRevenue", chartPeriod);
         const revenueOption = {
           animation: false,
           grid: { top: 20, right: 20, bottom: 40, left: 50 },
@@ -224,7 +224,7 @@ const AdminDashboard = () => {
     if (profitChartRef.current) {
       const profitChart = echarts.getInstanceByDom(profitChartRef.current);
       if (profitChart) {
-        const profitData = generateProfitData(dashboardData);
+        const profitData = generateDenseData(dashboardData.profitGrowth, "totalProfit", chartPeriod);
         const profitOption = {
           animation: false,
           grid: { top: 20, right: 20, bottom: 40, left: 50 },
@@ -281,46 +281,43 @@ const AdminDashboard = () => {
     }
   }, [chartInitialized, dashboardData]);
 
-  const generateMemberGrowthData = (data) => {
-    if (!data || !data.memberGrowth || data.memberGrowth.length === 0) {
-      return {
-        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        values: [0, 0, 0, 0, 0, 0],
-      };
+  const generateDenseData = (dataArray, valueKey, period) => {
+    if (!dataArray || dataArray.length === 0) {
+      const defaultMonths = period === 1 
+        ? ["W1", "W2", "W3", "W4"] 
+        : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].slice(0, period);
+      return { months: defaultMonths, values: Array(defaultMonths.length).fill(0) };
     }
 
-    const months = data.memberGrowth.map((item) => item.month);
-    const values = data.memberGrowth.map((item) => item.count);
+    const isOneMonth = period === 1;
+    const labels = [];
+    const dataMap = {};
+    
+    dataArray.forEach(item => {
+      dataMap[item.month] = Number(item[valueKey] || 0);
+    });
 
-    return { months, values };
-  };
-
-  const generateRevenueData = (data) => {
-    if (!data || !data.revenueGrowth || data.revenueGrowth.length === 0) {
-      return {
-        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        values: [0, 0, 0, 0, 0, 0],
-      };
+    const now = new Date();
+    
+    if (isOneMonth) {
+      // Last 30 days
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        const dayLabel = `${String(d.getDate()).padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })}`;
+        labels.push(dayLabel);
+      }
+    } else {
+      // Last `period` months
+      for (let i = period - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(d.toLocaleString('default', { month: 'short' }));
+      }
     }
 
-    const months = data.revenueGrowth.map((item) => item.month);
-    const values = data.revenueGrowth.map((item) => item.totalRevenue || 0);
+    const values = labels.map(label => dataMap[label] || 0);
 
-    return { months, values };
-  };
-
-  const generateProfitData = (data) => {
-    if (!data || !data.profitGrowth || data.profitGrowth.length === 0) {
-      return {
-        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        values: [0, 0, 0, 0, 0, 0],
-      };
-    }
-
-    const months = data.profitGrowth.map((item) => item.month);
-    const values = data.profitGrowth.map((item) => item.totalProfit || 0);
-
-    return { months, values };
+    return { months: labels, values };
   };
 
   const formatTime = (dateString) => {

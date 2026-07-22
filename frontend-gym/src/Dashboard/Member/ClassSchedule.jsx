@@ -5,10 +5,16 @@ import axiosInstance from '../../Api/axiosInstance';
 
 const ClassSchedule = () => {
   const [groupClasses, setGroupClasses] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [activeTab, setActiveTab] = useState('classes');
   const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sessionsError, setSessionsError] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState(null);
 
@@ -79,7 +85,24 @@ const ClassSchedule = () => {
       }
     };
 
+    const fetchSessions = async () => {
+      if (!memberId) return;
+      try {
+        setSessionsLoading(true);
+        const response = await axiosInstance.get(`sessions/member/${memberId}`);
+        if (response.data.success) {
+          setSessions(response.data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching sessions:', err);
+        setSessionsError('Failed to load sessions.');
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
+
     fetchClasses();
+    fetchSessions();
   }, [memberId]);
 
   const formatTime = (timeString) => {
@@ -108,8 +131,20 @@ const ClassSchedule = () => {
     setBookingError(null);
   };
 
+  const openSessionModal = (session) => {
+    setSelectedSession(session);
+    setIsSessionModalOpen(true);
+    setBookingError(null);
+  };
+
+  const closeSessionModal = () => {
+    setIsSessionModalOpen(false);
+    setSelectedSession(null);
+    setBookingError(null);
+  };
+
   useEffect(() => {
-    if (isModalOpen) {
+    if (isModalOpen || isSessionModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -117,7 +152,7 @@ const ClassSchedule = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isModalOpen]);
+  }, [isModalOpen, isSessionModalOpen]);
 
   const handleConfirmBooking = async () => {
     if (!id || !selectedClass) {
@@ -175,6 +210,34 @@ const ClassSchedule = () => {
     }
   };
 
+  const handleConfirmSessionBooking = async () => {
+    if (!memberId || !selectedSession) return;
+    setBookingLoading(true);
+    try {
+      const response = await axiosInstance.post('sessions/join', {
+        memberId,
+        sessionId: selectedSession.id
+      });
+      if (response.data.success) {
+        alert('✅ Successfully joined the session!');
+        setSessions(prev =>
+          prev.map(s =>
+            s.id === selectedSession.id ? {
+              ...s,
+              isJoined: true,
+              joinedCount: (s.joinedCount || 0) + 1
+            } : s
+          )
+        );
+        closeSessionModal();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to join session');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-2">
@@ -197,14 +260,37 @@ const ClassSchedule = () => {
   return (
     <div className="p-2">
       <div className="row mb-3">
-        <div className="col-12 text-center text-md-start">
-          <h1 className="fw-bold">Class Schedule</h1>
-          <p className="text-muted mb-0">View and book available classes</p>
+        <div className="col-12 text-center text-md-start mb-3">
+          <h1 className="fw-bold">Schedule</h1>
+          <p className="text-muted mb-0">View and book available classes and sessions</p>
+        </div>
+        <div className="col-12">
+          <ul className="nav nav-pills mb-3">
+            <li className="nav-item">
+              <button 
+                className={`nav-link ${activeTab === 'classes' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('classes')}
+                style={activeTab === 'classes' ? { backgroundColor: '#2f6a87' } : { color: '#2f6a87' }}
+              >
+                Classes
+              </button>
+            </li>
+            <li className="nav-item ms-2">
+              <button 
+                className={`nav-link ${activeTab === 'sessions' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('sessions')}
+                style={activeTab === 'sessions' ? { backgroundColor: '#2f6a87' } : { color: '#2f6a87' }}
+              >
+                Sessions
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <div className="row g-4">
-        {groupClasses.map(cls => {
+      {activeTab === 'classes' && (
+        <div className="row g-4">
+          {groupClasses.map(cls => {
           const isFull = cls.booked_seats >= cls.capacity;
           const isActive = cls.status === 'Active';
           const isBooked = cls.isBooked;
@@ -288,6 +374,102 @@ const ClassSchedule = () => {
           );
         })}
       </div>
+      )}
+
+      {activeTab === 'sessions' && (
+        <div className="row g-4">
+          {sessionsLoading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="col-12 text-center py-5">
+              <p className="text-muted">No sessions available at the moment.</p>
+            </div>
+          ) : (
+            sessions.map(session => {
+              const capacity = session.capacity || 20;
+              const joinedCount = session.joinedCount || 0;
+              const isFull = joinedCount >= capacity;
+              const isJoined = session.isJoined;
+
+              let buttonText = 'Join Session';
+              let buttonDisabled = false;
+              let buttonStyle = '#2f6a87';
+              let badgeText = 'Available';
+              let badgeStyle = 'bg-success';
+
+              if (isJoined) {
+                buttonText = 'Joined';
+                buttonDisabled = true;
+                buttonStyle = '#2f6e34ff';
+                badgeText = 'Joined';
+                badgeStyle = 'bg-primary';
+              } else if (isFull) {
+                buttonText = 'Session Full';
+                buttonDisabled = true;
+                buttonStyle = '#6c757d';
+                badgeText = 'Full';
+                badgeStyle = 'bg-danger';
+              }
+
+              return (
+                <div key={session.id} className="col-12 col-md-6 col-lg-4">
+                  <div className="card shadow-sm border-0" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+                    <div
+                      className="p-4"
+                      style={{
+                        color: '#2f6a87',
+                        minHeight: '60px'
+                      }}
+                    >
+                      <h5 className="mb-0 fw-bold">{session.sessionName}</h5>
+                      <div className="mt-2">
+                        <span className={`badge ${badgeStyle}`}>{badgeText}</span>
+                        <span className="badge bg-light text-dark ms-2">{joinedCount}/{capacity}</span>
+                      </div>
+                    </div>
+                    <div className="card-body p-4">
+                      <div className="d-flex align-items-center mb-3">
+                        <FaClock size={16} className="me-2 text-primary" />
+                        <small>{formatTime(session.time)} ({session.duration} min)</small>
+                      </div>
+                      <div className="d-flex align-items-center mb-3">
+                        <FaUser size={16} className="me-2 text-primary" />
+                        <small>{session.trainerName || 'Trainer'}</small>
+                      </div>
+                      <div className="d-flex align-items-center mb-3">
+                        <FaCalendarAlt size={16} className="me-2 text-primary" />
+                        <small>{formatDate(session.date)}</small>
+                      </div>
+
+                      <div className="mt-4">
+                        <button
+                          className="btn w-100 py-2 fw-medium"
+                          style={{
+                            backgroundColor: buttonStyle,
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '0.9rem',
+                            transition: 'all 0.2s ease'
+                          }}
+                          disabled={buttonDisabled}
+                          onClick={() => openSessionModal(session)}
+                        >
+                          {buttonText}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
       {/* BOOKING MODAL */}
       {isModalOpen && selectedClass && (
@@ -455,6 +637,109 @@ const ClassSchedule = () => {
                           </button>
                         </div>
                       )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SESSION BOOKING MODAL */}
+      {isSessionModalOpen && selectedSession && (
+        <div
+          className="modal fade show"
+          tabIndex="-1"
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={closeSessionModal}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered modal-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header border-0 pb-0">
+                <h3 className="modal-title fw-bold">Session Details</h3>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeSessionModal}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="card border-0 shadow-sm mb-4">
+                  <div
+                    className="card-header p-4 text-white"
+                    style={{
+                      background: '#2f6a87',
+                      borderRadius: '12px 12px 0 0'
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <h4 className="mb-2 fw-bold">{selectedSession.sessionName}</h4>
+                        <div className="d-flex align-items-center mb-2">
+                          <FaCalendarAlt size={16} className="me-2" />
+                          <small>{formatDate(selectedSession.date)}</small>
+                        </div>
+                        <div className="d-flex align-items-center mb-2">
+                          <FaClock size={16} className="me-2" />
+                          <small>{formatTime(selectedSession.time)} ({selectedSession.duration} min)</small>
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <FaUser size={16} className="me-2" />
+                          <small>{selectedSession.trainerName}</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="card-body p-4">
+                    <h5 className="fw-bold mb-3">Session Information</h5>
+                    <div className="row g-4 mb-4">
+                      <div className="col-md-12">
+                        <p className="text-muted">{selectedSession.description}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="d-flex align-items-center">
+                          <div className="bg-light rounded-circle p-2 me-3">
+                            <span className="text-primary">👥</span>
+                          </div>
+                          <div>
+                            <div className="fw-medium">Availability</div>
+                            <div>{selectedSession.joinedCount || 0}/{selectedSession.capacity || 20} members joined</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-center">
+                      <div className="d-flex gap-3 justify-content-center">
+                        <button
+                          className="btn btn-outline-secondary btn-lg px-4 py-3 fw-bold"
+                          style={{
+                            borderRadius: '8px',
+                            fontSize: '1.1rem'
+                          }}
+                          onClick={closeSessionModal}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="btn btn-lg px-5 py-3 fw-bold"
+                          style={{
+                            backgroundColor: '#2f6a87',
+                            color: 'white',
+                            borderRadius: '8px',
+                            border: 'none',
+                            fontSize: '1.1rem'
+                          }}
+                          onClick={handleConfirmSessionBooking}
+                          disabled={bookingLoading || (selectedSession.joinedCount || 0) >= (selectedSession.capacity || 20)}
+                        >
+                          {bookingLoading ? 'Joining...' : 'Join Session'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

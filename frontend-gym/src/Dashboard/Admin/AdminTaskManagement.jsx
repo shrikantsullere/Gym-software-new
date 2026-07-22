@@ -175,8 +175,25 @@ const AdminTaskManagement = () => {
     }
   };
 
+  const handleCompleteTask = async (taskId) => {
+    try {
+      const response = await axiosInstance.put(`/housekeepingtask/status/${taskId}`, {
+        status: 'Review Pending'
+      });
+      if (response.data.success) {
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: 'Review Pending' } : t));
+        alert('Task marked as complete and sent to Admin for review!');
+      } else {
+        alert('Failed to update task status');
+      }
+    } catch (err) {
+      console.error('Update status error:', err);
+      alert('Error updating task status');
+    }
+  };
+
   const handleCreateTask = async () => {
-    const { roleId, taskTitle, dueDate, priority, description } = taskForm;
+    const { assignedTo, roleId, taskTitle, dueDate, priority, description } = taskForm;
 
     if (!roleId || !taskTitle || !dueDate) {
       alert('Please fill all required fields: Department, Title, and Due Date.');
@@ -185,6 +202,7 @@ const AdminTaskManagement = () => {
 
     try {
       const payload = {
+        assignedTo: assignedTo ? parseInt(assignedTo, 10) : null,
         roleId: parseInt(roleId, 10),
         adminId: parseInt(adminId, 10),
         taskTitle,
@@ -294,14 +312,19 @@ const AdminTaskManagement = () => {
               <div className="modal-body">
                 <form>
                   <div className="row mb-3">
-
                     <div className="col-md-6">
                       <label className="form-label">Department *</label>
                       <select
                         className="form-select"
                         name="roleId"
                         value={taskForm.roleId}
-                        onChange={handleTaskFormChange}
+                        onChange={(e) => {
+                          setTaskForm(prev => ({
+                            ...prev, 
+                            roleId: e.target.value, 
+                            assignedTo: '' // Reset assignedTo when department changes
+                          }));
+                        }}
                         required
                       >
                         <option value="">Select Department</option>
@@ -310,6 +333,26 @@ const AdminTaskManagement = () => {
                             {dept.name}
                           </option>
                         ))}
+                      </select>
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label">Staff Member (Optional)</label>
+                      <select
+                        className="form-select"
+                        name="assignedTo"
+                        value={taskForm.assignedTo}
+                        onChange={handleTaskFormChange}
+                        disabled={!taskForm.roleId}
+                      >
+                        <option value="">Select Staff Member</option>
+                        {staffMembers
+                          .filter(staff => staff.roleId === parseInt(taskForm.roleId))
+                          .map(staff => (
+                            <option key={staff.staffId || staff.id} value={staff.staffId || staff.id}>
+                              {staff.fullName}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>
@@ -475,7 +518,7 @@ const AdminTaskManagement = () => {
 
       {/* Pending Tasks Section */}
       <div>
-        <h4 className="mb-3">Pending Tasks (Approval Required)</h4>
+        <h4 className="mb-3">{isAdmin ? "Pending Tasks (Approval Required)" : "My Actionable Tasks"}</h4>
         <div className="table-responsive">
           <table className="table table-striped">
             <thead>
@@ -490,16 +533,24 @@ const AdminTaskManagement = () => {
             <tbody>
               {tasks.filter(task => {
                 const s = (task.status || '').toLowerCase();
-                return s === 'pending' || s === 'review pending' || s === 'pending approval' || s === 'in progress';
+                if (isAdmin) {
+                  return s === 'pending' || s === 'review pending' || s === 'pending approval' || s === 'in progress';
+                } else {
+                  return s === 'assigned' || s === 'rejected' || s === 'pending';
+                }
               }).length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center text-muted">No tasks require approval</td>
+                  <td colSpan="5" className="text-center text-muted">No actionable tasks</td>
                 </tr>
               ) : (
                 tasks
                   .filter(task => {
                     const s = (task.status || '').toLowerCase();
-                    return s === 'pending' || s === 'review pending' || s === 'pending approval' || s === 'in progress';
+                    if (isAdmin) {
+                      return s === 'pending' || s === 'review pending' || s === 'pending approval' || s === 'in progress';
+                    } else {
+                      return s === 'assigned' || s === 'rejected' || s === 'pending';
+                    }
                   })
                   .map(task => (
                     <tr key={task.id}>
@@ -513,20 +564,32 @@ const AdminTaskManagement = () => {
                       </td>
                       <td>
                         <div className="btn-group">
-                          <button
-                            className="btn btn-sm btn-success"
-                            onClick={() => handleApproveTask(task.id)}
-                            title="Approve"
-                          >
-                            <Check size={14} /> Approve
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger ms-1"
-                            onClick={() => handleRejectTask(task.id)}
-                            title="Reject"
-                          >
-                            <X size={14} /> Reject
-                          </button>
+                          {isAdmin ? (
+                            <>
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => handleApproveTask(task.id)}
+                                title="Approve"
+                              >
+                                <Check size={14} /> Approve
+                              </button>
+                              <button
+                                className="btn btn-sm btn-danger ms-1"
+                                onClick={() => handleRejectTask(task.id)}
+                                title="Reject"
+                              >
+                                <X size={14} /> Reject
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleCompleteTask(task.id)}
+                                title="Mark as Complete"
+                              >
+                                <Check size={14} /> Mark Complete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

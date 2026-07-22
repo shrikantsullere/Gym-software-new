@@ -635,6 +635,12 @@ model user {
   trialStatus                  String?         @default("None") @db.VarChar(50)
   razorpayKeyId                String?         @db.VarChar(255)
   razorpayKeySecret            String?         @db.VarChar(255)
+  whatsappAccessToken          String?         @db.VarChar(500)
+  whatsappPhoneNumberId        String?         @db.VarChar(255)
+  smtpHost                     String?         @db.VarChar(255)
+  smtpPort                     Int?
+  smtpUser                     String?         @db.VarChar(255)
+  smtpPass                     String?         @db.VarChar(255)
   alert                        alert[]
   branch_branch_adminIdTouser  branch[]        @relation("branch_adminIdTouser")
   classschedule                classschedule[]

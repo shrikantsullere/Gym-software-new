@@ -1,0 +1,113 @@
+/* Global Profile Image Crop Styles */
+
+/* Apply to all rounded-circle images */
+.rounded-circle img,
+img.rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Specific profile image classes */
+.profile-image,
+.profile-img,
+.profile-photo,
+.profile-avatar,
+.avatar,
+.user-avatar {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Member card images */
+.member-card img,
+.staff-card img,
+.admin-card img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Table profile images */
+table img.rounded-circle,
+.table img.rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Modal profile images */
+.modal img.rounded-circle,
+.modal-body img.rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Navbar profile image */
+.navbar img.rounded-circle,
+.dropdown img.rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Profile page images */
+.account-page img.rounded-circle,
+.profile-page img.rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Card header/body images */
+.card-header img.rounded-circle,
+.card-body img.rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Testimonial and author avatars */
+.testimonial-avatar,
+.author-avatar {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Ensure width and height are equal for perfect circles */
+.rounded-circle {
+  aspect-ratio: 1 / 1;
+}
+
+/* Image wrapper containers that should maintain square aspect ratio */
+.profile-image-wrapper,
+.avatar-wrapper {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-image-wrapper img,
+.avatar-wrapper img {
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100%;
+  height: 100%;
+}
+
+/* Bootstrap overflow-hidden utility for rounded circles */
+.rounded-circle.overflow-hidden img {
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure all profile-related images inside containers are cropped */
+[class*="profile"] img,
+[class*="avatar"] img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* For images with specific dimensions */
+img[style*="width"][style*="height"].rounded-circle {
+  object-fit: cover !important;
+  object-position: center !important;
+}

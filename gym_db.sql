@@ -1,0 +1,3078 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Jul 20, 2026 at 10:45 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `gym_db`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `alert`
+--
+
+CREATE TABLE `alert` (
+  `id` int(11) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `message` varchar(191) NOT NULL,
+  `memberId` int(11) DEFAULT NULL,
+  `staffId` int(11) DEFAULT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `announcement`
+--
+
+CREATE TABLE `announcement` (
+  `id` int(11) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `channels` varchar(255) NOT NULL,
+  `targetRoles` varchar(255) NOT NULL,
+  `sentBy` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `adminId` int(11) DEFAULT NULL,
+  `imageUrl` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `announcement`
+--
+
+INSERT INTO `announcement` (`id`, `subject`, `message`, `channels`, `targetRoles`, `sentBy`, `branchId`, `createdAt`, `adminId`, `imageUrl`) VALUES
+(17, 'team', 'hiii', '[\"EMAIL\",\"WHATSAPP\",\"APP_PUSH\"]', '[2]', 67, NULL, '2026-07-14 10:36:31', NULL, 'https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_settings`
+--
+
+CREATE TABLE `app_settings` (
+  `id` int(11) NOT NULL,
+  `logo` varchar(500) DEFAULT NULL,
+  `gym_name` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `memberPlanId` int(11) DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `adminId` int(11) DEFAULT NULL,
+  `hero_banner` varchar(500) DEFAULT NULL,
+  `hero_subtitle` text DEFAULT NULL,
+  `hero_title` varchar(255) DEFAULT NULL,
+  `services_json` text DEFAULT NULL,
+  `testimonials_json` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `app_settings`
+--
+
+INSERT INTO `app_settings` (`id`, `logo`, `gym_name`, `description`, `url`, `memberPlanId`, `createdAt`, `updatedAt`, `adminId`, `hero_banner`, `hero_subtitle`, `hero_title`, `services_json`, `testimonials_json`) VALUES
+(9, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767009449/gym/app-logo/ft1ddb2v3qpzfsmyfxtz.jpg', 'Power Gym', 'Best fitness gym in the city', 'localhost:5173', 35, '2025-12-13 02:11:43', '2026-01-06 14:58:03', 90, NULL, NULL, NULL, NULL, NULL),
+(10, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765806552/gym/app-logo/vpeahm6mvq7ageoiluxv.jpg', NULL, 'Welcome to GYM – Where Fitness Meets Lifestyle\r\n\r\nGYM ek modern, fully-equipped fitness destination hai jo aapke health aur lifestyle goals ko dhyaan me rakh kar design kiya gaya hai. Yahan sirf workout nahi hota, balki complete fitness transformation hota hai – body, mind aur confidence ka.\r\n\r\nHum provide karte hain state-of-the-art gym equipment, certified trainers, aur scientifically designed workout programs jo beginners se leke advanced athletes tak sabke liye suitable hain. Chahe aap weight loss chahte ho, muscle gain, strength training, ya overall fitness – GYM aapke har goal ke liye ready hai.', 'fitgym', 22, '2025-12-13 02:18:29', '2025-12-15 05:49:08', 90, NULL, NULL, NULL, NULL, NULL),
+(11, NULL, 'Power Gym', 'Best fitness gym in the city', 'powergym.com', 35, '2025-12-29 17:37:48', '2025-12-30 13:05:17', 164, NULL, NULL, NULL, NULL, NULL),
+(12, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767010798/gym/app-logo/ekgmegsemkxrlqs4tnfe.jpg', NULL, 'Testing', 'fitgym', NULL, '2025-12-29 17:49:57', '2025-12-29 17:49:57', 170, NULL, NULL, NULL, NULL, NULL),
+(13, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783584241/gym/app-logo/omec1wwvpa7c7jfnckeh.png', NULL, '', '', NULL, '2026-07-09 13:34:02', '2026-07-09 13:34:02', 260, NULL, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `automation_settings`
+--
+
+CREATE TABLE `automation_settings` (
+  `id` int(11) NOT NULL,
+  `trialDurationDays` int(11) NOT NULL DEFAULT 7,
+  `gracePeriodDays` int(11) NOT NULL DEFAULT 3,
+  `enableEmailNotif` tinyint(1) NOT NULL DEFAULT 1,
+  `enableWhatsappNotif` tinyint(1) NOT NULL DEFAULT 0,
+  `lowCreditThreshold` int(11) NOT NULL DEFAULT 50,
+  `quarterlyDiscount` decimal(5,2) NOT NULL DEFAULT 5.00,
+  `yearlyDiscount` decimal(5,2) NOT NULL DEFAULT 15.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `automation_settings`
+--
+
+INSERT INTO `automation_settings` (`id`, `trialDurationDays`, `gracePeriodDays`, `enableEmailNotif`, `enableWhatsappNotif`, `lowCreditThreshold`, `quarterlyDiscount`, `yearlyDiscount`) VALUES
+(1, 7, 3, 1, 1, 50, 5.00, 15.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking`
+--
+
+CREATE TABLE `booking` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `scheduleId` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_requests`
+--
+
+CREATE TABLE `booking_requests` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) DEFAULT NULL,
+  `planId` int(11) DEFAULT NULL,
+  `classId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `userId` int(11) DEFAULT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `upiId` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `branch`
+--
+
+CREATE TABLE `branch` (
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `phone` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `address` varchar(191) DEFAULT NULL,
+  `status` enum('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  `adminId` int(11) DEFAULT NULL,
+  `attendanceRadiusMeters` int(11) NOT NULL DEFAULT 50
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `branch`
+--
+
+INSERT INTO `branch` (`id`, `name`, `phone`, `createdAt`, `address`, `status`, `adminId`, `attendanceRadiusMeters`) VALUES
+(33, 'Trainer', '07700912345', '2025-12-10 03:24:53.230', '123 High Street', 'ACTIVE', 90, 50),
+(48, 'Fitness', '07700912345', '2025-12-12 23:43:47.135', '123 High Street', 'ACTIVE', 90, 50),
+(50, 'Main Branch', '9999999999', '2025-12-30 16:36:43.625', 'Demo Address', 'ACTIVE', 90, 50);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `classschedule`
+--
+
+CREATE TABLE `classschedule` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `className` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `trainerId` int(11) NOT NULL,
+  `date` datetime(3) NOT NULL,
+  `startTime` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `endTime` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `capacity` int(11) NOT NULL,
+  `members` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
+  `day` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `price` decimal(10,2) DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `classschedule`
+--
+
+INSERT INTO `classschedule` (`id`, `adminId`, `className`, `trainerId`, `date`, `startTime`, `endTime`, `capacity`, `members`, `status`, `day`, `price`) VALUES
+(18, NULL, 'new', 166, '2025-12-29 00:00:00.000', '22:18', '23:18', 20, '[]', 'Active', 'Monday', 0.00),
+(19, 33, 'one', 165, '2025-12-30 00:00:00.000', '13:21', '14:22', 20, '[]', 'Active', 'Monday', 0.00),
+(22, NULL, 'Old Class', 166, '2025-12-30 00:00:00.000', '20:22', '22:22', 20, '[]', 'Active', 'Wednesday', 0.00),
+(27, 164, 'yoga', 182, '2026-01-02 00:00:00.000', '19:53', '20:53', 20, '[]', 'Active', '', 0.00),
+(29, 90, 'yoga classes', 280, '2026-07-17 00:00:00.000', '11:30', '12:30', 25, '[{\"id\":1784528951222,\"name\":\"riya\"},{\"id\":1784529333132,\"name\":\"Demo Aayush\"},{\"id\":1784529338004,\"name\":\"Demo girl\"},{\"id\":1784529341988,\"name\":\"Dummy Lead 1\"}]', 'Active', 'Thursday', 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `classtype`
+--
+
+CREATE TABLE `classtype` (
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `credit_packages`
+--
+
+CREATE TABLE `credit_packages` (
+  `id` int(11) NOT NULL,
+  `packageName` varchar(255) NOT NULL,
+  `credits` int(11) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `isActive` tinyint(1) DEFAULT 1,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `packageType` varchar(50) DEFAULT 'WHATSAPP'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `credit_packages`
+--
+
+INSERT INTO `credit_packages` (`id`, `packageName`, `credits`, `price`, `isActive`, `createdAt`, `packageType`) VALUES
+(1, 'Bronze Package', 500, 1000.00, 1, '2026-06-20 15:03:16', 'WHATSAPP'),
+(2, 'Silver Package', 5000, 4500.00, 1, '2026-06-20 15:03:16', 'WHATSAPP'),
+(3, 'Gold Package', 10000, 8000.00, 1, '2026-06-20 15:03:16', 'WHATSAPP'),
+(4, 'bronze package', 8, 200.00, 1, '2026-07-08 12:16:27', 'EMAIL');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `demo_requests`
+--
+
+CREATE TABLE `demo_requests` (
+  `id` int(11) NOT NULL,
+  `email` varchar(191) NOT NULL,
+  `phone` varchar(191) NOT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'pending',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dietmeal`
+--
+
+CREATE TABLE `dietmeal` (
+  `id` int(11) NOT NULL,
+  `dietPlanId` int(11) NOT NULL,
+  `time` varchar(191) NOT NULL,
+  `food` varchar(191) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dietmeal`
+--
+
+INSERT INTO `dietmeal` (`id`, `dietPlanId`, `time`, `food`) VALUES
+(17, 3, 'Breakfast', 'Greek Yogurt (0%) with Chia Seeds & Blueberries'),
+(18, 3, 'Lunch', 'Chickpea & Quinoa Salad with Cucumber'),
+(19, 3, 'Pre-Workout', 'Handful of Almonds'),
+(20, 3, 'Post-Workout', 'Plant-based Protein Shake'),
+(21, 3, 'Dinner', 'Tofu Stir-fry with Bell Peppers and Soy Sauce'),
+(22, 2, 'Breakfast', '4 Egg whites, 1 whole egg + Spinach'),
+(23, 2, 'Lunch', 'Grilled Chicken Breast with Steamed Broccoli'),
+(24, 2, 'Pre-Workout', 'One Apple or 100g Berries'),
+(25, 2, 'Post-Workout', 'Whey Protein Shake + 1 Rice Cake'),
+(26, 2, 'Dinner', 'Baked White Fish (Tilapia/Cod) with Asparagus'),
+(27, 4, 'Evening Snack', '2 boiled eggs ');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dietplan`
+--
+
+CREATE TABLE `dietplan` (
+  `id` int(11) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `notes` varchar(191) DEFAULT NULL,
+  `createdBy` int(11) NOT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `dietType` varchar(20) DEFAULT 'Any'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dietplan`
+--
+
+INSERT INTO `dietplan` (`id`, `title`, `notes`, `createdBy`, `branchId`, `createdAt`, `dietType`) VALUES
+(2, 'Extreme weight loss', 'Drink 3L daily', 102, 48, '2026-06-15 15:23:24.373', 'Non-Veg'),
+(3, 'Extreme weight loss', 'Drink 3L daily', 102, 48, '2026-06-15 15:33:16.337', 'Veg'),
+(4, 'Extreme weight gain', 'eggs,healthy diet', 279, 48, '2026-07-20 11:34:20.985', 'Any');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dietplanassignment`
+--
+
+CREATE TABLE `dietplanassignment` (
+  `id` int(11) NOT NULL,
+  `dietPlanId` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dietplanassignment`
+--
+
+INSERT INTO `dietplanassignment` (`id`, `dietPlanId`, `memberId`, `assignedAt`) VALUES
+(2, 3, 152, '2026-06-15 15:33:26.322'),
+(3, 2, 153, '2026-06-15 15:33:35.576'),
+(4, 3, 161, '2026-07-13 13:15:24.079'),
+(5, 3, 160, '2026-07-20 11:32:32.472');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `expense`
+--
+
+CREATE TABLE `expense` (
+  `id` int(11) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `category` varchar(191) NOT NULL,
+  `amount` double NOT NULL,
+  `date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `branchId` int(11) NOT NULL,
+  `notes` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `global_settings`
+--
+
+CREATE TABLE `global_settings` (
+  `key_name` varchar(191) NOT NULL,
+  `value_data` text NOT NULL,
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `global_settings`
+--
+
+INSERT INTO `global_settings` (`key_name`, `value_data`, `updatedAt`) VALUES
+('free_trial_alert_channel', '[\"EMAIL\",\"WHATSAPP\",\"APP_PUSH\"]', '2026-07-03 16:21:29'),
+('invoice_channel', '[\"EMAIL\",\"WHATSAPP\",\"APP_PUSH\"]', '2026-06-13 16:22:46'),
+('saas_renewal_channel', '[\"EMAIL\",\"WHATSAPP\",\"APP_PUSH\"]', '2026-07-09 00:02:14'),
+('templates_channel', '[\"EMAIL\",\"WHATSAPP\",\"APP_PUSH\"]', '2026-06-13 16:22:46'),
+('welcome_note_channel', '[\"EMAIL\",\"WHATSAPP\",\"APP_PUSH\"]', '2026-06-13 16:22:46');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `group_class_bookings`
+--
+
+CREATE TABLE `group_class_bookings` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `classId` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
+  `bookingStatus` varchar(20) DEFAULT 'Booked',
+  `paymentStatus` varchar(20) DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `housekeepingattendance`
+--
+
+CREATE TABLE `housekeepingattendance` (
+  `id` int(11) NOT NULL,
+  `staffId` int(11) NOT NULL,
+  `attendanceDate` date NOT NULL,
+  `status` enum('Present','Absent','Late') NOT NULL,
+  `checkIn` time DEFAULT NULL,
+  `checkOut` time DEFAULT NULL,
+  `workHours` varchar(20) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `createdById` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `housekeepingschedule`
+--
+
+CREATE TABLE `housekeepingschedule` (
+  `id` int(11) NOT NULL,
+  `dutyDate` date NOT NULL,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `status` enum('In Progress','Completed','Pending') DEFAULT 'Pending',
+  `staffId` int(11) NOT NULL,
+  `createdById` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `landing_page_cms`
+--
+
+CREATE TABLE `landing_page_cms` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `heroTitle` varchar(255) DEFAULT NULL,
+  `heroSubtitle` varchar(255) DEFAULT NULL,
+  `bannerUrl` varchar(500) DEFAULT NULL,
+  `featuresJson` text DEFAULT NULL,
+  `testimonialsJson` text DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `leads`
+--
+
+CREATE TABLE `leads` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `fullName` varchar(191) NOT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `phone` varchar(191) NOT NULL,
+  `gender` varchar(191) DEFAULT NULL,
+  `source` varchar(191) NOT NULL DEFAULT 'Landing Page',
+  `status` varchar(191) NOT NULL DEFAULT 'New',
+  `assignedToStaffId` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `followUpDate` datetime(3) DEFAULT NULL,
+  `leadType` varchar(50) DEFAULT 'GYM',
+  `interestedPlan` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `leads`
+--
+
+INSERT INTO `leads` (`id`, `adminId`, `fullName`, `email`, `phone`, `gender`, `source`, `status`, `assignedToStaffId`, `notes`, `createdAt`, `updatedAt`, `branchId`, `followUpDate`, `leadType`, `interestedPlan`) VALUES
+(1, 90, 'vaani', 'vaani@gmail.com', '7788994457', 'Female', 'Website', 'Converted', NULL, 'wdfgh', '2026-06-05 14:31:44.000', '2026-06-08 18:08:13.000', NULL, NULL, 'GYM', NULL),
+(11, 90, 'abc', 'abc@gmail.com', '1111112222', 'Male', 'Website', 'Converted', NULL, NULL, '2026-06-08 15:50:21.000', '2026-06-08 15:52:49.000', 48, '2026-06-01 00:00:00.000', 'GYM', NULL),
+(64, NULL, 'Visitor', NULL, '0000000000', NULL, 'Pricing Page', 'New', NULL, 'City: N/A | Gym: N/A', '2026-07-07 16:21:45.000', '2026-07-07 16:21:45.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(65, NULL, '7dayssecondfree Owner', '7dayssecondfree@gmail.com', '554545545', NULL, 'Start Free Trial', 'Converted', NULL, 'City: N/A | Gym: 7dayssecondfree | GST Number: 52698323', '2026-07-07 16:51:03.000', '2026-07-07 16:51:03.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(66, NULL, 'aaagym Owner', 'aaagym@gmail.com', '6565362545', NULL, 'Start Free Trial', 'Converted', NULL, 'City: noida | Gym: aaagym | GST Number: 5869746565', '2026-07-07 17:17:19.000', '2026-07-07 17:17:19.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(67, NULL, 'zzgym Owner', 'zzgym@gmail.com', '456789965', NULL, 'Start Free Trial', 'Converted', NULL, 'City: indore | Gym: zzgym | GST Number: 5689565965', '2026-07-07 18:23:16.000', '2026-07-07 18:23:16.000', NULL, NULL, 'SAAS', 'Pro'),
+(68, NULL, 'plangym Owner', 'plangym@gmail.com', '5522336984', NULL, 'Complete Purchase', 'Converted', NULL, 'City: gujrat | Gym: plangym | GST Number: 325698596536', '2026-07-08 11:01:57.000', '2026-07-08 11:01:57.000', NULL, NULL, 'SAAS', 'Pro'),
+(69, NULL, 'planbgym Owner', 'planbgym@gmail.com', '5689565656', NULL, 'Complete Purchase', 'Converted', NULL, 'City: suart | Gym: planbgym | GST Number: 3569563259', '2026-07-08 11:11:47.000', '2026-07-08 11:11:47.000', NULL, NULL, 'SAAS', 'Basic'),
+(70, NULL, 'plancgym Owner', 'plancgym@gmail.com', '456136554', NULL, 'Complete Purchase', 'Converted', NULL, 'City: ahemdabad | Gym: plancgym | GST Number: 658659856', '2026-07-08 11:27:21.000', '2026-07-08 11:27:21.000', NULL, NULL, 'SAAS', 'Gold'),
+(71, NULL, 'palnaagym Owner', 'planaagym@gmail.com', '455656565', NULL, 'Complete Purchase', 'Converted', NULL, 'City: ranchi | Gym: palnaagym | GST Number: 565565965', '2026-07-08 11:40:08.000', '2026-07-08 11:40:08.000', NULL, NULL, 'SAAS', 'Pro'),
+(72, NULL, 'chikkugym Owner', 'Chikkuyadav125@gmail.com', '654789656', NULL, 'Complete Purchase', 'Converted', NULL, 'City: indore | Gym: chikkugym | GST Number: 659898656598', '2026-07-08 15:51:22.000', '2026-07-08 15:51:22.000', NULL, NULL, 'SAAS', 'Pro'),
+(73, NULL, 'bhaktigym Owner', 'yadavbhakti287@gmail.com', '9713391164', NULL, 'Complete Purchase', 'Converted', NULL, 'City: indore | Gym: bhaktigym | GST Number: 598568965', '2026-07-08 17:11:52.000', '2026-07-08 17:11:52.000', NULL, NULL, 'SAAS', 'Basic'),
+(74, NULL, 'sarah', 'sarah123@gmail.com', '101010101010', NULL, 'Schedule Demo', 'New', NULL, 'City: noida | Gym: xyzgym', '2026-07-09 11:13:32.000', '2026-07-09 11:13:32.000', NULL, NULL, 'SAAS', 'Pro'),
+(75, NULL, 'bhagyashreegym Owner', 'bhagyashreeyadav1001@gmail.com', '101010101010', NULL, 'Start Free Trial', 'Converted', NULL, 'City: noida | Gym: bhagyashreegym | GST Number: 9768563455', '2026-07-09 11:26:37.000', '2026-07-09 11:26:37.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(76, NULL, 'bhgayshreegym Owner', 'bhagyashreeyadav1001@gmail.com', '5588996648', NULL, 'Start Free Trial', 'Converted', NULL, 'City: noida | Gym: bhgayshreegym | GST Number: 5885695656', '2026-07-09 11:32:21.000', '2026-07-09 11:32:21.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(77, NULL, 'bhgaygym Owner', 'bhagyashreeyadav1001@gmail.com', '101010101019', NULL, 'Start Free Trial', 'Converted', NULL, 'City: noida | Gym: bhgaygym | GST Number: 65898563265', '2026-07-09 11:33:54.000', '2026-07-09 11:33:54.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(78, 260, 'leed1', 'leed1@gmail.com', '45632145', 'Female', 'Phone', 'New', 57, NULL, '2026-07-09 13:28:26.000', '2026-07-09 13:28:26.000', NULL, '2026-07-11 00:00:00.000', 'GYM', NULL),
+(79, 90, 'sarah', 'sarah123@gmail.com', '101010101010', 'Male', 'Phone', 'In Progress', NULL, NULL, '2026-07-09 13:42:49.000', '2026-07-09 13:42:49.000', 48, '2026-07-30 00:00:00.000', 'GYM', NULL),
+(80, 260, 'leed2', 'leed2@gmail.com', '8523697412', 'Female', 'Website', 'New', NULL, NULL, '2026-07-09 13:48:27.000', '2026-07-09 13:48:27.000', NULL, '2026-07-30 00:00:00.000', 'GYM', NULL),
+(81, 90, 'barodjia', 'barodjia@gmail.com', '456563365', 'Female', 'Walk-in', 'Converted', 63, 'ss', '2026-07-11 15:32:49.000', '2026-07-13 13:07:51.000', 48, '2026-07-23 00:00:00.000', 'GYM', NULL),
+(82, NULL, 'piiigym Owner', 'barodpia280897@gmail.com', '1234567890', NULL, 'Start Free Trial', 'Converted', NULL, 'City: noida | Gym: piiigym | GST Number: 74AS741851526', '2026-07-14 11:13:49.000', '2026-07-14 11:13:49.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(83, NULL, 'raj_gym', 'raj_gym@gmail.com', '4565656666', NULL, 'Schedule Demo', 'New', NULL, 'City: N/A | Gym: N/A', '2026-07-14 12:24:58.000', '2026-07-14 12:24:58.000', NULL, NULL, 'SAAS', NULL),
+(84, NULL, 'nalinigym Owner', 'naliniparas228@gmail.com', '5566223148', NULL, 'Complete Purchase', 'New', NULL, 'City: pipli | Gym: nalinigym | GST Number: 74AS741851528', '2026-07-14 15:01:50.000', '2026-07-14 15:01:50.000', NULL, NULL, 'SAAS', 'Pro'),
+(85, NULL, 'rah_shekar', 'raj23@gmail.com', '101010101010', NULL, 'Schedule Demo', 'New', NULL, 'City: noida | Gym: ra_gym', '2026-07-14 15:40:20.000', '2026-07-14 15:40:20.000', NULL, NULL, 'SAAS', 'Basic'),
+(86, NULL, 'raj_shekar sir Owner', 'rsld2012@gmail.com', '5566442563', NULL, 'Start Free Trial', 'New', NULL, 'City: delhi | Gym: raj_shekar sir | GST Number: 74AS741851527', '2026-07-14 15:45:46.000', '2026-07-14 15:45:46.000', NULL, NULL, 'SAAS', '7-Day Free Trial'),
+(87, 90, 'xyz', 'xyz@gmail.com', '98765432345', 'Male', 'Walk-in', 'In Progress', 71, NULL, '2026-07-20 12:55:28.000', '2026-07-20 12:55:28.000', 48, '2026-07-15 00:00:00.000', 'GYM', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `marketing_campaigns`
+--
+
+CREATE TABLE `marketing_campaigns` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `campaignName` varchar(191) NOT NULL,
+  `templateMessage` text NOT NULL,
+  `channel` varchar(50) NOT NULL,
+  `recipientCount` int(11) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'pending',
+  `scheduledAt` datetime DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `member`
+--
+
+CREATE TABLE `member` (
+  `id` int(11) NOT NULL,
+  `userId` int(11) DEFAULT NULL,
+  `adminId` int(11) NOT NULL,
+  `fullName` varchar(191) NOT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `phone` varchar(191) NOT NULL,
+  `gender` varchar(191) DEFAULT NULL,
+  `address` varchar(191) DEFAULT NULL,
+  `joinDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `branchId` int(11) DEFAULT NULL,
+  `membershipFrom` datetime(3) DEFAULT NULL,
+  `membershipTo` datetime(3) DEFAULT NULL,
+  `paymentMode` varchar(191) DEFAULT NULL,
+  `interestedIn` varchar(191) DEFAULT NULL,
+  `amountPaid` double DEFAULT NULL,
+  `dateOfBirth` datetime(3) DEFAULT NULL,
+  `password` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'ACTIVE',
+  `planId` int(11) DEFAULT NULL,
+  `discount` decimal(10,2) DEFAULT 0.00,
+  `goal` varchar(191) DEFAULT NULL,
+  `profileImage` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `member`
+--
+
+INSERT INTO `member` (`id`, `userId`, `adminId`, `fullName`, `email`, `phone`, `gender`, `address`, `joinDate`, `branchId`, `membershipFrom`, `membershipTo`, `paymentMode`, `interestedIn`, `amountPaid`, `dateOfBirth`, `password`, `status`, `planId`, `discount`, `goal`, `profileImage`) VALUES
+(152, 224, 90, 'demo boy', 'demoboy@gmail.com', '7894561234', 'Male', 'demo street, demo city ', '2026-06-15 14:21:59.007', NULL, '2026-06-15 05:30:00.000', '2026-08-14 05:30:00.000', 'Cash', 'Personal Training', 0, '1998-12-28 05:30:00.000', '$2b$10$xMgLjnERgs3JU4toOTxGV.W9l0L1bUE39v5/Pi7fTJ24EqhNoRDYK', 'Active', 22, 0.00, 'Weight Loss', NULL),
+(153, 225, 90, 'Demo girl', 'demogirl@gmail.com', '457869123', 'Female', 'demo street', '2026-06-15 15:11:44.762', NULL, '2026-06-15 05:30:00.000', '2026-07-15 05:30:00.000', 'Cash', 'General Trainer', 0, '1999-08-21 05:30:00.000', '$2b$10$oQ/0HcuOdFAY/.NkIooRee2HS.XGtlw7.6DI3xwi3AGeN1T6Gsdjq', 'Inactive', 39, 0.00, 'Weight Gain', NULL),
+(154, 227, 90, 'Demo Aayush', 'demoaayu@gmail.com', '1234567890', 'Male', 'demo street', '2026-06-17 13:28:37.726', NULL, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 'General Trainer', 0, '2002-01-01 05:30:00.000', '$2b$10$/qC8JqA2Yq6IxtKKEGJey.btosdudsAV5IQCuoRnb05v0nUyFXd.q', 'Inactive', 39, 0.00, 'Weight Gain', NULL),
+(155, 228, 90, 'Dummy Lead 1', 'dummy.lead1@example.com', '9000000001', 'Male', 'xyz', '2026-06-17 14:33:22.872', NULL, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 'General Trainer', 0, '2000-08-07 05:30:00.000', '$2b$10$XOroeua9HURQPyWvfQx9ROfv/x.MSxuEGc4ySVMZh0IiNSpreELbG', 'Inactive', 39, 0.00, 'Weight Loss', NULL),
+(156, 163, 90, 'Mamber', 'member@gmail.com', '1234567890', 'Male', NULL, '2025-01-01 00:00:00.000', 48, NULL, NULL, NULL, NULL, 0, '1990-01-01 00:00:00.000', '123456', 'ACTIVE', NULL, 0.00, NULL, NULL),
+(157, 230, 90, 'pia b', 'pia@gmail.com', '78945455421', 'Female', 'null', '2026-06-26 15:29:00.425', NULL, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 'Personal Training', 0, '1997-02-28 05:30:00.000', '$2b$10$XM0CxnvFkK3w5zRHZbiw6enP8NceBqljEJr1JLwP2h5whr4b7i.T.', 'Active', 22, 0.00, 'Weight Gain', NULL),
+(158, 231, 90, 'riya ', 'riya@gmail.com', '7849615654', 'Female', 'null', '2026-06-26 16:06:29.393', NULL, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 'Personal Training', 0, '0000-00-00 00:00:00.000', '$2b$10$ZQdCgNH7I//MSIeXYyDz2OvdI.wChFkj0IHFksLeDkrdSNYpV2.Ne', 'Active', 22, 0.00, 'Weight Loss', NULL),
+(159, 254, 252, 'sarah', 'sarahh@gmail.com', '7067955583', 'Female', 'greater indore', '2026-07-08 17:18:13.811', NULL, '2026-07-08 05:30:00.000', NULL, 'Cash', 'Personal Training', 513, '2003-02-12 05:30:00.000', '$2b$10$cnQm.vPQgyYu3QAAl6FcN.oZwXSYtGWpbMtodbvVfppsUm9NOVHZ.', 'Active', NULL, 0.00, 'Weight Loss', NULL),
+(160, 255, 90, 'sanni', 'sanni@gmail.com', '582548666', 'Female', 'greater indore', '2026-07-08 17:43:25.620', NULL, '2026-07-08 05:30:00.000', '2026-09-06 05:30:00.000', 'Cash', 'Personal Training', 200, '2003-02-05 05:30:00.000', '$2b$10$DccN17.PS57wQCRIMIHXAuUwhe4a4GMj61C2fl3G3Ubp1pUYFxwUm', 'Active', 22, 0.00, 'Weight Gain', NULL),
+(161, 275, 90, 'barodjia', 'barodjia@gmail.com', '456563365', 'Female', 'greater indore', '2026-07-13 13:07:51.842', 48, '2026-07-13 05:30:00.000', '2026-09-11 05:30:00.000', 'Cash', 'Personal Training', 0, '2002-05-02 05:30:00.000', '$2b$10$pBoeBCXkBtpOzAXg3PfoyOA0e5Vqw0RujdkOD.QAdsmsZMlnVkf16', 'Active', 22, 0.00, 'Weight Gain', NULL),
+(162, 285, 90, 'rahshekar2', 'rajshekkar12@gmai.com', '545656656', 'Male', 'greater indore', '2026-07-14 16:38:52.203', NULL, '2026-07-14 05:30:00.000', '2026-09-12 05:30:00.000', 'Cash', 'Personal Training', 200, '2000-01-02 05:30:00.000', '$2b$10$wcBrPIxJ3L.OPiH2C4b5Yeb5Azsil/sXqdyiMOPvhgM3MVycd9b96', 'Active', 22, 0.00, 'Weight Loss', NULL),
+(163, 286, 90, 'john', 'johne@gmail.com', 'smith', 'Male', 'john , mira , dolly', '2026-07-20 11:13:59.750', NULL, '2026-07-20 05:30:00.000', '2026-09-18 05:30:00.000', 'Cash', 'Group Classes', 25000, '2026-07-03 05:30:00.000', '$2b$10$Fb6cOPtg6ohLQHYr8AbXXe1EyEb9VCOHsQyIyxs9GO6/HT3QCeqdW', 'Active', 46, 0.00, 'Weight Gain', NULL),
+(164, 287, 90, 'xyz', 'xyz@gmail.com', '98765432345', 'Male', NULL, '2026-07-20 12:54:32.651', NULL, '2026-07-20 05:30:00.000', '2026-08-19 05:30:00.000', 'Cash', 'General Trainer', 34000, '2026-07-09 05:30:00.000', '$2b$10$JQY0afoa2hwzT3UJyGkwsuHVCCLz/pt2Y0kntJAIl6MNg5/9v9ojq', 'Active', 39, 0.00, 'Body Building', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `memberattendance`
+--
+
+CREATE TABLE `memberattendance` (
+  `id` int(11) NOT NULL,
+  `staffId` int(11) DEFAULT NULL,
+  `memberId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `checkIn` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `checkOut` datetime(3) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `notes` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT NULL,
+  `mode` varchar(20) DEFAULT NULL,
+  `shiftId` int(11) DEFAULT NULL,
+  `deviceId` varchar(191) DEFAULT NULL,
+  `ipAddress` varchar(45) DEFAULT NULL,
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `memberattendance`
+--
+
+INSERT INTO `memberattendance` (`id`, `staffId`, `memberId`, `branchId`, `checkIn`, `checkOut`, `createdAt`, `notes`, `status`, `mode`, `shiftId`, `deviceId`, `ipAddress`, `latitude`, `longitude`) VALUES
+(35, NULL, 76, 33, '2025-12-15 00:58:41.822', '2025-12-15 04:17:54.914', '2025-12-15 00:58:41.824', 'QR Code Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(38, NULL, 76, 33, '2025-12-15 04:24:33.906', NULL, '2025-12-15 04:24:33.908', 'QR Code Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(50, 27, NULL, NULL, '2025-12-16 16:31:00.000', '2025-12-16 17:31:00.000', '2025-12-16 16:31:01.380', 'late', 'Late', 'Manual', 1, NULL, NULL, NULL, NULL),
+(78, NULL, 101, 48, '2025-12-19 17:07:39.294', '2025-12-19 17:07:48.376', '2025-12-19 17:07:39.296', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(80, NULL, 169, 1, '2025-12-29 17:06:40.216', NULL, '2025-12-29 17:06:40.218', 'Manual Check-in', 'In Gym', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(81, NULL, 168, 33, '2025-12-29 17:07:31.313', '2025-12-30 13:07:05.667', '2025-12-29 17:07:31.317', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(82, NULL, 167, 33, '2025-12-29 17:07:59.437', NULL, '2025-12-29 17:07:59.441', 'Manual Check-in', 'In Gym', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(83, NULL, 165, 33, '2025-12-29 18:26:35.907', NULL, '2025-12-29 18:26:35.914', 'Manual Check-in', 'In Gym', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(84, NULL, 166, 33, '2025-12-30 13:20:18.520', NULL, '2025-12-30 13:20:18.523', 'Manual Check-in', 'In Gym', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(85, NULL, 68, 45, '2025-12-05 08:00:00.000', NULL, '2025-12-30 14:15:14.981', 'Member attended with father', 'In Gym', 'manual', NULL, NULL, NULL, NULL, NULL),
+(87, NULL, 101, 1, '2025-12-30 16:42:07.000', '2026-01-06 18:12:44.527', '2025-12-30 16:42:07.976', NULL, 'Present', NULL, NULL, NULL, NULL, NULL, NULL),
+(88, NULL, 116, NULL, '2025-12-05 08:00:00.000', NULL, '2025-12-30 16:53:10.886', 'Member attended with father', 'In Gym', 'manual', NULL, NULL, NULL, NULL, NULL),
+(90, NULL, 161, 1, '2026-01-01 17:43:22.666', '2026-01-01 17:45:19.557', '2026-01-01 17:43:22.670', 'Scanned Global QR Code - Admin: John Admin', 'Present', 'QR Code', NULL, NULL, NULL, NULL, NULL),
+(91, NULL, 184, 1, '2026-01-01 18:37:24.345', '2026-01-01 18:39:41.153', '2026-01-01 18:37:24.352', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(92, NULL, 104, 48, '2026-01-03 17:00:09.855', '2026-01-03 17:01:45.438', '2026-01-03 17:00:09.942', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(93, NULL, 184, 1, '2026-01-05 14:53:47.882', '2026-01-05 14:54:09.107', '2026-01-05 14:53:47.891', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(98, NULL, 102, 48, '2026-01-06 18:09:52.981', '2026-01-06 18:10:21.251', '2026-01-06 18:09:52.989', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(99, NULL, 101, 48, '2026-01-06 18:12:47.925', '2026-01-06 18:40:20.658', '2026-01-06 18:12:47.928', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(100, 27, 104, 48, '2026-01-06 18:47:13.142', '2026-01-06 18:48:54.237', '2026-01-06 18:47:13.150', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(101, NULL, 102, 48, '2026-01-07 13:13:43.962', '2026-01-07 14:14:15.413', '2026-01-07 13:13:43.968', 'Manual Check-in', 'Present', 'Manual', NULL, NULL, NULL, NULL, NULL),
+(105, NULL, 101, 48, '2026-06-05 15:26:01.119', NULL, '2026-06-05 15:26:01.132', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1780653120782_wa7vjrwlh', '::1', NULL, NULL),
+(106, NULL, 152, 1, '2026-06-15 14:22:31.168', NULL, '2026-06-15 14:22:31.171', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1781513551162_t50kp7u8w', '::1', NULL, NULL),
+(107, NULL, 93, 48, '2026-06-22 17:14:59.824', NULL, '2026-06-22 17:14:59.826', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1781513551162_t50kp7u8w', '::1', NULL, NULL),
+(108, NULL, 156, 48, '2026-07-20 10:43:53.359', NULL, '2026-07-20 10:43:53.369', 'Manual Check-in', 'In Gym', 'Manual', NULL, 'dev_1784524433290_31btfbpr2', '::1', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `memberplan`
+--
+
+CREATE TABLE `memberplan` (
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `sessions` int(11) NOT NULL,
+  `validityDays` int(11) NOT NULL,
+  `price` double NOT NULL,
+  `type` varchar(191) NOT NULL DEFAULT 'GROUP',
+  `adminId` int(11) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
+  `trainerId` int(11) DEFAULT NULL,
+  `trainerType` varchar(255) DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  `taxRate` decimal(5,2) DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `memberplan`
+--
+
+INSERT INTO `memberplan` (`id`, `name`, `sessions`, `validityDays`, `price`, `type`, `adminId`, `branchId`, `createdAt`, `updatedAt`, `trainerId`, `trainerType`, `status`, `taxRate`) VALUES
+(13, 'Basic', 12, 30, 12000, 'PERSONAL', 68, 33, '2025-12-10 03:25:18.278', '2025-12-15 01:13:56.955', NULL, NULL, NULL, 0.00),
+(14, 'Golden', 12, 60, 5999, 'GROUP', 90, 33, '2025-12-10 03:25:40.750', '2025-12-18 15:47:45.557', NULL, NULL, 'Active', 0.00),
+(22, 'Pre', 12, 60, 1500, 'PERSONAL', 90, NULL, '2025-12-12 22:10:39.629', '2025-12-18 15:47:48.999', NULL, NULL, 'Active', 0.00),
+(24, 'Basic', 24, 90, 1200, 'GROUP', 90, NULL, '2025-12-13 01:45:45.516', '2026-01-06 14:42:49.698', NULL, NULL, 'Active', 10.00),
+(31, 'Basic', 12, 90, 1200, 'MEMBER', 90, NULL, '2025-12-16 17:53:38.853', '2025-12-19 12:13:53.716', 101, 'general', 'Active', 0.00),
+(39, 'general', 12, 30, 5000, 'MEMBER', 90, NULL, '2026-01-06 14:27:45.193', '2026-01-06 14:27:45.193', 139, 'general', 'Active', 5.00),
+(42, 'test', 1, 30, 5999, 'MEMBER', 90, NULL, '2026-01-07 16:44:15.201', '2026-01-07 16:44:15.201', 181, 'personal', 'Active', 0.00),
+(43, 'prmium pack', 13, 31, 5499, 'PERSONAL', 216, NULL, '2026-06-13 15:29:18.669', '2026-06-13 15:29:18.669', NULL, NULL, 'Active', 0.00),
+(46, 'Diwali Bonus', 12, 60, 59999, 'GROUP', 90, NULL, '2026-06-17 14:14:50.816', '2026-06-17 14:25:56.297', NULL, NULL, 'Active', 0.00),
+(47, 'gold ', 1, 30, 499, 'PERSONAL', 260, NULL, '2026-07-09 14:50:05.994', '2026-07-09 14:50:05.994', NULL, NULL, 'Active', 0.00),
+(48, 'premium plan pack', 13, 90, 79999, 'GROUP', 260, NULL, '2026-07-09 14:55:23.877', '2026-07-09 14:55:23.877', NULL, NULL, 'Active', 0.00),
+(49, 'premium memnber', 14, 60, 9999, 'MEMBER', 260, NULL, '2026-07-09 14:57:07.851', '2026-07-09 14:57:07.851', 262, 'personal', 'Active', 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `membership_renewal_requests`
+--
+
+CREATE TABLE `membership_renewal_requests` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assignmentId` int(11) NOT NULL COMMENT 'ID from member_plan_assignment table',
+  `planId` int(11) NOT NULL,
+  `paymentMode` varchar(191) DEFAULT NULL,
+  `amountPaid` double DEFAULT NULL,
+  `requestedBy` int(11) NOT NULL COMMENT 'User ID who requested (admin/receptionist)',
+  `requestedByRole` varchar(50) DEFAULT NULL COMMENT 'Role: admin, receptionist',
+  `status` varchar(191) NOT NULL DEFAULT 'pending' COMMENT 'pending, approved, rejected',
+  `approvedBy` int(11) DEFAULT NULL COMMENT 'Admin ID who approved',
+  `approvedAt` datetime(3) DEFAULT NULL,
+  `rejectedAt` datetime(3) DEFAULT NULL,
+  `rejectionReason` text DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `member_assessments`
+--
+
+CREATE TABLE `member_assessments` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assessment_date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `engine_version` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '1.0.0',
+  `config_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `createdBy` int(11) NOT NULL,
+  `age_at_assessment` int(11) NOT NULL,
+  `gender_at_assessment` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `weight_kg` decimal(5,2) NOT NULL,
+  `height_cm` decimal(5,2) NOT NULL,
+  `neck_cm` decimal(4,1) NOT NULL,
+  `waist_cm` decimal(4,1) NOT NULL,
+  `hip_cm` decimal(4,1) DEFAULT NULL,
+  `resting_hr` int(11) NOT NULL,
+  `activity_level` enum('sedentary','light','moderate','active') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fitness_goal` enum('fat_loss','maintenance','muscle_gain') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `bmi` decimal(5,2) NOT NULL,
+  `body_fat_percentage` decimal(5,2) NOT NULL,
+  `lean_body_mass` decimal(5,2) NOT NULL,
+  `ideal_body_weight` decimal(5,2) NOT NULL,
+  `waist_to_hip_ratio` decimal(4,2) DEFAULT NULL,
+  `bmr` decimal(6,2) NOT NULL,
+  `tdee` decimal(6,2) NOT NULL,
+  `target_calories` int(11) NOT NULL,
+  `protein_grams` int(11) NOT NULL,
+  `fat_grams` int(11) NOT NULL,
+  `carb_grams` int(11) NOT NULL,
+  `metrics_output` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `is_baseline` tinyint(1) DEFAULT 0,
+  `baseline_bf_percent` decimal(5,2) DEFAULT NULL,
+  `baseline_lbm` decimal(5,2) DEFAULT NULL,
+  `demographic_multiplier` decimal(3,2) DEFAULT NULL,
+  `final_leaderboard_score` decimal(8,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `member_assessments`
+--
+
+INSERT INTO `member_assessments` (`id`, `memberId`, `assessment_date`, `engine_version`, `config_snapshot`, `createdBy`, `age_at_assessment`, `gender_at_assessment`, `weight_kg`, `height_cm`, `neck_cm`, `waist_cm`, `hip_cm`, `resting_hr`, `activity_level`, `fitness_goal`, `bmi`, `body_fat_percentage`, `lean_body_mass`, `ideal_body_weight`, `waist_to_hip_ratio`, `bmr`, `tdee`, `target_calories`, `protein_grams`, `fat_grams`, `carb_grams`, `metrics_output`, `createdAt`, `is_baseline`, `baseline_bf_percent`, `baseline_lbm`, `demographic_multiplier`, `final_leaderboard_score`) VALUES
+(4, 152, '2026-06-15 09:09:33.016', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 1, 28, 'male', 80.00, 200.00, 40.0, 85.0, NULL, 80, 'moderate', 'fat_loss', 20.00, 11.47, 70.83, 93.10, NULL, 1915.00, 2968.25, 2468, 156, 69, 307, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":147,\"fat_burn_high\":158,\"cardio_low\":158,\"cardio_high\":170}}', '2026-06-15 09:09:33.016', 0, NULL, NULL, NULL, NULL),
+(5, 152, '2026-06-15 09:34:49.053', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 1, 28, 'male', 78.00, 200.00, 38.0, 75.0, NULL, 75, 'moderate', 'fat_loss', 19.50, 4.59, 74.42, 93.10, NULL, 1895.00, 2937.25, 2437, 164, 68, 293, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":145,\"fat_burn_high\":157,\"cardio_low\":157,\"cardio_high\":169}}', '2026-06-15 09:34:49.053', 0, NULL, NULL, NULL, NULL),
+(6, 153, '2026-06-15 10:14:54.185', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 1, 35, 'female', 75.00, 160.00, 35.0, 80.0, 100.0, 68, 'moderate', 'maintenance', 29.30, 32.30, 50.78, 52.38, 0.80, 1414.00, 2191.70, 2192, 112, 61, 299, '{\"bmi_risk_label\":\"Overweight\",\"cardio_zones\":{\"fat_burn_low\":138,\"fat_burn_high\":150,\"cardio_low\":150,\"cardio_high\":162}}', '2026-06-15 10:14:54.185', 0, NULL, NULL, NULL, NULL),
+(7, 161, '2026-07-13 08:44:23.609', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 272, 24, 'female', 50.00, 165.50, 44.5, 60.9, 190.0, 30, 'moderate', 'fat_loss', 18.25, 60.00, 20.00, 57.36, 0.32, 1253.38, 1942.73, 1443, 44, 40, 227, '{\"bmi_risk_label\":\"Underweight\",\"cardio_zones\":{\"fat_burn_low\":130,\"fat_burn_high\":146,\"cardio_low\":146,\"cardio_high\":163}}', '2026-07-13 08:44:23.609', 1, 60.00, 20.00, 1.12, 0.00),
+(8, 161, '2026-07-20 05:53:50.195', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 279, 24, 'female', 56.00, 150.00, 20.0, 76.2, 126.5, 200, 'light', 'maintenance', 24.89, 60.00, 22.40, 45.50, 0.60, 1216.50, 1672.69, 1673, 49, 46, 265, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":198,\"fat_burn_high\":197,\"cardio_low\":197,\"cardio_high\":197}}', '2026-07-20 05:53:50.195', 0, 60.00, 20.00, 1.12, 97.89),
+(9, 154, '2026-07-20 06:00:30.432', '1.0.0', '{\"ENGINE_VERSION\":\"1.0.0\",\"ACTIVITY_MULTIPLIERS\":{\"sedentary\":1.2,\"light\":1.375,\"moderate\":1.55,\"active\":1.725},\"GOAL_ADJUSTMENTS\":{\"fat_loss\":-500,\"maintenance\":0,\"muscle_gain\":350},\"MACRO_RATIOS\":{\"protein_per_kg_lbm\":2.2,\"fat_percentage\":0.25},\"HEART_RATE_ZONES\":{\"fat_burn_low\":0.6,\"fat_burn_high\":0.7,\"cardio_low\":0.7,\"cardio_high\":0.8}}', 279, 24, 'male', 55.00, 158.00, 24.0, 75.4, NULL, 75, 'moderate', 'muscle_gain', 22.03, 29.92, 38.54, 55.07, NULL, 1422.50, 2204.88, 2555, 85, 71, 394, '{\"bmi_risk_label\":\"Normal\",\"cardio_zones\":{\"fat_burn_low\":148,\"fat_burn_high\":160,\"cardio_low\":160,\"cardio_high\":172}}', '2026-07-20 06:00:30.432', 1, 29.92, 38.54, 1.00, 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `member_bodybuilding_logs`
+--
+
+CREATE TABLE `member_bodybuilding_logs` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `log_date` datetime DEFAULT current_timestamp(),
+  `weight_kg` decimal(5,2) DEFAULT NULL,
+  `chest_cm` decimal(5,2) DEFAULT NULL,
+  `shoulders_cm` decimal(5,2) DEFAULT NULL,
+  `left_arm_cm` decimal(5,2) DEFAULT NULL,
+  `right_arm_cm` decimal(5,2) DEFAULT NULL,
+  `left_forearm_cm` decimal(5,2) DEFAULT NULL,
+  `right_forearm_cm` decimal(5,2) DEFAULT NULL,
+  `waist_cm` decimal(5,2) DEFAULT NULL,
+  `thighs_cm` decimal(5,2) DEFAULT NULL,
+  `calves_cm` decimal(5,2) DEFAULT NULL,
+  `front_photo_url` varchar(255) DEFAULT NULL,
+  `back_photo_url` varchar(255) DEFAULT NULL,
+  `side_photo_url` varchar(255) DEFAULT NULL,
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `member_health_log`
+--
+
+CREATE TABLE `member_health_log` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `height` decimal(5,2) NOT NULL,
+  `weight` decimal(5,2) NOT NULL,
+  `bmi` decimal(5,2) NOT NULL,
+  `status` varchar(191) NOT NULL,
+  `recordedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `trainerId` int(11) DEFAULT NULL,
+  `neck_cm` decimal(4,1) DEFAULT NULL,
+  `waist_cm` decimal(4,1) DEFAULT NULL,
+  `hip_cm` decimal(4,1) DEFAULT NULL,
+  `resting_hr` int(11) DEFAULT NULL,
+  `activity_level` varchar(50) DEFAULT NULL,
+  `fitness_goal` varchar(50) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `dietChart` text DEFAULT NULL,
+  `bmiStatus` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `member_health_log`
+--
+
+INSERT INTO `member_health_log` (`id`, `memberId`, `height`, `weight`, `bmi`, `status`, `recordedAt`, `trainerId`, `neck_cm`, `waist_cm`, `hip_cm`, `resting_hr`, `activity_level`, `fitness_goal`, `notes`, `dietChart`, `bmiStatus`) VALUES
+(2, 152, 200.00, 80.00, 20.00, '', '2026-06-15 14:27:45.000', 102, NULL, NULL, NULL, NULL, NULL, NULL, '3 Golden Rules:Hydration: Drink at least 3 to 4 liters of water daily.Avoid: Junk food, deep-fried items, and sugary drinks.Supplement: Creatine (5g) and a daily multivitamin help optimize your workouts.', 'Daily Meal Chart:Meal 1 (Breakfast): 1 bowl of Oats (with milk) OR 4-5 Egg Whites (or 1 whole egg) + 2 slices of brown bread.Meal 2 (Mid-Morning): 1 banana + handful of soaked almonds/walnuts.Meal 3 (Lunch): 150g Grilled Chicken, Fish, or Paneer + 1 cup Brown Rice or Quinoa + Veggie Salad.Meal 4 (Pre/Post-Workout): 1 scoop Whey Protein + 1 Apple or Banana + Black Coffee.Meal 5 (Dinner): 150g Grilled Chicken/Fish OR Soya/Tofu + Veggies + 1 Multigrain Roti.Meal 6 (Bedtime - Optional): 1 glass of Skim Milk or 1 scoop Casein protein', 'Normal'),
+(3, 152, 200.00, 78.00, 19.50, '', '2026-06-15 15:15:23.000', 102, NULL, NULL, NULL, NULL, NULL, NULL, 'Water Intake: Din bhar me kam se kam 3-4 litres pani zaroor piyein.\n\nAvoid: Zyada tel (oil), sugar, junk food aur cold drinks se bachein.\n\nConsistency: Isko testing ke liye baseline maan kar 2-3 weeks follow karein aur apne body response ke hisab se quantities adjust karein.', '🏋️‍♂️ Daily Routine & Diet Plan\n🌅 Morning (Pre-Workout / Empty Stomach)\n\n1 glass gunguna pani + 1 baadam/akhrot (optional).\n\nPre-Workout (30 min pehle): 1-2 kele (bananas) ya 1 cup black coffee / oats.\n\n🍳 Breakfast (Post-Workout - High Protein)\n\n4-5 egg whites (boiled/omelette) + 2 brown bread slices.\n\nVeg option: 100g Paneer bhurji ya 1 bowl Oats/Dalia (boiled with skimmed milk) + 1 scoop whey protein.\n\n🍱 Lunch (Balanced Meal)\n\n150g Chicken breast ya 150g Paneer/Tofu.\n\n1 bada bowl dal ya rajma/chole.\n\n1-2 chapati (roti) ya 1 bowl brown/white rice.\n\nSath me green salad zaroor lein.\n\n☕ Evening Snack (Energy Boost)\n\n1 cup green tea ya coffee.\n\nEk mutthi bhune chane (roasted chana) ya roasted makhane / mix nuts.\n\n1-2 boiled eggs ya 50g paneer.\n\n🍽️ Dinner (Light & High Protein)\n\n150g Fish, Chicken, ya Tofu/Paneer (grilled/boiled).\n\n1 bowl mix veg stir-fry ya sabzi.\n\n1 choti roti ya thoda sa rice (dinner me carbs thoda kam rakhein).\n\n🥛 Before Bed (Recovery)\n\n1 glass gunguna doodh (milk) thodi si haldi ke sath (muscle soreness kam karne ke liye).', 'Normal'),
+(4, 153, 160.00, 76.00, 29.69, '', '2026-06-15 15:49:32.000', 102, NULL, NULL, NULL, NULL, NULL, NULL, 'Water: Drink 3–4 liters of water daily.\n\nAvoid Whites: Strictly cut out white sugar, maida (refined flour), deep-fried food, and packaged snacks.\n\nMove: Walk briskly for 30–45 minutes or complete 8,000–10,000 steps daily.\n\nSleep: Aim for 7–8 hours of sound sleep to manage stress hormones that stall weight loss.', '🌅 1. Early Morning (7:00 AM)\nDrink: 1-2 glasses of warm water (optional: add 1/2 lemon or cumin seeds).\n\nNuts: 5 soaked almonds (peeled) + 1 walnut.\n\n🍳 2. Breakfast (8:30 AM)\nVeg Option: 1 cup of Oats porridge (with low-fat milk, no sugar, add 1/2 apple) OR 1 Besan/Oats Cheela with veggies.\n\nNon-Veg Option: 3 Egg White omelet/scramble + 1 slice of whole-wheat bread.\n\nDrink: 1 cup of Green Tea or black coffee (sugar-free).\n\n🍏 3. Mid-Morning (11:00 AM)\n1 medium fruit (Apple, Papaya, Guava, or Orange) OR 1 glass of buttermilk with a pinch of cumin powder.\n\n🥗 4. Lunch (1:30 PM)\nStarter: 1 large plate of raw salad (Cucumber, Tomato, Carrot) — Eat this first to control portions.\n\nCarbs: 1 or max 2 Multigrain Rotis (no ghee) OR 1 small bowl of boiled rice.\n\nProtein: 1 big bowl of Dal OR 100g Paneer/Tofu OR 120g Grilled Chicken.\n\nSide: 1 small bowl of low-fat curd.\n\n☕ 5. Evening Snack (5:30 PM)\n1 cup of Green Tea or Milk Tea (without sugar).\n\nWith: 1 small bowl of roasted Makhana (Fox nuts) OR roasted Chana.\n\n🍲 6. Dinner (8:00 PM) — Keep it light & early\nOption A: 1 large bowl of mixed Vegetable Soup with added paneer cubes or shredded chicken.\n\nOption B: 1 bowl of Vegetable Dalia or Oats Khichdi.\n\nOption C: 100g stir-fried veggies (Broccoli, Bell peppers, Mushrooms) with Paneer/Tofu.\n\n🥛 7. Before Bed (9:30 PM)\n1 small cup of warm turmeric milk (low-fat, no sugar).', 'Overweight'),
+(5, 161, 5.90, 50.00, 15.46, '', '2026-07-13 13:14:03.000', 272, NULL, NULL, NULL, NULL, NULL, NULL, ' hiii this is ur diet chart', 'dal roti chaval egg', 'Underweight'),
+(6, 153, 150.00, 55.00, 24.44, '', '2026-07-20 11:41:10.000', 279, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2 boiled eggs in evening \ngreen vegetables daily in morning or evening too', 'Normal');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `member_plan_assignment`
+--
+
+CREATE TABLE `member_plan_assignment` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `planId` int(11) NOT NULL,
+  `membershipFrom` datetime(3) NOT NULL,
+  `membershipTo` datetime(3) NOT NULL,
+  `paymentMode` varchar(191) DEFAULT NULL,
+  `amountPaid` double DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'Active',
+  `assignedBy` int(11) DEFAULT NULL COMMENT 'Admin/Receptionist who assigned this plan',
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `member_plan_assignment`
+--
+
+INSERT INTO `member_plan_assignment` (`id`, `memberId`, `planId`, `membershipFrom`, `membershipTo`, `paymentMode`, `amountPaid`, `status`, `assignedBy`, `assignedAt`, `createdAt`, `updatedAt`) VALUES
+(60, 152, 22, '2026-06-15 05:30:00.000', '2026-08-14 05:30:00.000', 'Cash', 1000, 'Active', 90, '2026-06-15 14:21:59.000', '2026-06-15 14:21:59.011', '2026-06-15 14:21:59.011'),
+(61, 153, 39, '2026-06-15 05:30:00.000', '2026-07-15 05:30:00.000', 'Cash', 1000, 'Active', 90, '2026-06-15 15:11:44.000', '2026-06-15 15:11:44.769', '2026-06-15 15:11:44.769'),
+(62, 154, 39, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 1000, 'Active', 90, '2026-06-17 13:28:37.000', '2026-06-17 13:28:37.731', '2026-06-17 13:28:37.731'),
+(63, 155, 39, '2026-06-17 05:30:00.000', '2026-07-17 05:30:00.000', 'Cash', 5000, 'Active', 90, '2026-06-17 14:33:22.000', '2026-06-17 14:33:22.876', '2026-06-17 14:33:22.876'),
+(64, 157, 22, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 1000, 'Active', 90, '2026-06-26 15:29:00.000', '2026-06-26 15:29:00.430', '2026-06-26 15:29:00.430'),
+(65, 158, 22, '2026-06-26 05:30:00.000', '2026-08-25 05:30:00.000', 'Cash', 1000, 'Active', 90, '2026-06-26 16:06:29.000', '2026-06-26 16:06:29.408', '2026-06-26 16:06:29.408'),
+(66, 160, 22, '2026-07-08 05:30:00.000', '2026-09-06 05:30:00.000', 'Cash', 200, 'Active', 90, '2026-07-08 17:43:25.000', '2026-07-08 17:43:25.629', '2026-07-08 17:43:25.629'),
+(67, 161, 22, '2026-07-13 05:30:00.000', '2026-09-11 05:30:00.000', 'Cash', 1500, 'Active', 90, '2026-07-13 13:07:51.000', '2026-07-13 13:07:51.853', '2026-07-13 13:07:51.853'),
+(69, 156, 24, '2026-07-14 00:00:00.000', '2027-07-14 00:00:00.000', 'CASH', 8999, 'Active', NULL, '2026-07-14 14:55:50.000', '2026-07-14 14:55:50.000', '2026-07-14 14:55:50.187'),
+(70, 162, 22, '2026-07-14 05:30:00.000', '2026-09-12 05:30:00.000', 'Cash', 200, 'Active', 90, '2026-07-14 16:38:52.000', '2026-07-14 16:38:52.211', '2026-07-14 16:38:52.211'),
+(71, 156, 46, '2026-07-20 05:30:00.000', '2026-09-18 05:30:00.000', 'Cash', 59999, 'Active', 90, '2026-07-20 10:48:04.000', '2026-07-20 10:48:04.264', '2026-07-20 10:48:04.264'),
+(72, 156, 24, '2026-07-20 05:30:00.000', '2026-10-18 05:30:00.000', 'UPI', 1200, 'Active', 90, '2026-07-20 10:48:30.000', '2026-07-20 10:48:30.218', '2026-07-20 10:48:30.218'),
+(73, 163, 46, '2026-07-20 05:30:00.000', '2026-09-18 05:30:00.000', 'Cash', 25000, 'Active', 279, '2026-07-20 11:13:59.000', '2026-07-20 11:13:59.757', '2026-07-20 11:13:59.757'),
+(74, 164, 39, '2026-07-20 05:30:00.000', '2026-08-19 05:30:00.000', 'Cash', 34000, 'Active', 90, '2026-07-20 12:54:32.000', '2026-07-20 12:54:32.660', '2026-07-20 12:54:32.660'),
+(75, 154, 24, '2026-07-20 05:30:00.000', '2026-10-18 05:30:00.000', 'Card', 1200, 'Active', 90, '2026-07-20 13:15:53.000', '2026-07-20 13:15:53.460', '2026-07-20 13:15:53.460');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `message_templates`
+--
+
+CREATE TABLE `message_templates` (
+  `id` int(11) NOT NULL,
+  `templateType` varchar(100) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `messageBody` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `message_templates`
+--
+
+INSERT INTO `message_templates` (`id`, `templateType`, `subject`, `messageBody`) VALUES
+(1, 'WELCOME_TRIAL', 'Welcome to Your Gym Software Trial!', 'Hi {Name}, your {Days}-day free trial has started. Enjoy!'),
+(2, 'EXPIRY_REMINDER_DAILY', 'Your Trial is Expiring Soon', 'Hi {Name}, your trial expires on {Date}. Please purchase a subscription to keep access.'),
+(3, 'TRIAL_EXPIRED_FINAL', 'Your Trial Has Expired', 'Hi {Name}, your trial has expired. Your account is now inactive. Please upgrade.'),
+(4, 'SUBSCRIPTION_ACTIVATED', 'Welcome Aboard!', 'Hi {Name}, thank you for purchasing a subscription. Your account is fully active!');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notificationlog`
+--
+
+CREATE TABLE `notificationlog` (
+  `id` int(11) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `to` varchar(191) NOT NULL,
+  `message` varchar(191) NOT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'PENDING',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `memberId` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `notificationlog`
+--
+
+INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
+(1, 'EMAIL', 'test-recipient@example.com', 'This is a mock welcome note text message.', 'FAILED', '2026-06-13 15:57:27.939', NULL),
+(2, 'EMAIL', 'vamika@gmail.com', 'Hi vamika,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: vamika@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-06-13 16:11:39.279', NULL),
+(3, 'EMAIL', 'maddii@gmail.com', 'Hi maddii,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: maddii@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-06-13 16:26:07.652', NULL),
+(4, 'WHATSAPP', '101010101010', 'Hi maddii,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: maddii@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-06-13 16:26:07.657', NULL),
+(5, 'IN-APP', '222', 'Hi maddii,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: maddii@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-06-13 16:26:07.660', NULL),
+(6, 'EMAIL', 'maddii@gmail.com', 'Hi maddii,\n\nThank you for your payment of Rs.5000 for the test plan.\n\nYour membership has been successfully renewed. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-06-13 16:41:43.454', NULL),
+(7, 'WHATSAPP', '101010101010', 'Hi maddii,\n\nThank you for your payment of Rs.5000 for the test plan.\n\nYour membership has been successfully renewed. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-06-13 16:41:43.462', NULL),
+(8, 'IN-APP', '222', 'Hi maddii,\n\nThank you for your payment of Rs.5000 for the test plan.\n\nYour membership has been successfully renewed. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-06-13 16:41:43.480', NULL),
+(9, 'EMAIL', 'jem@gmail.com', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'FAILED', '2026-06-13 16:54:40.062', NULL),
+(10, 'WHATSAPP', '101010101010', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'SENT', '2026-06-13 16:54:40.075', NULL),
+(11, 'IN-APP', '215', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'UNREAD', '2026-06-13 16:54:40.080', NULL),
+(12, 'EMAIL', 'sara@gmail.com', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'FAILED', '2026-06-13 16:54:40.096', NULL),
+(13, 'WHATSAPP', '101010101010', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'SENT', '2026-06-13 16:54:40.124', NULL),
+(14, 'EMAIL', 'admin@gmail.com', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'FAILED', '2026-06-13 16:54:40.098', NULL),
+(15, 'IN-APP', '216', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'UNREAD', '2026-06-13 16:54:40.130', NULL),
+(16, 'EMAIL', 'john@gmail.com', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'FAILED', '2026-06-13 16:54:40.125', NULL),
+(17, 'WHATSAPP', '9876543210', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'SENT', '2026-06-13 16:54:40.138', NULL),
+(18, 'WHATSAPP', '0770090987', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'SENT', '2026-06-13 16:54:40.141', NULL),
+(19, 'IN-APP', '90', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'READ', '2026-06-13 16:54:40.145', NULL),
+(20, 'IN-APP', '89', 'Hello owners, this is a system-wide test broadcast for notices and offers!', 'UNREAD', '2026-06-13 16:54:40.148', NULL),
+(21, 'EMAIL', 'demoboy@gmail.com', 'Hi demo boy,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demoboy@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'FAILED', '2026-06-15 14:21:59.091', 152),
+(22, 'EMAIL', 'demoboy@gmail.com', 'Hi demo boy,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-06-15 14:21:59.092', 152),
+(23, 'WHATSAPP', '7894561234', 'Hi demo boy,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demoboy@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'SENT', '2026-06-15 14:21:59.095', 152),
+(24, 'WHATSAPP', '7894561234', 'Hi demo boy,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-06-15 14:21:59.097', 152),
+(25, 'IN-APP', '224', 'Hi demo boy,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demoboy@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'UNREAD', '2026-06-15 14:21:59.098', 152),
+(26, 'IN-APP', '224', 'Hi demo boy,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-06-15 14:21:59.100', 152),
+(27, 'EMAIL', 'demogirl@gmail.com', 'Hi Demo girl,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demogirl@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'FAILED', '2026-06-15 15:11:44.839', 153),
+(28, 'EMAIL', 'demogirl@gmail.com', 'Hi Demo girl,\n\nThank you for your payment of Rs.1000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-06-15 15:11:44.840', 153),
+(29, 'WHATSAPP', '457869123', 'Hi Demo girl,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demogirl@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'SENT', '2026-06-15 15:11:44.842', 153),
+(30, 'WHATSAPP', '457869123', 'Hi Demo girl,\n\nThank you for your payment of Rs.1000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-06-15 15:11:44.843', 153),
+(31, 'IN-APP', '225', 'Hi Demo girl,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demogirl@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'UNREAD', '2026-06-15 15:11:44.844', 153),
+(32, 'IN-APP', '225', 'Hi Demo girl,\n\nThank you for your payment of Rs.1000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-06-15 15:11:44.844', 153),
+(33, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demoaayu@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'FAILED', '2026-06-17 13:28:37.800', 154),
+(34, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush,\n\nThank you for your payment of Rs.1000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-06-17 13:28:37.801', 154),
+(35, 'WHATSAPP', '1234567890', 'Hi Demo Aayush,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demoaayu@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'SENT', '2026-06-17 13:28:37.804', 154),
+(36, 'WHATSAPP', '1234567890', 'Hi Demo Aayush,\n\nThank you for your payment of Rs.1000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-06-17 13:28:37.805', 154),
+(37, 'IN-APP', '227', 'Hi Demo Aayush,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: demoaayu@gmail.com\nPassword: 123\n\nRegards,\nGym Management', 'UNREAD', '2026-06-17 13:28:37.808', 154),
+(38, 'IN-APP', '227', 'Hi Demo Aayush,\n\nThank you for your payment of Rs.1000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-06-17 13:28:37.808', 154),
+(39, 'EMAIL', 'dummy.lead1@example.com', 'Hi Dummy Lead 1,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: dummy.lead1@example.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-06-17 14:33:22.976', 155),
+(40, 'WHATSAPP', '9000000001', 'Hi Dummy Lead 1,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: dummy.lead1@example.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-06-17 14:33:22.979', 155),
+(41, 'IN-APP', '228', 'Hi Dummy Lead 1,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: dummy.lead1@example.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-06-17 14:33:22.981', 155),
+(42, 'IN-APP', '90', 'New inventory request: 10x Yoga Mats (High Density) by generaltrainer (ID: 93)', 'READ', '2026-06-22 14:42:37.000', NULL),
+(43, 'EMAIL', 'pia@gmail.com', 'Hi pia b,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: pia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-06-26 15:29:00.550', 157),
+(44, 'EMAIL', 'pia@gmail.com', 'Hi pia b,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-06-26 15:29:00.557', 157),
+(45, 'WHATSAPP', '78945455421', 'Hi pia b,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: pia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-06-26 15:29:00.600', 157),
+(46, 'WHATSAPP', '78945455421', 'Hi pia b,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-06-26 15:29:00.606', 157),
+(47, 'IN-APP', '230', 'Hi pia b,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: pia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-06-26 15:29:00.609', 157),
+(48, 'IN-APP', '230', 'Hi pia b,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-06-26 15:29:00.611', 157),
+(49, 'EMAIL', 'riya@gmail.com', 'Hi riya ,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: riya@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-06-26 16:06:29.597', 158),
+(50, 'EMAIL', 'riya@gmail.com', 'Hi riya ,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-06-26 16:06:29.614', 158),
+(51, 'WHATSAPP', '7849615654', 'Hi riya ,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: riya@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-06-26 16:06:29.625', 158),
+(52, 'WHATSAPP', '7849615654', 'Hi riya ,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-06-26 16:06:29.639', 158),
+(53, 'IN-APP', '231', 'Hi riya ,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: riya@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-06-26 16:06:29.639', 158),
+(54, 'IN-APP', '231', 'Hi riya ,\n\nThank you for your payment of Rs.1000 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-06-26 16:06:29.641', 158),
+(56, 'IN-APP', '232', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: verify_1783080059363@test.com\nTemporary Pas', 'UNREAD', '2026-07-03 17:30:59.769', NULL),
+(57, 'EMAIL', 'superadmin@gmail.com', '🔔 New Free Trial Registration Alert!\nGym Name: fitgym\nEmail: fitgym@gmail.com\nPlan: 7-Day Free Trial\nBilling Duration: Monthly\nStart Date: 10/07/2026', 'FAILED', '2026-07-03 18:03:27.198', NULL),
+(58, 'IN-APP', '67', '🔔 New Free Trial Registration Alert!\nGym Name: fitgym\nEmail: fitgym@gmail.com\nPlan: 7-Day Free Trial\nBilling Duration: Monthly\nStart Date: 10/07/2026', 'READ', '2026-07-03 18:03:27.210', NULL),
+(59, 'EMAIL', 'superadmin@gmail.com', '🔔 New Free Trial Registration Alert!\nGym Name: rajss gym\nEmail: rajss@gmail.com\nPlan: 7-Day Free Trial\nBilling Duration: Monthly\nStart Date: 10/07/2026', 'FAILED', '2026-07-03 18:13:26.102', NULL),
+(60, 'IN-APP', '67', '🔔 New Free Trial Registration Alert!\nGym Name: rajss gym\nEmail: rajss@gmail.com\nPlan: 7-Day Free Trial\nBilling Duration: Monthly\nStart Date: 10/07/2026', 'READ', '2026-07-03 18:13:26.109', NULL),
+(61, 'EMAIL', 'rajss@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rajss@gmail.com\nTemporary Password: Gym@443', 'FAILED', '2026-07-03 18:25:09.816', NULL),
+(62, 'IN-APP', '233', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rajss@gmail.com\nTemporary Password: Gym@443', 'UNREAD', '2026-07-03 18:25:09.821', NULL),
+(63, 'EMAIL', 'onboard_1783144295371@test.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144295371@test.com\nTemporary Pa', 'FAILED', '2026-07-04 11:21:35.884', NULL),
+(64, 'IN-APP', '234', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144295371@test.com\nTemporary Pa', 'UNREAD', '2026-07-04 11:21:35.893', NULL),
+(65, 'EMAIL', 'onboard_1783144352701@test.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144352701@test.com\nTemporary Pa', 'FAILED', '2026-07-04 11:22:33.357', NULL),
+(66, 'IN-APP', '235', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144352701@test.com\nTemporary Pa', 'UNREAD', '2026-07-04 11:22:33.370', NULL),
+(68, 'IN-APP', '236', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: onboard_1783144416151@test.com\nTemporary Pa', 'UNREAD', '2026-07-04 11:23:36.498', NULL),
+(69, 'EMAIL', 'fitgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitgym@gmail.com\nTemporary Password: 123456', 'FAILED', '2026-07-04 11:28:16.106', NULL),
+(70, 'IN-APP', '237', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitgym@gmail.com\nTemporary Password: 123456', 'UNREAD', '2026-07-04 11:28:16.109', NULL),
+(71, 'EMAIL', 'fitnessgym@gmil.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitnessgym@gmil.com\nPassword', 'FAILED', '2026-07-06 12:08:49.089', NULL),
+(72, 'IN-APP', '238', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: fitnessgym@gmil.com\nPassword', 'READ', '2026-07-06 12:08:49.094', NULL),
+(73, 'EMAIL', 'glowupgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: glowupgym@gmail.com\nPassword', 'FAILED', '2026-07-06 12:36:16.952', NULL),
+(74, 'IN-APP', '239', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: glowupgym@gmail.com\nPassword', 'READ', '2026-07-06 12:36:16.980', NULL),
+(75, 'EMAIL', 'superadmin@gmail.com', '🔔 New Free Trial Registration Alert!\nGym Name: glowupgym\nEmail: glowupgym@gmail.com\nPlan: Basic\nBilling Duration: Yearly\nStart Date: 06/07/2026', 'FAILED', '2026-07-06 13:13:33.654', NULL),
+(76, 'IN-APP', '67', '🔔 New Free Trial Registration Alert!\nGym Name: glowupgym\nEmail: glowupgym@gmail.com\nPlan: Basic\nBilling Duration: Yearly\nStart Date: 06/07/2026', 'READ', '2026-07-06 13:13:33.661', NULL),
+(77, 'EMAIL', 'glowupgym@gmail.com', '🎉 Subscription Approved!\nYour request to renew/upgrade your gym plan to \"Basic\" has been approved.\n\nNew Expiry Date: 14/07/2027\nThank you for staying with us!', 'FAILED', '2026-07-06 13:14:25.889', NULL),
+(78, 'IN-APP', '239', '🎉 Subscription Approved!\nYour request to renew/upgrade your gym plan to \"Basic\" has been approved.\n\nNew Expiry Date: 14/07/2027\nThank you for staying with us!', 'READ', '2026-07-06 13:14:25.903', NULL),
+(79, 'EMAIL', 'piabgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: piabgym@gmail.com\nPassword: ', 'FAILED', '2026-07-06 16:09:34.885', NULL),
+(80, 'IN-APP', '240', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: piabgym@gmail.com\nPassword: ', 'READ', '2026-07-06 16:09:34.898', NULL),
+(81, 'EMAIL', '7daysfreetrialgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7daysfreetrialgym@gmail.com\n', 'FAILED', '2026-07-07 16:22:58.437', NULL),
+(82, 'IN-APP', '244', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7daysfreetrialgym@gmail.com\n', 'UNREAD', '2026-07-07 16:22:58.449', NULL),
+(83, 'EMAIL', '7dayssecondfree@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7dayssecondfree@gmail.com\nPa', 'FAILED', '2026-07-07 16:51:03.468', NULL),
+(84, 'IN-APP', '245', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: 7dayssecondfree@gmail.com\nPa', 'UNREAD', '2026-07-07 16:51:03.479', NULL),
+(85, 'EMAIL', 'aaagym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: aaagym@gmail.com\nPassword: 1', 'FAILED', '2026-07-07 17:17:19.079', NULL),
+(86, 'IN-APP', '246', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: aaagym@gmail.com\nPassword: 1', 'READ', '2026-07-07 17:17:19.105', NULL),
+(87, 'EMAIL', 'superadmin@gmail.com', '🔔 New Free Trial Registration Alert!\nGym Name: zzgym\nEmail: zzgym@gmail.com\nPlan: Pro\nBilling Duration: Yearly\nStart Date: 11/07/2026', 'FAILED', '2026-07-07 18:23:16.089', NULL),
+(88, 'IN-APP', '67', '🔔 New Free Trial Registration Alert!\nGym Name: zzgym\nEmail: zzgym@gmail.com\nPlan: Pro\nBilling Duration: Yearly\nStart Date: 11/07/2026', 'READ', '2026-07-07 18:23:16.099', NULL),
+(89, 'EMAIL', 'zzgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: zzgym@gmail.com\nTemporary Password: 123456\n', 'FAILED', '2026-07-07 18:33:04.603', NULL),
+(90, 'IN-APP', '247', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created successfully.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: zzgym@gmail.com\nTemporary Password: 123456\n', 'UNREAD', '2026-07-07 18:33:04.613', NULL),
+(91, 'EMAIL', 'plangym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plangym@gmail.com', 'FAILED', '2026-07-08 11:01:57.284', NULL),
+(92, 'IN-APP', '248', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plangym@gmail.com', 'UNREAD', '2026-07-08 11:01:57.305', NULL),
+(93, 'EMAIL', 'planbgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planbgym@gmail.co', 'FAILED', '2026-07-08 11:11:47.530', NULL),
+(94, 'IN-APP', '249', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planbgym@gmail.co', 'UNREAD', '2026-07-08 11:11:47.536', NULL),
+(95, 'EMAIL', 'john@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.937', NULL),
+(96, 'EMAIL', 'admin@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.939', NULL),
+(97, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.943', NULL),
+(98, 'EMAIL', '7dayssecondfree@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:06.945', NULL),
+(99, 'IN-APP', '89', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.020', NULL),
+(100, 'IN-APP', '244', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.030', NULL),
+(101, 'IN-APP', '245', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.033', NULL),
+(102, 'EMAIL', 'aaagym@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:07.034', NULL),
+(103, 'EMAIL', 'zzgym@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:07.035', NULL),
+(104, 'EMAIL', 'plangym@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:07.035', NULL),
+(105, 'EMAIL', 'planbgym@gmail.com', 'hello every one we want to announce somethimg\n', 'FAILED', '2026-07-08 11:14:07.036', NULL),
+(106, 'WHATSAPP', '9876543210', 'hello every one we want to announce somethimg\n', 'SENT', '2026-07-08 11:14:07.065', NULL),
+(107, 'IN-APP', '248', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.066', NULL),
+(108, 'IN-APP', '249', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.068', NULL),
+(109, 'IN-APP', '246', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.073', NULL),
+(110, 'IN-APP', '247', 'hello every one we want to announce somethimg\n', 'UNREAD', '2026-07-08 11:14:07.076', NULL),
+(111, 'IN-APP', '90', 'hello every one we want to announce somethimg\n', 'READ', '2026-07-08 11:14:07.079', NULL),
+(112, 'EMAIL', 'plancgym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plancgym@gmail.co', 'FAILED', '2026-07-08 11:27:21.261', NULL),
+(113, 'IN-APP', '250', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: plancgym@gmail.co', 'UNREAD', '2026-07-08 11:27:21.269', NULL),
+(114, 'EMAIL', 'planaagym@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planaagym@gmail.c', 'FAILED', '2026-07-08 11:40:08.160', NULL),
+(115, 'IN-APP', '251', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: planaagym@gmail.c', 'UNREAD', '2026-07-08 11:40:08.171', NULL),
+(116, 'EMAIL', 'planaagym@gmail.com', 'Hi palnaagym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0010\n\nRegards,\nSpeed Fitness', 'FAILED', '2026-07-08 11:40:08.187', NULL),
+(117, 'IN-APP', '251', 'Hi palnaagym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0010\n\nRegards,\nSpeed Fitness', 'UNREAD', '2026-07-08 11:40:08.194', NULL),
+(118, 'EMAIL', 'admin@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.600', NULL),
+(119, 'EMAIL', '7daysfreetrialgym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.603', NULL),
+(120, 'EMAIL', 'john@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.606', NULL),
+(121, 'IN-APP', '244', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.672', NULL),
+(122, 'IN-APP', '89', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.703', NULL),
+(123, 'EMAIL', 'planaagym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.709', NULL),
+(124, 'EMAIL', 'zzgym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.723', NULL),
+(125, 'EMAIL', 'aaagym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.725', NULL),
+(126, 'EMAIL', '7dayssecondfree@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.727', NULL),
+(127, 'EMAIL', 'planbgym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.728', NULL),
+(128, 'EMAIL', 'plangym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.729', NULL),
+(129, 'EMAIL', 'plancgym@gmail.com', ' hii everyone happy holi', 'FAILED', '2026-07-08 12:43:45.732', NULL),
+(130, 'IN-APP', '251', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.743', NULL),
+(131, 'WHATSAPP', '9876543210', ' hii everyone happy holi', 'SENT', '2026-07-08 12:43:45.745', NULL),
+(132, 'IN-APP', '247', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.754', NULL),
+(133, 'IN-APP', '90', ' hii everyone happy holi', 'READ', '2026-07-08 12:43:45.757', NULL),
+(134, 'IN-APP', '246', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.758', NULL),
+(135, 'IN-APP', '245', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.760', NULL),
+(136, 'IN-APP', '249', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.764', NULL),
+(137, 'IN-APP', '250', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.766', NULL),
+(138, 'IN-APP', '248', ' hii everyone happy holi', 'UNREAD', '2026-07-08 12:43:45.772', NULL),
+(139, 'EMAIL', 'john@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.260', NULL),
+(140, 'EMAIL', 'admin@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.264', NULL),
+(141, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.344', NULL),
+(142, 'IN-APP', '89', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.348', NULL),
+(143, 'EMAIL', '7dayssecondfree@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.354', NULL),
+(144, 'EMAIL', 'zzgym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.355', NULL),
+(145, 'EMAIL', 'aaagym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.358', NULL),
+(146, 'EMAIL', 'plangym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.397', NULL),
+(147, 'IN-APP', '244', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.408', NULL),
+(148, 'IN-APP', '245', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.410', NULL),
+(149, 'IN-APP', '247', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.413', NULL),
+(150, 'IN-APP', '246', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.417', NULL),
+(151, 'EMAIL', 'planbgym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.417', NULL),
+(152, 'EMAIL', 'plancgym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.418', NULL),
+(153, 'EMAIL', 'planaagym@gmail.com', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'FAILED', '2026-07-08 12:57:04.419', NULL),
+(154, 'WHATSAPP', '9876543210', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'SENT', '2026-07-08 12:57:04.426', NULL),
+(155, 'IN-APP', '248', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.432', NULL),
+(156, 'IN-APP', '90', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'READ', '2026-07-08 12:57:04.435', NULL),
+(157, 'IN-APP', '249', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.439', NULL),
+(158, 'IN-APP', '250', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.442', NULL),
+(159, 'IN-APP', '251', 'hello holi notification\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783495623/announcements/kz4szghg2grkildcjfgy.png', 'UNREAD', '2026-07-08 12:57:04.444', NULL),
+(160, 'EMAIL', 'john@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.260', NULL),
+(161, 'EMAIL', 'admin@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.264', NULL),
+(162, 'EMAIL', '7daysfreetrialgym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.267', NULL),
+(163, 'EMAIL', '7dayssecondfree@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.270', NULL),
+(164, 'EMAIL', 'aaagym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.274', NULL),
+(165, 'EMAIL', 'zzgym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.277', NULL),
+(166, 'EMAIL', 'plangym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.281', NULL),
+(167, 'EMAIL', 'planbgym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.283', NULL),
+(168, 'EMAIL', 'plancgym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.286', NULL),
+(169, 'EMAIL', 'planaagym@gmail.com', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'FAILED', '2026-07-08 12:58:25.300', NULL),
+(170, 'IN-APP', '246', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.377', NULL),
+(171, 'IN-APP', '250', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.468', NULL),
+(172, 'IN-APP', '245', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.498', NULL),
+(173, 'IN-APP', '244', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.519', NULL),
+(174, 'IN-APP', '89', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.526', NULL),
+(175, 'IN-APP', '247', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.532', NULL),
+(176, 'IN-APP', '248', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.538', NULL),
+(177, 'IN-APP', '249', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.549', NULL),
+(178, 'IN-APP', '251', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'UNREAD', '2026-07-08 12:58:25.575', NULL),
+(179, 'WHATSAPP', '9876543210', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'SENT', '2026-07-08 12:58:25.617', NULL),
+(180, 'IN-APP', '90', 'poiuytgrfsdz\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/raw/upload/v1783495704/announcements/bgonhcwxlwyvenfl0dhy', 'READ', '2026-07-08 12:58:25.620', NULL),
+(181, 'EMAIL', 'john@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.561', NULL),
+(182, 'EMAIL', 'admin@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.563', NULL),
+(183, 'EMAIL', '7dayssecondfree@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.566', NULL),
+(184, 'IN-APP', '89', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.640', NULL),
+(185, 'IN-APP', '245', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.645', NULL),
+(186, 'EMAIL', '7daysfreetrialgym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.646', NULL),
+(187, 'EMAIL', 'aaagym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.647', NULL),
+(188, 'EMAIL', 'planbgym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.648', NULL),
+(189, 'EMAIL', 'zzgym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.648', NULL),
+(190, 'EMAIL', 'plangym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.649', NULL),
+(191, 'IN-APP', '244', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.681', NULL),
+(192, 'IN-APP', '246', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.683', NULL),
+(193, 'IN-APP', '247', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.687', NULL),
+(194, 'IN-APP', '249', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.689', NULL),
+(195, 'EMAIL', 'planaagym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.691', NULL),
+(196, 'EMAIL', 'plancgym@gmail.com', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'FAILED', '2026-07-08 13:05:21.693', NULL),
+(197, 'WHATSAPP', '9876543210', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'SENT', '2026-07-08 13:05:21.697', NULL),
+(198, 'IN-APP', '248', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.699', NULL),
+(199, 'IN-APP', '90', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'READ', '2026-07-08 13:05:21.713', NULL),
+(200, 'IN-APP', '251', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.731', NULL),
+(201, 'IN-APP', '250', 'jhxffuikm\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783496120/announcements/khvu12vsztlxmiheutek.pdf', 'UNREAD', '2026-07-08 13:05:21.734', NULL),
+(202, 'EMAIL', 'Chikkuyadav125@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: Chikkuyadav125@gm', 'FAILED', '2026-07-08 15:51:22.550', NULL),
+(203, 'IN-APP', '252', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: Chikkuyadav125@gm', 'READ', '2026-07-08 15:51:22.563', NULL),
+(204, 'EMAIL', 'Chikkuyadav125@gmail.com', 'Hi chikkugym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0011\n\nRegards,\nSpeed Fitness', 'FAILED', '2026-07-08 15:51:22.578', NULL),
+(205, 'IN-APP', '252', 'Hi chikkugym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.11999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0011\n\nRegards,\nSpeed Fitness', 'READ', '2026-07-08 15:51:22.590', NULL),
+(206, 'EMAIL', 'plancgym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.839', NULL),
+(207, 'IN-APP', '250', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:40.848', NULL),
+(208, 'EMAIL', 'admin@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.892', NULL),
+(209, 'EMAIL', 'planaagym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.941', NULL),
+(210, 'WHATSAPP', '9876543210', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.966', NULL),
+(211, 'IN-APP', '90', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'READ', '2026-07-08 15:57:40.978', NULL),
+(212, 'IN-APP', '251', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:40.991', NULL),
+(213, 'EMAIL', 'plangym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:40.994', NULL),
+(214, 'EMAIL', 'zzgym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.006', NULL),
+(215, 'EMAIL', 'aaagym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.038', NULL),
+(216, 'IN-APP', '248', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.049', NULL),
+(217, 'IN-APP', '247', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.061', NULL),
+(218, 'IN-APP', '246', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.075', NULL),
+(219, 'EMAIL', '7dayssecondfree@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.125', NULL),
+(220, 'IN-APP', '245', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.130', NULL),
+(221, 'EMAIL', '7daysfreetrialgym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.164', NULL),
+(222, 'IN-APP', '244', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.181', NULL),
+(223, 'EMAIL', 'john@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.183', NULL),
+(224, 'IN-APP', '89', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.192', NULL),
+(225, 'EMAIL', 'planbgym@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.258', NULL),
+(226, 'IN-APP', '249', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'UNREAD', '2026-07-08 15:57:41.262', NULL),
+(227, 'EMAIL', 'Chikkuyadav125@gmail.com', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'SENT', '2026-07-08 15:57:41.298', NULL),
+(228, 'IN-APP', '252', 'nbdsjhdjasdknam\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783506458/announcements/iqupsrzh1ikkxqy9xtoi.jpg', 'READ', '2026-07-08 15:57:41.303', NULL),
+(229, 'EMAIL', 'yadavbhakti287@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: yadavbhakti287@gm', 'SENT', '2026-07-08 17:11:51.098', NULL),
+(230, 'IN-APP', '253', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: yadavbhakti287@gm', 'UNREAD', '2026-07-08 17:11:51.114', NULL),
+(231, 'EMAIL', 'yadavbhakti287@gmail.com', 'Hi bhaktigym, \n\nThank you for purchasing the Basic plan. We have received your payment of Rs.8999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0012\n\nRegards,\nSpeed Fitnes', 'SENT', '2026-07-08 17:11:52.445', NULL),
+(232, 'IN-APP', '253', 'Hi bhaktigym, \n\nThank you for purchasing the Basic plan. We have received your payment of Rs.8999.\n\nYour Gym Owner account is active.\n\nTransaction ID: PAY-20260708-0012\n\nRegards,\nSpeed Fitnes', 'UNREAD', '2026-07-08 17:11:52.451', NULL),
+(233, 'EMAIL', 'sarahh@gmail.com', 'Hi sarah,\n\nThank you for your payment of Rs.513 for the Gym Plan plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:18:16.169', 159),
+(234, 'EMAIL', 'sarahh@gmail.com', 'Hi sarah,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sarahh@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:18:16.232', 159),
+(235, 'WHATSAPP', '7067955583', 'Hi sarah,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sarahh@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:18:17.098', 159),
+(236, 'WHATSAPP', '7067955583', 'Hi sarah,\n\nThank you for your payment of Rs.513 for the Gym Plan plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:18:17.099', 159),
+(237, 'IN-APP', '254', 'Hi sarah,\n\nThank you for your payment of Rs.513 for the Gym Plan plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:18:17.102', 159),
+(238, 'IN-APP', '254', 'Hi sarah,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sarahh@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:18:17.100', 159),
+(239, 'EMAIL', 'sanni@gmail.com', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:43:27.528', 160),
+(240, 'EMAIL', 'sanni@gmail.com', 'Hi sanni,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-08 17:43:27.842', 160),
+(241, 'WHATSAPP', '582548666', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:43:27.966', 160);
+INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
+(242, 'IN-APP', '255', 'Hi sanni,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: sanni@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:43:27.969', 160),
+(243, 'WHATSAPP', '582548666', 'Hi sanni,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-08 17:43:28.261', 160),
+(244, 'IN-APP', '255', 'Hi sanni,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-08 17:43:28.265', 160),
+(245, 'EMAIL', 'sanni@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.345', NULL),
+(246, 'IN-APP', '160', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.355', NULL),
+(247, 'EMAIL', 'riya@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.377', NULL),
+(248, 'IN-APP', '158', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.380', NULL),
+(249, 'EMAIL', 'dummy.lead1@example.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.468', NULL),
+(250, 'IN-APP', '155', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.471', NULL),
+(251, 'EMAIL', 'pia@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.521', NULL),
+(252, 'IN-APP', '157', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.528', NULL),
+(253, 'EMAIL', 'demogirl@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.543', NULL),
+(254, 'EMAIL', 'demoboy@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.546', NULL),
+(255, 'IN-APP', '153', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.550', NULL),
+(256, 'IN-APP', '152', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.554', NULL),
+(257, 'EMAIL', 'demoaayu@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.560', NULL),
+(258, 'IN-APP', '154', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.569', NULL),
+(259, 'EMAIL', 'member@gmail.com', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'SENT', '2026-07-08 17:49:42.597', NULL),
+(260, 'IN-APP', '156', 'nbhdfubhhddiaa\n\n📎 Attachment: https://res.cloudinary.com/dw48hcxi5/image/upload/v1783513179/announcements/n2sfy6jibyjdnwhxyuyb.png', 'UNREAD', '2026-07-08 17:49:42.600', NULL),
+(261, 'EMAIL', 'admin@gmail.com', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitn', 'SENT', '2026-07-08 23:32:49.647', NULL),
+(262, 'WHATSAPP', '9876543210', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitn', 'FAILED', '2026-07-08 23:32:50.926', NULL),
+(263, 'IN-APP', '90', 'Hi John Admin, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.8999.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260708-0013\n\nRegards,\nSpeed Fitn', 'READ', '2026-07-08 23:32:50.930', NULL),
+(264, 'IN-APP', '90', 'Checkup Due: 15 days have passed since demo boy\'s last BMI checkup.', 'READ', '2026-07-09 00:00:00.165', 152),
+(265, 'IN-APP', '90', 'Checkup Due: 15 days have passed since Demo girl\'s last BMI checkup.', 'READ', '2026-07-09 00:00:00.182', 153),
+(266, 'EMAIL', 'Chikkuyadav125@gmail.com', 'Hi chikkugym, your trial expires on 9/7/2026. Please purchase a subscription to keep access.', 'SENT', '2026-07-09 00:12:23.239', NULL),
+(267, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'SENT', '2026-07-09 11:25:34.769', NULL),
+(268, 'IN-APP', '256', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'UNREAD', '2026-07-09 11:25:34.778', NULL),
+(269, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'SENT', '2026-07-09 11:30:48.643', NULL),
+(270, 'IN-APP', '259', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'UNREAD', '2026-07-09 11:30:48.648', NULL),
+(271, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'SENT', '2026-07-09 11:33:53.562', NULL),
+(272, 'IN-APP', '260', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: bhagyashreeyadav1001@gmail.c', 'READ', '2026-07-09 11:33:53.567', NULL),
+(273, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'Hi bhgaygym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260709-0019\n\nRegards,\nSpeed Fitne', 'SENT', '2026-07-09 11:42:40.175', NULL),
+(274, 'IN-APP', '260', 'Hi bhgaygym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nTransaction ID: PAY-20260709-0019\n\nRegards,\nSpeed Fitne', 'READ', '2026-07-09 11:42:40.180', NULL),
+(275, 'EMAIL', 'barodjia@gmail.com', 'Hi barodjia,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: barodjia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-13 13:07:53.712', 161),
+(276, 'WHATSAPP', '456563365', 'Hi barodjia,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: barodjia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-13 13:07:54.670', 161),
+(277, 'IN-APP', '275', 'Hi barodjia,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: barodjia@gmail.com\nPassword: 123456\n\nRegards,\nGym Management', 'READ', '2026-07-13 13:07:54.673', 161),
+(278, 'EMAIL', 'barodjia@gmail.com', 'Hi barodjia,\n\nYour new fitness assessment is ready!\n\nMetrics:\nBMI: 18.25\nBody Fat: 60%\nLean Body Mass: 20 kg\nTarget Calories: 1443 kcal\n\nKeep up the great work!', 'FAILED', '2026-07-13 14:14:24.671', NULL),
+(279, 'EMAIL', 'barodjia@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.334', NULL),
+(280, 'IN-APP', '275', 'hello everyone ', 'READ', '2026-07-13 16:04:24.340', NULL),
+(281, 'EMAIL', 'member@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.343', NULL),
+(282, 'IN-APP', '163', 'hello everyone ', 'READ', '2026-07-13 16:04:24.348', NULL),
+(283, 'EMAIL', 'demoboy@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.370', NULL),
+(284, 'EMAIL', 'demoaayu@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.374', NULL),
+(285, 'IN-APP', '224', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.376', NULL),
+(286, 'IN-APP', '227', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.377', NULL),
+(287, 'EMAIL', 'sanni@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.622', NULL),
+(288, 'EMAIL', 'riya@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.625', NULL),
+(289, 'IN-APP', '255', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.632', NULL),
+(290, 'IN-APP', '231', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.634', NULL),
+(291, 'EMAIL', 'pia@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.644', NULL),
+(292, 'EMAIL', 'dummy.lead1@example.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.648', NULL),
+(293, 'EMAIL', 'demogirl@gmail.com', 'hello everyone ', 'FAILED', '2026-07-13 16:04:24.651', NULL),
+(294, 'IN-APP', '230', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.653', NULL),
+(295, 'IN-APP', '228', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.654', NULL),
+(296, 'IN-APP', '225', 'hello everyone ', 'UNREAD', '2026-07-13 16:04:24.655', NULL),
+(297, 'EMAIL', 'demogirl@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:46.853', NULL),
+(298, 'IN-APP', '225', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:46.856', NULL),
+(299, 'EMAIL', 'sanni@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:46.859', NULL),
+(300, 'IN-APP', '255', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:46.861', NULL),
+(301, 'EMAIL', 'riya@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.205', NULL),
+(302, 'IN-APP', '231', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.207', NULL),
+(303, 'EMAIL', 'demoaayu@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.233', NULL),
+(304, 'IN-APP', '227', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.236', NULL),
+(305, 'EMAIL', 'member@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.243', NULL),
+(306, 'IN-APP', '163', 'this is a big announcements  we have to do some celebrations', 'READ', '2026-07-13 16:13:47.245', NULL),
+(307, 'EMAIL', 'barodjia@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.249', NULL),
+(308, 'IN-APP', '275', 'this is a big announcements  we have to do some celebrations', 'READ', '2026-07-13 16:13:47.251', NULL),
+(309, 'EMAIL', 'pia@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.263', NULL),
+(310, 'IN-APP', '230', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.265', NULL),
+(311, 'EMAIL', 'dummy.lead1@example.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.271', NULL),
+(312, 'IN-APP', '228', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.273', NULL),
+(313, 'EMAIL', 'demoboy@gmail.com', 'this is a big announcements  we have to do some celebrations', 'FAILED', '2026-07-13 16:13:47.285', NULL),
+(314, 'IN-APP', '224', 'this is a big announcements  we have to do some celebrations', 'UNREAD', '2026-07-13 16:13:47.288', NULL),
+(315, 'EMAIL', 'barodpia280897@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: barodpia280897@gmail.com\nPas', 'FAILED', '2026-07-14 11:13:49.571', NULL),
+(316, 'IN-APP', '276', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: barodpia280897@gmail.com\nPas', 'UNREAD', '2026-07-14 11:13:49.595', NULL),
+(317, 'EMAIL', 'barodpia280897@gmail.com', 'Hi piiigym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/p', 'SENT', '2026-07-14 12:16:43.741', NULL),
+(318, 'IN-APP', '276', 'Hi piiigym, \n\nThank you for upgrading to the Basic plan. We have received your payment of Rs.91790.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/p', 'UNREAD', '2026-07-14 12:16:43.758', NULL),
+(319, 'EMAIL', 'plangym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.163', NULL),
+(320, 'IN-APP', '248', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.173', NULL),
+(321, 'EMAIL', 'aaagym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.260', NULL),
+(322, 'IN-APP', '246', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.272', NULL),
+(323, 'EMAIL', 'barodgym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.278', NULL),
+(324, 'IN-APP', '267', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.284', NULL),
+(325, 'EMAIL', 'yadavbhakti287@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.293', NULL),
+(326, 'IN-APP', '253', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.300', NULL),
+(327, 'EMAIL', 'planaagym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.318', NULL),
+(328, 'IN-APP', '251', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.327', NULL),
+(329, 'EMAIL', 'singhgym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.352', NULL),
+(330, 'IN-APP', '268', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.360', NULL),
+(331, 'EMAIL', '7dayssecondfree@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.368', NULL),
+(332, 'IN-APP', '245', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.375', NULL),
+(333, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.493', NULL),
+(334, 'EMAIL', 'admin@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.495', NULL),
+(335, 'IN-APP', '244', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.500', NULL),
+(336, 'EMAIL', 'barodpia280897@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.767', NULL),
+(337, 'IN-APP', '276', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.774', NULL),
+(338, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.776', NULL),
+(339, 'IN-APP', '260', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.783', NULL),
+(340, 'EMAIL', 'john@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:11.887', NULL),
+(341, 'IN-APP', '89', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:11.893', NULL),
+(342, 'EMAIL', 'Chikkuyadav125@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:12.015', NULL),
+(343, 'EMAIL', 'planbgym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:12.018', NULL),
+(344, 'IN-APP', '249', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:12.061', NULL),
+(345, 'WHATSAPP', '9876543210', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'FAILED', '2026-07-14 12:39:12.066', NULL),
+(346, 'IN-APP', '90', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'READ', '2026-07-14 12:39:12.071', NULL),
+(347, 'EMAIL', 'zzgym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:12.066', NULL),
+(348, 'IN-APP', '247', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:12.083', NULL),
+(349, 'EMAIL', 'plancgym@gmail.com', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'SENT', '2026-07-14 12:39:12.093', NULL),
+(350, 'IN-APP', '250', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:12.105', NULL),
+(351, 'WHATSAPP', '654789656', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'FAILED', '2026-07-14 12:39:12.303', NULL),
+(352, 'IN-APP', '252', 'hii everyone this is big annoucemets for u \n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784012951/announcements/pm9gjmuuugyoekhhlfba.png', 'UNREAD', '2026-07-14 12:39:12.306', NULL),
+(353, 'EMAIL', 'planaagym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.264', NULL),
+(354, 'EMAIL', 'barodgym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.267', NULL),
+(355, 'EMAIL', 'admin@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.287', NULL),
+(356, 'IN-APP', '251', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.291', NULL),
+(357, 'IN-APP', '267', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.298', NULL),
+(358, 'EMAIL', 'singhgym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.314', NULL),
+(359, 'EMAIL', 'barodpia280897@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.327', NULL),
+(360, 'IN-APP', '268', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.336', NULL),
+(361, 'IN-APP', '276', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.340', NULL),
+(362, 'EMAIL', 'john@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.352', NULL),
+(363, 'IN-APP', '89', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.361', NULL),
+(364, 'EMAIL', 'plancgym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.422', NULL),
+(365, 'IN-APP', '250', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.432', NULL),
+(366, 'EMAIL', 'planbgym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.518', NULL),
+(367, 'IN-APP', '249', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.528', NULL),
+(368, 'EMAIL', 'aaagym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.549', NULL),
+(369, 'IN-APP', '246', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.561', NULL),
+(370, 'EMAIL', 'yadavbhakti287@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.591', NULL),
+(371, 'IN-APP', '253', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.601', NULL),
+(372, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.610', NULL),
+(373, 'IN-APP', '260', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.620', NULL),
+(374, 'WHATSAPP', '9876543210', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'FAILED', '2026-07-14 12:45:42.695', NULL),
+(375, 'IN-APP', '90', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'READ', '2026-07-14 12:45:42.699', NULL),
+(376, 'EMAIL', 'zzgym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.970', NULL),
+(377, 'EMAIL', 'plangym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:42.976', NULL),
+(378, 'IN-APP', '247', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.992', NULL),
+(379, 'IN-APP', '248', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:42.993', NULL),
+(380, 'EMAIL', 'Chikkuyadav125@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:43.003', NULL),
+(381, 'EMAIL', '7daysfreetrialgym@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:43.272', NULL),
+(382, 'WHATSAPP', '654789656', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'FAILED', '2026-07-14 12:45:43.293', NULL),
+(383, 'IN-APP', '244', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:43.297', NULL),
+(384, 'IN-APP', '252', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:43.301', NULL),
+(385, 'EMAIL', '7dayssecondfree@gmail.com', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'SENT', '2026-07-14 12:45:43.357', NULL),
+(386, 'IN-APP', '245', ' hi hi hi hi\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784013343/announcements/qdxdxba0uvdjsndg1fd8.pdf', 'UNREAD', '2026-07-14 12:45:43.372', NULL),
+(387, 'EMAIL', 'Chikkuyadav125@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:58.940', NULL),
+(388, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:58.943', NULL),
+(389, 'IN-APP', '260', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.013', NULL),
+(390, 'EMAIL', 'barodpia280897@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:59.016', NULL),
+(391, 'IN-APP', '276', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.049', NULL),
+(392, 'EMAIL', 'admin@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:59.104', NULL),
+(393, 'WHATSAPP', '654789656', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'FAILED', '2026-07-14 12:49:59.386', NULL),
+(394, 'IN-APP', '252', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.390', NULL),
+(395, 'WHATSAPP', '9876543210', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'FAILED', '2026-07-14 12:49:59.450', NULL),
+(396, 'IN-APP', '90', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'READ', '2026-07-14 12:49:59.455', NULL),
+(397, 'EMAIL', 'barodgym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:59.746', NULL),
+(398, 'IN-APP', '267', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.759', NULL),
+(399, 'EMAIL', 'singhgym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:59.768', NULL),
+(400, 'IN-APP', '268', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.776', NULL),
+(401, 'EMAIL', 'aaagym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:59.857', NULL),
+(402, 'IN-APP', '246', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.865', NULL),
+(403, 'EMAIL', 'john@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:49:59.933', NULL),
+(404, 'IN-APP', '89', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:49:59.939', NULL),
+(405, 'EMAIL', 'yadavbhakti287@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:00.140', NULL),
+(406, 'IN-APP', '253', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:00.148', NULL),
+(407, 'EMAIL', 'plancgym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:06.531', NULL),
+(408, 'IN-APP', '250', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:06.538', NULL),
+(409, 'EMAIL', '7dayssecondfree@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:06.837', NULL),
+(410, 'IN-APP', '245', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:06.844', NULL),
+(411, 'EMAIL', 'planaagym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:07.101', NULL),
+(412, 'IN-APP', '251', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:07.110', NULL),
+(413, 'EMAIL', 'zzgym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:07.451', NULL),
+(414, 'IN-APP', '247', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:07.456', NULL),
+(415, 'EMAIL', 'plangym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:07.725', NULL),
+(416, 'IN-APP', '248', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:07.733', NULL),
+(417, 'EMAIL', 'planbgym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:08.070', NULL),
+(418, 'IN-APP', '249', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:08.077', NULL),
+(419, 'EMAIL', '7daysfreetrialgym@gmail.com', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'SENT', '2026-07-14 12:50:08.372', NULL),
+(420, 'IN-APP', '244', 'heyy heeyy\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784013600/announcements/g1vyghkhbxrbf55lccwo', 'UNREAD', '2026-07-14 12:50:08.378', NULL),
+(421, 'EMAIL', 'planaagym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.294', NULL),
+(422, 'IN-APP', '251', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.309', NULL),
+(423, 'EMAIL', 'Chikkuyadav125@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.317', NULL),
+(424, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.379', NULL),
+(425, 'EMAIL', 'zzgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.380', NULL),
+(426, 'IN-APP', '260', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.422', NULL),
+(427, 'EMAIL', 'john@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.424', NULL),
+(428, 'EMAIL', 'singhgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.426', NULL),
+(429, 'EMAIL', 'plangym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:31.427', NULL),
+(430, 'IN-APP', '247', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.430', NULL),
+(431, 'IN-APP', '89', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.449', NULL),
+(432, 'IN-APP', '268', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.452', NULL),
+(433, 'IN-APP', '248', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.458', NULL),
+(434, 'WHATSAPP', '654789656', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'FAILED', '2026-07-14 12:58:31.827', NULL),
+(435, 'IN-APP', '252', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:31.830', NULL),
+(436, 'EMAIL', '7dayssecondfree@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:38.751', NULL),
+(437, 'IN-APP', '245', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:38.761', NULL),
+(438, 'EMAIL', 'plancgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:39.051', NULL),
+(439, 'IN-APP', '250', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:39.058', NULL),
+(440, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:39.468', NULL),
+(441, 'IN-APP', '244', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:39.480', NULL),
+(442, 'EMAIL', 'aaagym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:39.872', NULL),
+(443, 'IN-APP', '246', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:39.881', NULL),
+(444, 'EMAIL', 'planbgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:40.290', NULL),
+(445, 'IN-APP', '249', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:40.311', NULL),
+(446, 'EMAIL', 'yadavbhakti287@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:40.490', NULL),
+(447, 'IN-APP', '253', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:40.494', NULL),
+(448, 'EMAIL', 'barodgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:40.573', NULL),
+(449, 'IN-APP', '267', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:40.578', NULL),
+(450, 'EMAIL', 'barodpia280897@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:41.007', NULL),
+(451, 'IN-APP', '276', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'UNREAD', '2026-07-14 12:58:41.020', NULL),
+(452, 'EMAIL', 'admin@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'SENT', '2026-07-14 12:58:41.309', NULL),
+(453, 'WHATSAPP', '9876543210', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'FAILED', '2026-07-14 12:58:42.044', NULL),
+(454, 'IN-APP', '90', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784014111/announcements/d6xj05b2_1784014107025.pdf', 'READ', '2026-07-14 12:58:42.065', NULL),
+(455, 'EMAIL', 'naliniparas228@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: naliniparas228@gm', 'SENT', '2026-07-14 15:01:48.759', NULL),
+(456, 'IN-APP', '282', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated successfully (Paid Plan).\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: naliniparas228@gm', 'UNREAD', '2026-07-14 15:01:48.769', NULL),
+(457, 'EMAIL', 'naliniparas228@gmail.com', 'Hi nalinigym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.2850.\n\nYour Gym Owner account is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/pur', 'SENT', '2026-07-14 15:01:50.784', NULL),
+(458, 'IN-APP', '282', 'Hi nalinigym, \n\nThank you for purchasing the Pro plan. We have received your payment of Rs.2850.\n\nYour Gym Owner account is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api/v1/pur', 'UNREAD', '2026-07-14 15:01:50.790', NULL),
+(459, 'EMAIL', 'rsld2012@gmail.com', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rsld2012@gmail.com\nPassword:', 'SENT', '2026-07-14 15:45:45.992', NULL),
+(460, 'IN-APP', '283', '🎉 Welcome to Gym Management!\nYour Gym Owner account has been created and activated automatically.\n\nLogin Details:\nURL: http://localhost:5173/login\nUsername/Email: rsld2012@gmail.com\nPassword:', 'READ', '2026-07-14 15:45:46.001', NULL),
+(461, 'EMAIL', 'rsld2012@gmail.com', 'Hi raj_shekar sir, \n\nThank you for upgrading to the Pro plan. We have received your payment of Rs.10199.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api', 'SENT', '2026-07-14 15:53:42.360', NULL),
+(462, 'IN-APP', '283', 'Hi raj_shekar sir, \n\nThank you for upgrading to the Pro plan. We have received your payment of Rs.10199.\n\nYour new subscription is active.\n\nDownload Tax Invoice PDF: http://localhost:5000/api', 'UNREAD', '2026-07-14 15:53:42.371', NULL),
+(463, 'EMAIL', 'planbgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:30.901', NULL),
+(464, 'IN-APP', '249', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:30.915', NULL),
+(465, 'EMAIL', 'admin@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:30.961', NULL),
+(466, 'EMAIL', 'naliniparas228@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.042', NULL),
+(467, 'EMAIL', 'zzgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.043', NULL),
+(468, 'EMAIL', 'john@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.051', NULL),
+(469, 'EMAIL', 'barodpia280897@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.057', NULL),
+(470, 'IN-APP', '282', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.074', NULL),
+(471, 'IN-APP', '247', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.077', NULL),
+(472, 'IN-APP', '89', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.081', NULL),
+(473, 'IN-APP', '276', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.084', NULL),
+(474, 'EMAIL', 'aaagym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.088', NULL),
+(475, 'EMAIL', 'singhgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.148', NULL),
+(476, 'IN-APP', '246', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.158', NULL),
+(477, 'IN-APP', '268', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.179', NULL),
+(478, 'EMAIL', 'barodgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.353', NULL),
+(479, 'IN-APP', '267', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.367', NULL),
+(480, 'EMAIL', '7dayssecondfree@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.378', NULL),
+(481, 'EMAIL', 'rsld2012@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.467', NULL),
+(482, 'WHATSAPP', '9876543210', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'FAILED', '2026-07-14 16:05:31.488', NULL),
+(483, 'IN-APP', '245', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.491', NULL),
+(484, 'IN-APP', '90', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'READ', '2026-07-14 16:05:31.496', NULL),
+(485, 'IN-APP', '283', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.505', NULL),
+(486, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.507', NULL);
+INSERT INTO `notificationlog` (`id`, `type`, `to`, `message`, `status`, `createdAt`, `memberId`) VALUES
+(487, 'IN-APP', '244', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.513', NULL),
+(488, 'EMAIL', 'plancgym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.541', NULL),
+(489, 'IN-APP', '250', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.552', NULL),
+(490, 'EMAIL', 'yadavbhakti287@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.641', NULL),
+(491, 'IN-APP', '253', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.664', NULL),
+(492, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.674', NULL),
+(493, 'IN-APP', '260', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.700', NULL),
+(494, 'EMAIL', 'Chikkuyadav125@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.704', NULL),
+(495, 'EMAIL', 'planaagym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.798', NULL),
+(496, 'IN-APP', '251', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.806', NULL),
+(497, 'EMAIL', 'plangym@gmail.com', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'SENT', '2026-07-14 16:05:31.834', NULL),
+(498, 'IN-APP', '248', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.846', NULL),
+(499, 'WHATSAPP', '654789656', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'FAILED', '2026-07-14 16:05:31.960', NULL),
+(500, 'IN-APP', '252', 'hello everyone\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/image/upload/v1784025332/announcements/635u0x2r_1784025327246.jpeg.jpg', 'UNREAD', '2026-07-14 16:05:31.962', NULL),
+(501, 'EMAIL', 'Chikkuyadav125@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.233', NULL),
+(502, 'EMAIL', 'singhgym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.284', NULL),
+(503, 'IN-APP', '268', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.294', NULL),
+(504, 'EMAIL', 'aaagym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.350', NULL),
+(505, 'EMAIL', 'plangym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.351', NULL),
+(506, 'EMAIL', 'yadavbhakti287@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.353', NULL),
+(507, 'IN-APP', '246', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.371', NULL),
+(508, 'IN-APP', '248', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.375', NULL),
+(509, 'IN-APP', '253', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.377', NULL),
+(510, 'EMAIL', 'bhagyashreeyadav1001@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.469', NULL),
+(511, 'EMAIL', 'barodpia280897@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.472', NULL),
+(512, 'IN-APP', '260', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.480', NULL),
+(513, 'IN-APP', '276', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.482', NULL),
+(514, 'EMAIL', '7daysfreetrialgym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.731', NULL),
+(515, 'IN-APP', '244', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.734', NULL),
+(516, 'EMAIL', 'admin@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.793', NULL),
+(517, 'EMAIL', 'plancgym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.853', NULL),
+(518, 'EMAIL', 'zzgym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.855', NULL),
+(519, 'EMAIL', '7dayssecondfree@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.858', NULL),
+(520, 'IN-APP', '250', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.862', NULL),
+(521, 'IN-APP', '247', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.863', NULL),
+(522, 'IN-APP', '245', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.864', NULL),
+(523, 'EMAIL', 'john@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.872', NULL),
+(524, 'EMAIL', 'planaagym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.874', NULL),
+(525, 'EMAIL', 'planbgym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.876', NULL),
+(526, 'IN-APP', '89', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.883', NULL),
+(527, 'IN-APP', '251', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.884', NULL),
+(528, 'IN-APP', '249', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.885', NULL),
+(529, 'WHATSAPP', '654789656', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'FAILED', '2026-07-14 16:06:33.963', NULL),
+(530, 'IN-APP', '252', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:33.965', NULL),
+(531, 'EMAIL', 'naliniparas228@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:33.999', NULL),
+(532, 'EMAIL', 'rsld2012@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:34.001', NULL),
+(533, 'EMAIL', 'barodgym@gmail.com', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'SENT', '2026-07-14 16:06:34.005', NULL),
+(534, 'IN-APP', '282', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:34.031', NULL),
+(535, 'IN-APP', '283', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:34.042', NULL),
+(536, 'IN-APP', '267', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'UNREAD', '2026-07-14 16:06:34.051', NULL),
+(537, 'WHATSAPP', '9876543210', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'FAILED', '2026-07-14 16:06:34.544', NULL),
+(538, 'IN-APP', '90', 'hiii\n\n📎 Attachment: https://res.cloudinary.com/fosnfvnp/raw/upload/v1784025395/announcements/yqql5lyi_1784025389541.pdf', 'READ', '2026-07-14 16:06:34.546', NULL),
+(539, 'EMAIL', 'rajshekkar12@gmai.com', 'Hi rahshekar2,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: rajshekkar12@gmai.com\nPassword: 123456\n\nRegards,\nGym Management', 'SENT', '2026-07-14 16:38:54.216', 162),
+(540, 'EMAIL', 'rajshekkar12@gmai.com', 'Hi rahshekar2,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-14 16:38:54.217', 162),
+(541, 'WHATSAPP', '545656656', 'Hi rahshekar2,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-14 16:38:54.660', 162),
+(542, 'IN-APP', '285', 'Hi rahshekar2,\n\nThank you for your payment of Rs.200 for the Pre plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'READ', '2026-07-14 16:38:54.664', 162),
+(543, 'WHATSAPP', '545656656', 'Hi rahshekar2,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: rajshekkar12@gmai.com\nPassword: 123456\n\nRegards,\nGym Management', 'FAILED', '2026-07-14 16:38:54.968', 162),
+(544, 'IN-APP', '285', 'Hi rahshekar2,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: rajshekkar12@gmai.com\nPassword: 123456\n\nRegards,\nGym Management', 'READ', '2026-07-14 16:38:54.975', 162),
+(545, 'EMAIL', 'demoboy@gmail.com', 'Hi demo boy, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:39.220', 152),
+(546, 'IN_APP', 'demoboy@gmail.com', 'Hi demo boy, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:41.214', 152),
+(547, 'EMAIL', 'demogirl@gmail.com', 'Hi Demo girl, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:41.253', 153),
+(548, 'IN_APP', 'demogirl@gmail.com', 'Hi Demo girl, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:43.020', 153),
+(549, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:43.038', 154),
+(550, 'IN_APP', 'demoaayu@gmail.com', 'Hi Demo Aayush, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:44.222', 154),
+(551, 'EMAIL', 'dummy.lead1@example.com', 'Hi Dummy Lead 1, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:44.239', 155),
+(552, 'IN_APP', 'dummy.lead1@example.com', 'Hi Dummy Lead 1, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:45.166', 155),
+(553, 'EMAIL', 'member@gmail.com', 'Hi Mamber, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:45.179', 156),
+(554, 'IN_APP', 'member@gmail.com', 'Hi Mamber, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:46.078', 156),
+(555, 'EMAIL', 'pia@gmail.com', 'Hi pia b, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:46.110', 157),
+(556, 'IN_APP', 'pia@gmail.com', 'Hi pia b, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:47.060', 157),
+(557, 'EMAIL', 'riya@gmail.com', 'Hi riya , consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:47.081', 158),
+(558, 'IN_APP', 'riya@gmail.com', 'Hi riya , consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:48.850', 158),
+(559, 'EMAIL', 'sarahh@gmail.com', 'Hi sarah, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:48.862', 159),
+(560, 'IN_APP', 'sarahh@gmail.com', 'Hi sarah, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:50.548', 159),
+(561, 'EMAIL', 'sanni@gmail.com', 'Hi sanni, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:50.560', 160),
+(562, 'IN_APP', 'sanni@gmail.com', 'Hi sanni, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:51.421', 160),
+(563, 'EMAIL', 'barodjia@gmail.com', 'Hi barodjia, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:51.431', 161),
+(564, 'IN_APP', 'barodjia@gmail.com', 'Hi barodjia, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:52.318', 161),
+(565, 'EMAIL', 'rajshekkar12@gmai.com', 'Hi rahshekar2, consistency is key! Let us know if you need any help getting back on track.', 'SENT', '2026-07-14 16:54:52.328', 162),
+(566, 'IN_APP', 'rajshekkar12@gmai.com', 'Hi rahshekar2, consistency is key! Let us know if you need any help getting back on track.', 'PENDING', '2026-07-14 16:54:54.008', 162),
+(567, 'IN-APP', '90', 'Checkup Due: 15 days have passed since demo boy\'s last BMI checkup.', 'UNREAD', '2026-07-17 00:00:00.058', 152),
+(568, 'IN-APP', '90', 'Checkup Due: 15 days have passed since Demo girl\'s last BMI checkup.', 'UNREAD', '2026-07-17 00:00:00.096', 153),
+(569, 'EMAIL', 'johne@gmail.com', 'Hi john,\n\nThank you for your payment of Rs.25000 for the Diwali Bonus plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 11:14:00.052', 163),
+(570, 'EMAIL', 'johne@gmail.com', 'Hi john,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: johne@gmail.com\nPassword: 123456789\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 11:14:00.061', 163),
+(571, 'IN-APP', '286', 'Hi john,\n\nThank you for your payment of Rs.25000 for the Diwali Bonus plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 11:14:00.072', 163),
+(572, 'IN-APP', '286', 'Hi john,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: johne@gmail.com\nPassword: 123456789\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 11:14:00.077', 163),
+(573, 'EMAIL', 'barodjia@gmail.com', 'Hi barodjia,\n\nYour new fitness assessment is ready!\n\nMetrics:\nBMI: 24.89\nBody Fat: 60%\nLean Body Mass: 22.4 kg\nTarget Calories: 1673 kcal\n\nKeep up the great work!', 'FAILED', '2026-07-20 11:23:50.243', NULL),
+(574, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush,\n\nYour new fitness assessment is ready!\n\nMetrics:\nBMI: 22.03\nBody Fat: 29.92%\nLean Body Mass: 38.54 kg\nTarget Calories: 2555 kcal\n\nKeep up the great work!', 'FAILED', '2026-07-20 11:30:30.473', NULL),
+(575, 'EMAIL', 'xyz@gmail.com', 'Hi xyz,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: xyz@gmail.com\nPassword: 1234456798\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 12:54:32.803', 164),
+(576, 'EMAIL', 'xyz@gmail.com', 'Hi xyz,\n\nThank you for your payment of Rs.34000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 12:54:32.804', 164),
+(577, 'WHATSAPP', '98765432345', 'Hi xyz,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: xyz@gmail.com\nPassword: 1234456798\n\nRegards,\nGym Management', 'SENT', '2026-07-20 12:54:32.827', 164),
+(578, 'WHATSAPP', '98765432345', 'Hi xyz,\n\nThank you for your payment of Rs.34000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-20 12:54:32.831', 164),
+(579, 'IN-APP', '287', 'Hi xyz,\n\nWelcome to our gym! 🏋️‍♂️ Your membership is registered successfully.\n\nLogin credentials:\nEmail: xyz@gmail.com\nPassword: 1234456798\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 12:54:32.832', 164),
+(580, 'IN-APP', '287', 'Hi xyz,\n\nThank you for your payment of Rs.34000 for the general plan(s).\n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 12:54:32.834', 164),
+(581, 'EMAIL', 'demoaayu@gmail.com', 'Hi Demo Aayush, \n\nThank you for your payment of Rs.1200 for the Basic plan. \n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'FAILED', '2026-07-20 13:15:53.497', 154),
+(582, 'WHATSAPP', '1234567890', 'Hi Demo Aayush, \n\nThank you for your payment of Rs.1200 for the Basic plan. \n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'SENT', '2026-07-20 13:15:53.524', 154),
+(583, 'IN-APP', '227', 'Hi Demo Aayush, \n\nThank you for your payment of Rs.1200 for the Basic plan. \n\nYour membership is now active. Enjoy your workout! 💪\n\nRegards,\nGym Management', 'UNREAD', '2026-07-20 13:15:53.529', 154);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment`
+--
+
+CREATE TABLE `payment` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `planId` int(11) NOT NULL,
+  `amount` double NOT NULL,
+  `paymentDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `invoiceNo` varchar(191) NOT NULL,
+  `gstAmount` double DEFAULT NULL,
+  `gstPercent` double DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payment`
+--
+
+INSERT INTO `payment` (`id`, `memberId`, `planId`, `amount`, `paymentDate`, `invoiceNo`, `gstAmount`, `gstPercent`) VALUES
+(4, 154, 24, 1200, '2026-07-20 13:15:53.404', 'INV-1784533553403-334', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `plan`
+--
+
+CREATE TABLE `plan` (
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `duration` enum('Monthly','Yearly','7 Days') NOT NULL,
+  `price` double NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `category` varchar(191) DEFAULT NULL,
+  `description` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'ACTIVE',
+  `branchId` int(11) DEFAULT NULL,
+  `sessions` int(11) NOT NULL DEFAULT 0,
+  `validityDays` int(11) NOT NULL DEFAULT 0,
+  `taxRate` decimal(5,2) DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `plan`
+--
+
+INSERT INTO `plan` (`id`, `name`, `duration`, `price`, `createdAt`, `category`, `description`, `status`, `branchId`, `sessions`, `validityDays`, `taxRate`) VALUES
+(16, 'Gold', 'Yearly', 4998, '2025-12-10 03:23:46.781', 'BASIC', 'test tsting', 'ACTIVE', NULL, 0, 0, 0.00),
+(17, 'Basic', 'Monthly', 8999, '2025-12-10 03:26:29.134', 'BASIC', 'demo', 'ACTIVE', NULL, 0, 0, 0.00),
+(18, 'Pro', 'Yearly', 11999, '2025-12-10 03:26:56.723', 'PRO', 'Life Time', 'ACTIVE', NULL, 0, 0, 0.00),
+(19, 'bronz', 'Monthly', 2000, '2026-07-14 16:17:47.470', 'BASIC', '', 'ACTIVE', NULL, 0, 0, 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product`
+--
+
+CREATE TABLE `product` (
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `sku` varchar(191) DEFAULT NULL,
+  `category` varchar(191) DEFAULT NULL,
+  `sellingPrice` double NOT NULL,
+  `costPrice` double DEFAULT NULL,
+  `currentStock` int(11) NOT NULL DEFAULT 0,
+  `branchId` int(11) NOT NULL,
+  `isActive` tinyint(1) NOT NULL DEFAULT 1,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pt_bookings`
+--
+
+CREATE TABLE `pt_bookings` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `trainerId` int(11) NOT NULL,
+  `sessionId` int(11) DEFAULT NULL,
+  `date` date NOT NULL,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
+  `bookingStatus` varchar(20) DEFAULT 'Booked',
+  `paymentStatus` varchar(20) DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime DEFAULT current_timestamp(),
+  `updatedAt` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `purchase`
+--
+
+CREATE TABLE `purchase` (
+  `id` int(11) NOT NULL,
+  `selectedPlan` varchar(191) NOT NULL,
+  `companyName` varchar(191) NOT NULL,
+  `email` varchar(191) NOT NULL,
+  `billingDuration` varchar(191) NOT NULL,
+  `startDate` datetime(3) NOT NULL,
+  `purchaseDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `status` varchar(191) NOT NULL DEFAULT 'pending',
+  `amount` decimal(10,2) DEFAULT 0.00,
+  `phone` varchar(20) DEFAULT NULL,
+  `adminName` varchar(191) DEFAULT NULL,
+  `branchName` varchar(191) DEFAULT NULL,
+  `gstNumber` varchar(191) DEFAULT NULL,
+  `city` varchar(191) DEFAULT NULL,
+  `profileImage` text DEFAULT NULL,
+  `transactionId` varchar(255) DEFAULT NULL,
+  `password` varchar(191) DEFAULT NULL,
+  `visiblePassword` varchar(191) DEFAULT NULL,
+  `paymentMethod` varchar(191) DEFAULT NULL,
+  `paymentDetails` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `purchase`
+--
+
+INSERT INTO `purchase` (`id`, `selectedPlan`, `companyName`, `email`, `billingDuration`, `startDate`, `purchaseDate`, `status`, `amount`, `phone`, `adminName`, `branchName`, `gstNumber`, `city`, `profileImage`, `transactionId`, `password`, `visiblePassword`, `paymentMethod`, `paymentDetails`) VALUES
+(1, '7-Day Free Trial', '7daysfreetrialgym', '7daysfreetrialgym@gmail.com', 'Monthly', '2026-07-10 05:30:00.000', '2026-07-07 16:22:58.160', 'approved', 0.00, '4561237899', '', '', NULL, NULL, NULL, 'PAY-20260707-0001', NULL, NULL, NULL, NULL),
+(2, '7-Day Free Trial', '7dayssecondfree', '7dayssecondfree@gmail.com', 'Yearly', '2026-07-10 05:30:00.000', '2026-07-07 16:51:03.115', 'approved', 0.00, '554545545', '', '', '52698323', NULL, NULL, 'PAY-20260707-0002', NULL, NULL, NULL, NULL),
+(3, 'Pro', '7dayssecondfree', '7dayssecondfree@gmail.com', 'Yearly', '2026-07-07 16:53:19.287', '2026-07-07 16:53:19.294', 'approved', 11999.00, '554545545', '7dayssecondfree', '', NULL, NULL, NULL, 'PAY-20260707-0003', NULL, NULL, NULL, NULL),
+(4, '7-Day Free Trial', 'aaagym', 'aaagym@gmail.com', 'Yearly', '2026-07-10 05:30:00.000', '2026-07-07 17:17:18.563', 'approved', 0.00, '6565362545', '', '', '5869746565', 'noida', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783424837/users/profile/djb6cg5qtj3jc2urps8z.png', 'PAY-20260707-0004', NULL, NULL, NULL, NULL),
+(5, 'Pro', 'aaagym', 'aaagym@gmail.com', 'Yearly', '2026-07-07 18:17:48.746', '2026-07-07 18:17:48.897', 'approved', 11999.00, '6565362545', 'aaagym', '', NULL, NULL, NULL, 'PAY-20260707-0005', NULL, NULL, NULL, NULL),
+(6, 'Pro', 'zzgym', 'zzgym@gmail.com', 'Yearly', '2026-07-11 05:30:00.000', '2026-07-07 18:23:15.705', 'approved', 0.00, '456789965', '', '', '5689565965', 'indore', NULL, 'PAY-20260707-0006', NULL, NULL, NULL, NULL),
+(7, 'Pro', 'plangym', 'plangym@gmail.com', 'Yearly', '2026-07-10 05:30:00.000', '2026-07-08 11:01:56.929', 'approved', 0.00, '5522336984', '', '', '325698596536', 'gujrat', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783488716/users/profile/fl4aezlflkfctqxhcuzn.png', 'PAY-20260708-0007', '123456', '123456', 'UPI', 'bhhshhas@256'),
+(8, 'Basic', 'planbgym', 'planbgym@gmail.com', 'Yearly', '2026-07-10 05:30:00.000', '2026-07-08 11:11:47.300', 'approved', 8999.00, '5689565656', '', '', '3569563259', 'suart', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783489307/users/profile/znhmejtrynlh9uvknhnb.png', 'PAY-20260708-0008', '123456', '123456', 'UPI', 'planbgym@xml'),
+(9, 'Gold', 'plancgym', 'plancgym@gmail.com', 'Yearly', '2026-07-11 05:30:00.000', '2026-07-08 11:27:20.945', 'approved', 4998.00, '456136554', '', '', '658659856', 'ahemdabad', NULL, 'PAY-20260708-0009', '123456', '123456', 'UPI', 'jsdsk@123'),
+(10, 'Pro', 'palnaagym', 'planaagym@gmail.com', 'Yearly', '2026-07-15 05:30:00.000', '2026-07-08 11:40:07.853', 'approved', 11999.00, '455656565', '', '', '565565965', 'ranchi', NULL, 'PAY-20260708-0010', '123456', '123456', 'UPI', 'planaagym@123'),
+(11, 'Pro', 'chikkugym', 'Chikkuyadav125@gmail.com', 'Yearly', '2026-07-10 05:30:00.000', '2026-07-08 15:51:22.195', 'approved', 11999.00, '654789656', '', '', '659898656598', 'indore', NULL, 'PAY-20260708-0011', '123456', '123456', 'UPI', 'chikkuydv@8wj'),
+(12, 'Basic', 'bhaktigym', 'yadavbhakti287@gmail.com', 'Yearly', '2026-07-08 05:30:00.000', '2026-07-08 17:11:48.897', 'approved', 8999.00, '9713391164', '', '', '598568965', 'indore', NULL, 'PAY-20260708-0012', '123456', '123456', 'UPI', '69869@sdsd'),
+(13, 'Basic', 'John Admin', 'admin@gmail.com', 'Yearly', '2026-07-08 23:32:45.388', '2026-07-08 23:32:45.538', 'approved', 8999.00, '9876543210', 'John Admin', 'Fitness', NULL, NULL, NULL, 'PAY-20260708-0013', NULL, NULL, NULL, NULL),
+(14, '7-Day Free Trial', 'bhagyashreegym', 'bhagyashreeyadav1001@gmail.com', 'Yearly', '2026-07-09 05:30:00.000', '2026-07-09 11:25:30.549', 'approved', 0.00, '101010101010', '', '', '9768563455', 'noida', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783576529/users/profile/zrcfq6yuelm03mzvwgko.jpg', 'PAY-20260709-0014', '123456', '123456', NULL, NULL),
+(15, '7-Day Free Trial', 'bhagyashreegym', 'bhagyashreeyadav1001@gmail.com', 'Yearly', '2026-07-09 05:30:00.000', '2026-07-09 11:25:31.097', 'approved', 0.00, '101010101010', '', '', '9768563455', 'noida', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783576530/users/profile/ezxbhvwrgek8dhf09y0r.jpg', 'PAY-20260709-0015', '123456', '123456', NULL, NULL),
+(16, '7-Day Free Trial', 'bhagyashreegym', 'bhagyashreeyadav1001@gmail.com', 'Yearly', '2026-07-09 05:30:00.000', '2026-07-09 11:25:33.526', 'approved', 0.00, '101010101010', '', '', '9768563455', 'noida', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783576532/users/profile/dvxjezwinwomwuizstyh.jpg', 'PAY-20260709-0016', '123456', '123456', NULL, NULL),
+(17, '7-Day Free Trial', 'bhgayshreegym', 'bhagyashreeyadav1001@gmail.com', 'Yearly', '2026-07-09 05:30:00.000', '2026-07-09 11:30:42.926', 'approved', 0.00, '5588996648', '', '', '5885695656', 'noida', NULL, 'PAY-20260709-0017', '123456', '123456', NULL, NULL),
+(18, '7-Day Free Trial', 'bhgaygym', 'bhagyashreeyadav1001@gmail.com', 'Yearly', '2026-07-09 05:30:00.000', '2026-07-09 11:33:49.344', 'approved', 0.00, '101010101019', '', '', '65898563265', 'noida', NULL, 'PAY-20260709-0018', '123456', '123456', NULL, NULL),
+(19, 'Basic', 'bhgaygym', 'bhagyashreeyadav1001@gmail.com', 'Yearly', '2026-07-09 11:42:36.695', '2026-07-09 11:42:36.751', 'approved', 91790.00, '101010101019', 'bhgaygym', '', NULL, NULL, NULL, 'PAY-20260709-0019', NULL, NULL, NULL, NULL),
+(20, '7-Day Free Trial', 'piiigym', 'barodpia280897@gmail.com', 'Yearly', '2026-07-14 05:30:00.000', '2026-07-14 11:13:48.390', 'approved', 0.00, '1234567890', '', '', '74AS741851526', 'noida', NULL, 'PAY-20260714-0020', '123456', '123456', NULL, NULL),
+(21, 'Basic', 'piiigym', 'barodpia280897@gmail.com', 'Yearly', '2026-07-14 12:16:41.741', '2026-07-14 12:16:41.776', 'approved', 91790.00, '1234567890', 'piiigym', '', NULL, NULL, NULL, 'PAY-20260714-0021', NULL, NULL, 'UPI', 'piabbb@123'),
+(22, 'Pro', 'nalinigym', 'naliniparas228@gmail.com', 'Quarterly', '2026-07-14 05:30:00.000', '2026-07-14 15:01:47.188', 'approved', 2850.00, '5566223148', '', '', '74AS741851528', 'pipli', 'https://res.cloudinary.com/fosnfvnp/image/upload/v1784021510/users/profile/q9lscukx_1784021504204.png.png', 'PAY-20260714-0022', '123456', '123456', 'UPI', 'naliniparas@888'),
+(23, '7-Day Free Trial', 'raj_shekar sir', 'rsld2012@gmail.com', 'Quarterly', '2026-07-14 05:30:00.000', '2026-07-14 15:45:43.569', 'approved', 0.00, '5566442563', '', '', '74AS741851527', 'delhi', NULL, 'PAY-20260714-0023', '123456', '123456', NULL, NULL),
+(24, 'Pro', 'raj_shekar sir', 'rsld2012@gmail.com', 'Yearly', '2026-07-14 15:53:40.549', '2026-07-14 15:53:40.640', 'approved', 10199.00, '5566442563', 'raj_shekar sir', '', NULL, NULL, NULL, 'PAY-20260714-0024', NULL, NULL, 'UPI', 'rajshear@567');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role`
+--
+
+CREATE TABLE `role` (
+  `id` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `role`
+--
+
+INSERT INTO `role` (`id`, `name`, `createdAt`) VALUES
+(1, 'Superadmin', '2025-12-03 06:06:52.620'),
+(2, 'Admin', '2025-12-03 06:06:52.627'),
+(3, 'trainer', '2025-12-03 06:06:52.631'),
+(4, 'member', '2025-12-03 06:06:52.634'),
+(5, 'personaltrainer', '2025-12-04 15:15:26.000'),
+(6, 'generaltrainer', '2025-12-04 15:15:26.000'),
+(7, 'receptionist', '2025-12-04 15:15:26.000'),
+(8, 'housekeeping', '2025-12-04 15:15:26.000'),
+(9, 'Subadmin', '2026-06-09 17:18:59.713'),
+(10, 'sales_agent', '2026-06-19 14:38:31.077');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `saas_payments`
+--
+
+CREATE TABLE `saas_payments` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `amount` double NOT NULL,
+  `planType` varchar(191) NOT NULL,
+  `paymentStatus` varchar(191) NOT NULL,
+  `transactionId` varchar(191) DEFAULT NULL,
+  `paymentDate` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `expiryDate` datetime(3) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `salary`
+--
+
+CREATE TABLE `salary` (
+  `id` int(11) NOT NULL,
+  `salaryId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `staffId` int(11) NOT NULL,
+  `role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `periodStart` datetime NOT NULL,
+  `periodEnd` datetime NOT NULL,
+  `hoursWorked` int(11) DEFAULT 0,
+  `hourlyRate` double DEFAULT 0,
+  `hourlyTotal` double DEFAULT 0,
+  `fixedSalary` double DEFAULT 0,
+  `commissionTotal` double DEFAULT 0,
+  `bonuses` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `deductions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `netPay` double NOT NULL,
+  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Generated',
+  `createdAt` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `session`
+--
+
+CREATE TABLE `session` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `sessionName` varchar(191) NOT NULL,
+  `trainerId` int(11) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `date` datetime(3) NOT NULL,
+  `time` varchar(191) NOT NULL,
+  `duration` int(11) NOT NULL,
+  `description` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'Upcoming',
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `session`
+--
+
+INSERT INTO `session` (`id`, `adminId`, `sessionName`, `trainerId`, `branchId`, `date`, `time`, `duration`, `description`, `status`, `createdAt`) VALUES
+(42, 164, 'New Session', 165, NULL, '2025-12-29 00:00:00.000', '20:00', 60, 'demo', 'Complete', '2025-12-29 17:01:54.670'),
+(43, 164, 'one', 165, NULL, '2025-12-29 00:00:00.000', '03:00', 60, 'demo', 'Complete', '2025-12-29 19:23:59.916');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `shifts`
+--
+
+CREATE TABLE `shifts` (
+  `id` int(11) NOT NULL,
+  `staffIds` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `shiftDate` date NOT NULL,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
+  `shiftType` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `createdById` int(11) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `shifts`
+--
+
+INSERT INTO `shifts` (`id`, `staffIds`, `branchId`, `shiftDate`, `startTime`, `endTime`, `shiftType`, `description`, `status`, `createdById`, `createdAt`) VALUES
+(59, 0, NULL, '2026-01-07', '13:12:00', '15:12:00', 'Evening Shift', 'Test', 'Pending', 7, '2026-01-07 07:42:29'),
+(60, 0, NULL, '2026-01-07', '13:17:00', '15:17:00', 'Evening Shift', 'test', 'Pending', 7, '2026-01-07 07:47:55'),
+(61, 0, NULL, '2026-06-17', '09:01:00', '15:00:00', 'Morning Shift', NULL, 'Approved', 7, '2026-06-16 10:06:02'),
+(62, 0, NULL, '2026-06-17', '09:00:00', '16:00:00', 'Morning Shift', NULL, 'Pending', 7, '2026-06-16 11:00:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff`
+--
+
+CREATE TABLE `staff` (
+  `id` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `gender` varchar(191) NOT NULL,
+  `dateOfBirth` datetime(3) NOT NULL,
+  `joinDate` datetime(3) NOT NULL,
+  `exitDate` datetime(3) DEFAULT NULL,
+  `profilePhoto` varchar(191) DEFAULT NULL,
+  `status` varchar(191) NOT NULL DEFAULT 'Active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `staff`
+--
+
+INSERT INTO `staff` (`id`, `userId`, `adminId`, `branchId`, `gender`, `dateOfBirth`, `joinDate`, `exitDate`, `profilePhoto`, `status`) VALUES
+(55, 93, 90, 48, 'Male', '1990-01-01 00:00:00.000', '2025-01-01 00:00:00.000', NULL, NULL, 'Active'),
+(57, 261, 260, NULL, 'Female', '2001-12-02 05:30:00.000', '2026-07-10 05:30:00.000', NULL, NULL, 'Active'),
+(58, 262, 260, NULL, 'Male', '2000-02-10 05:30:00.000', '2026-07-09 05:30:00.000', NULL, NULL, 'Active'),
+(59, 263, 260, NULL, 'Male', '2001-06-01 05:30:00.000', '2026-07-09 05:30:00.000', NULL, NULL, 'Active'),
+(60, 264, 260, NULL, 'Female', '2026-07-09 05:30:00.000', '2026-07-09 05:30:00.000', NULL, NULL, 'Active'),
+(61, 265, 260, NULL, 'Female', '2000-07-08 05:30:00.000', '2026-07-09 05:30:00.000', NULL, NULL, 'Active'),
+(62, 269, 90, 48, 'Female', '2000-02-02 05:30:00.000', '2026-07-13 05:30:00.000', NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783921635/staff/profile/pbxgzo6o2yyhdyyemcwu.jpg', 'Active'),
+(63, 270, 90, 48, 'Male', '2001-01-01 05:30:00.000', '2026-07-13 05:30:00.000', NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783923289/staff/profile/rsvgxctnme5pxio3ryit.jpg', 'Active'),
+(64, 271, 90, 48, 'Male', '2001-05-07 05:30:00.000', '2026-07-13 05:30:00.000', NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783923979/staff/profile/kr0tey5isyngvcqi7qgw.jpg', 'Active'),
+(65, 272, 90, 48, 'Male', '2001-08-09 05:30:00.000', '2026-07-13 05:30:00.000', NULL, NULL, 'Active'),
+(66, 273, 90, 48, 'Male', '2001-09-07 05:30:00.000', '2026-07-13 05:30:00.000', NULL, NULL, 'Active'),
+(67, 274, 90, 48, 'Male', '1999-09-05 05:30:00.000', '2026-07-13 05:30:00.000', NULL, NULL, 'Active'),
+(68, 277, 90, 48, 'Male', '0000-00-00 00:00:00.000', '2026-07-14 14:48:45.000', NULL, NULL, 'Active'),
+(69, 278, 90, 48, 'Male', '0000-00-00 00:00:00.000', '2026-07-14 14:48:45.000', NULL, NULL, 'Active'),
+(70, 279, 90, 48, 'Male', '0000-00-00 00:00:00.000', '2026-07-14 14:48:45.000', NULL, NULL, 'Active'),
+(71, 280, 90, 48, 'Male', '0000-00-00 00:00:00.000', '2026-07-14 14:48:45.000', NULL, NULL, 'Active'),
+(72, 281, 90, 48, 'Male', '0000-00-00 00:00:00.000', '2026-07-14 14:48:45.000', NULL, NULL, 'Active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staffattendance`
+--
+
+CREATE TABLE `staffattendance` (
+  `id` int(11) NOT NULL,
+  `shiftId` int(11) DEFAULT NULL,
+  `staffId` int(11) NOT NULL,
+  `branchId` int(11) NOT NULL,
+  `checkIn` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `checkOut` datetime(3) DEFAULT NULL,
+  `mode` varchar(20) DEFAULT 'Manual',
+  `status` varchar(20) DEFAULT 'Present',
+  `notes` text DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stockmovement`
+--
+
+CREATE TABLE `stockmovement` (
+  `id` int(11) NOT NULL,
+  `productId` int(11) NOT NULL,
+  `type` varchar(191) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `note` varchar(191) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tasks`
+--
+
+CREATE TABLE `tasks` (
+  `id` int(11) NOT NULL,
+  `assignedTo` int(11) DEFAULT NULL,
+  `roleId` int(11) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `taskTitle` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `dueDate` date NOT NULL,
+  `priority` varchar(50) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
+  `createdById` int(11) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tasks`
+--
+
+INSERT INTO `tasks` (`id`, `assignedTo`, `roleId`, `branchId`, `taskTitle`, `description`, `dueDate`, `priority`, `status`, `createdById`, `createdAt`) VALUES
+(32, 25, NULL, NULL, 'error', 'fix it', '2025-12-15', 'high', 'completed', 4, '2025-12-15 08:51:42'),
+(33, 25, NULL, NULL, 'Work Load', 'sdrg', '2025-12-16', 'low', 'completed', 4, '2025-12-15 08:53:43'),
+(35, 27, NULL, NULL, 'wfr', 'ecfw f3', '2025-12-15', 'low', 'completed', 4, '2025-12-15 11:29:14'),
+(38, NULL, 8, NULL, 'clean bathroom ', 'The bathroom is so dirty', '2026-06-16', 'High', 'Approved', 90, '2026-06-16 11:19:17'),
+(39, NULL, 3, NULL, 'start train 5 person from today ', '5 person train kro , i will audit next week', '2026-06-16', 'Medium', 'Pending', 90, '2026-06-16 11:21:03');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `unified_bookings`
+--
+
+CREATE TABLE `unified_bookings` (
+  `id` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `trainerId` int(11) DEFAULT NULL,
+  `sessionId` int(11) DEFAULT NULL,
+  `classId` int(11) DEFAULT NULL,
+  `date` date NOT NULL,
+  `endDate` date DEFAULT NULL,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
+  `bookingType` enum('PT','GROUP') NOT NULL,
+  `bookingStatus` varchar(50) DEFAULT 'Booked',
+  `paymentStatus` varchar(50) DEFAULT 'Pending',
+  `price` decimal(10,2) DEFAULT NULL,
+  `notes` varchar(255) DEFAULT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT current_timestamp(),
+  `updatedAt` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `unified_bookings`
+--
+
+INSERT INTO `unified_bookings` (`id`, `memberId`, `trainerId`, `sessionId`, `classId`, `date`, `endDate`, `startTime`, `endTime`, `bookingType`, `bookingStatus`, `paymentStatus`, `price`, `notes`, `branchId`, `createdAt`, `updatedAt`) VALUES
+(8, 3, NULL, NULL, 4, '2025-12-06', NULL, '07:00:00', '08:00:00', 'GROUP', 'Completed', 'Pending', NULL, 'Zumba class test', 1, '2025-12-11 09:12:16', '2026-01-03 10:06:00'),
+(9, 68, 87, NULL, 4, '2025-12-11', NULL, '15:52:00', '17:52:00', 'GROUP', 'Completed', 'Pending', NULL, 'Nothing', 33, '2025-12-11 09:23:04', '2026-01-03 10:06:00'),
+(10, 3, 5, 2, NULL, '2025-12-10', NULL, '09:00:00', '10:00:00', 'PT', 'Completed', 'Pending', NULL, 'Strength training with personal trainer', 1, '2025-12-11 09:48:05', '2025-12-19 02:25:00'),
+(11, 3, NULL, NULL, 4, '2025-12-06', NULL, '07:00:00', '08:00:00', 'GROUP', 'Completed', 'Pending', NULL, 'Zumba class test', 1, '2025-12-11 09:48:33', '2026-01-03 10:06:00'),
+(16, 68, 87, NULL, 1, '2025-12-25', NULL, '16:54:00', '18:54:00', 'GROUP', 'Cancelled', 'Refunded', NULL, 'testing...........', 33, '2025-12-11 10:24:56', '2025-12-12 10:47:36'),
+(23, 94, NULL, NULL, 24, '2025-12-18', NULL, '17:32:00', '18:32:00', 'GROUP', 'Completed', 'Paid', 1200.00, 'test', NULL, '2025-12-19 01:31:48', '2025-12-19 01:31:48'),
+(24, 91, 102, NULL, NULL, '2025-12-18', '2025-12-18', '17:42:00', '18:30:00', 'PT', 'Completed', 'Paid', 1200.00, 'test', NULL, '2025-12-19 01:42:26', '2025-12-19 02:31:00'),
+(25, 91, 102, NULL, NULL, '2025-12-18', '2025-12-18', '19:08:00', '19:09:00', 'PT', 'Completed', 'Paid', 1200.00, 'test', NULL, '2025-12-19 03:08:03', '2025-12-19 03:09:00'),
+(26, 94, 102, NULL, NULL, '2025-12-19', '2025-12-19', '17:53:00', '17:54:00', 'PT', 'Completed', 'Paid', 1200.00, 'test', NULL, '2025-12-20 01:53:12', '2025-12-20 01:53:48'),
+(30, 104, 152, NULL, NULL, '2025-12-01', NULL, '10:00:00', '11:00:00', 'GROUP', 'Completed', 'Pending', NULL, NULL, NULL, '2025-12-01 17:30:00', '2025-12-20 22:23:59'),
+(31, 104, 152, NULL, NULL, '2025-12-01', NULL, '18:00:00', '19:00:00', 'GROUP', 'Cancelled', 'Pending', NULL, NULL, NULL, '2025-12-02 01:00:00', '2025-12-20 22:23:59'),
+(32, 104, 152, NULL, NULL, '2025-12-02', NULL, '09:00:00', '10:00:00', 'GROUP', 'Completed', 'Pending', NULL, NULL, NULL, '2025-12-02 01:00:00', '2026-01-03 10:06:00'),
+(39, 95, 102, NULL, NULL, '2025-12-23', '2025-12-23', '12:00:00', '13:00:00', 'PT', 'Completed', 'Pending', 89500.00, 'testing', NULL, '2025-12-23 05:46:00', '2026-01-03 10:06:00'),
+(41, 87, 102, NULL, NULL, '2025-12-23', '2025-12-23', '14:00:00', '15:00:00', 'PT', 'Completed', 'Paid', 80000.00, 'Demo', NULL, '2025-12-23 05:54:42', '2026-01-03 10:06:00'),
+(42, 95, 102, NULL, NULL, '2025-12-24', '2025-12-24', '13:00:00', '14:00:00', 'PT', 'Completed', 'Pending', 9000.00, 'Testing', NULL, '2025-12-23 06:07:32', '2026-01-03 10:06:00'),
+(45, 102, 150, NULL, NULL, '2025-12-31', '2025-12-31', '13:00:00', '14:00:00', 'PT', 'Completed', 'Pending', 89500.00, 'GHGH', NULL, '2025-12-23 06:18:04', '2026-01-03 10:06:00'),
+(47, 87, NULL, NULL, 24, '2025-12-29', NULL, '16:54:00', '19:54:00', 'GROUP', 'Completed', 'Pending', 0.00, 'demo', NULL, '2025-12-29 09:25:11', '2026-01-03 10:06:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `used_qr_nonces`
+--
+
+CREATE TABLE `used_qr_nonces` (
+  `id` int(11) NOT NULL,
+  `nonce` varchar(191) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `usedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user`
+--
+
+CREATE TABLE `user` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) DEFAULT NULL,
+  `fullName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `roleId` int(11) NOT NULL,
+  `branchId` int(11) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `address` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `duration` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gymName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `planName` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `price` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dateOfBirth` date DEFAULT NULL,
+  `gender` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_street` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_city` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_state` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_zip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profileImage` text DEFAULT NULL,
+  `gstNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tax` decimal(10,2) DEFAULT NULL,
+  `gymAddress` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `licenseExpiryDate` datetime(3) DEFAULT NULL,
+  `licenseKey` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `whatsappPlan` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Basic',
+  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `visiblePassword` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `whatsappCredits` int(11) NOT NULL DEFAULT 0,
+  `isTrial` tinyint(1) NOT NULL DEFAULT 0,
+  `trialStartDate` datetime DEFAULT NULL,
+  `trialEndDate` datetime DEFAULT NULL,
+  `gracePeriodEndDate` datetime DEFAULT NULL,
+  `subscriptionPlan` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Basic',
+  `trialStatus` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'None',
+  `razorpayKeyId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `razorpayKeySecret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emailCredits` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user`
+--
+
+INSERT INTO `user` (`id`, `adminId`, `fullName`, `email`, `password`, `phone`, `roleId`, `branchId`, `createdAt`, `address`, `description`, `duration`, `gymName`, `planName`, `price`, `status`, `dateOfBirth`, `gender`, `address_street`, `address_city`, `address_state`, `address_zip`, `profileImage`, `gstNumber`, `tax`, `gymAddress`, `licenseExpiryDate`, `licenseKey`, `whatsappPlan`, `permissions`, `visiblePassword`, `whatsappCredits`, `isTrial`, `trialStartDate`, `trialEndDate`, `gracePeriodEndDate`, `subscriptionPlan`, `trialStatus`, `razorpayKeyId`, `razorpayKeySecret`, `emailCredits`) VALUES
+(67, NULL, 'Super Admin', 'superadmin@gmail.com', '$2b$10$VWFhEhOAdiHkoAsgQZEnCOaCbTcPtrOyX8aGYRXqH/okam7tTo6oO', '7034897239', 1, NULL, '2025-12-10 03:22:10.656', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', '', '', '', 'https://res.cloudinary.com/fosnfvnp/image/upload/v1784095233/users/profile/7h9ijft6_1784095229042.png.png', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(82, 68, 'John Doe', 'john.doe@example.com', '123', '1234567890', 4, 33, '2025-12-11 23:23:13.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(87, 68, 'Trainer Name', 'trainer@email.com', 'hashed_password_here', '9999999999', 3, 33, '2025-12-12 02:42:45.028', 'Address here', 'Trainer description', '60 mins', 'Gym Name', 'Plan Name', '1500', 'ACTIVE', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(89, 90, 'John Smith', 'john@gmail.com', '$2b$10$crhZxB76ZuAWo2BDk1i3AednUk5HK2zm4ApRzkyOvnsn90JPMUxPq', '0770090987', 2, 33, '2025-12-12 23:54:44.133', '123 High Street', 'Life Time', 'Yearly', 'GYM Fitness ', 'Pro', '11999', 'Active', NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765963221/users/profile/pytkcnfpl28ilkk9rpxy.png', '976856345', 10.00, 'indore', '2026-07-08 00:00:00.000', NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'Converted', NULL, NULL, 0),
+(90, 90, 'John Admin', 'admin@gmail.com', '$2b$10$crhZxB76ZuAWo2BDk1i3AednUk5HK2zm4ApRzkyOvnsn90JPMUxPq', '9876543210', 2, 48, '2025-12-13 00:01:36.965', '101 Shanti Nagar, Indore, Madhya Pradesh, 452001', 'Life Time', 'Yearly', 'Admin Gym', 'Basic', '8999', 'Active', '2005-02-28', 'Male', NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765970252/users/profile/gbtbcuht06njylbc71q8.jpg', '8963546345', 10.00, 'indore', '2027-07-22 00:00:00.000', NULL, 'Basic', NULL, NULL, 12987, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(91, 90, 'John Smith', 'smith1@gmail.com', '$2b$10$zO6HvteXi8KfmXtay9soce6aB0ILw3Jwpe.JznL/SthDX9bz1vHRy', '0770097890', 4, NULL, '2025-12-13 02:02:45.418', '123 High Street', NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(127, 90, '123', '123@gym.com', '$2b$10$PkIg/YTs4GFAWUYwnr6o1e9PlFbK7IuOFETGP28n2bTpf5py.dSQK', NULL, 6, NULL, '2025-12-17 13:14:23.306', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(128, NULL, 'TestSuperadmin', 'test123@gmail.com', '$2b$10$ImJP5DumtcqVUzwlTZnDwuvXMnyp6yE0H5bk/KHl25tHNRipIepBC', NULL, 1, NULL, '2025-12-17 13:20:31.038', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(129, 90, 'rahul123', '234@gmail.com', '$2b$10$CCbyKzVjMOEP7xq6UPgU1.bDEOR0yi.yCgQhSDqDS1xvSV0dkhPPq', NULL, 6, NULL, '2025-12-17 13:30:40.057', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(130, 90, 'rahul123', 'r234@gmail.com', '$2b$10$g6PuRz2uxw.llLUKa1w3hu9mR0BMAvnxnHj0IvVX3tnA.tmANv66i', NULL, 6, NULL, '2025-12-17 13:45:55.622', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(131, 90, '', '', '$2b$10$hK5NbZFxxE5oe4fAHDk5FuGjKtKhOyaKcnAt6S.r2cSMWCbGCcW..', NULL, 6, NULL, '2025-12-17 13:48:50.667', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765960702/users/profile/mfamodv3su9hqpihgbts.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(132, 90, 'raj', 'rrre234@gmail.com', '$2b$10$OIiDwkm7/xZiPfeYEPayRObo0G4yIWuynv4Tnc0UOhMjqXwbBcIAu', NULL, 6, NULL, '2025-12-17 14:14:40.362', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765961939/users/profile/kosfccw9efeg1s3qh9h5.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(134, 90, 'Rohit Kumar', 'rohit456@mail.com', '$2b$10$6BFA4S.4C2OdEbLq3jlL/.Nbkak1yBlyDZtJC3tTVXnbaO4RRPE1.', '987654321', 4, 33, '2025-12-17 14:36:01.711', 'India', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1765962394/users/profile/fgk2ftzwjrer6rjdrl2z.jpg', NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(151, 90, 'Sam Member', 'sam.member@example.com', '123', NULL, 4, NULL, '2025-12-20 12:45:55.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(161, 90, 'Rohit Kumar', 'rohit@gmail.com', '$2b$10$nnumGwAtIfMi01Q/Hfz5ju6JtgpCBUm9epgFp1u13yT8A1O0mYWiq', '682834545639', 4, NULL, '2025-12-29 15:57:21.147', 'demo', NULL, NULL, NULL, NULL, NULL, 'Active', '2025-12-29', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767004767/users/profile/zrfba7hmbyxefjh5xujl.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(163, 90, 'Mamber', 'member@gmail.com', '$2b$10$mcXbJOUzfg8A0JJevfx3gusEP8xASgVVuydciXHGkzFKNC5fKKBY.', '07008795635', 4, 48, '2025-12-29 16:06:39.494', 'indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2025-12-13', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767004755/users/profile/z1wpk3vxcezt0nwbav81.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(165, 164, 'Personal', 'personal3@gmail.com', '$2b$10$KP/r4CKd5DeUNztlbbRj8.v/LJPovrnk7suXUct7LjHVvZDZyPwNu', '8014535433', 5, 33, '2025-12-29 16:53:55.913', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767007436/staff/profile/aqmv4lztzvf2y3woa0f9.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(166, 164, 'General', 'general3@gmail.com', '$2b$10$WUXme3IFWdWoL4FYB23CtOUgQaSI02wfiFRRGyKhj7TkQSLvGfLhS', '571423624289', 6, 33, '2025-12-29 16:54:57.611', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767007497/staff/profile/le18gj4wul2r43tbphg1.png', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(167, 164, 'Housekeeping', 'housekeeping3@gmail.com', '$2b$10$NoEvoNrPUwtBk8C62BWREOTT2lYlU4z1Fss41E1V7O042gSjMOegq', '989543321321', 8, 33, '2025-12-29 16:55:46.503', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767007546/staff/profile/htwtaywruuljyzknalqa.png', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(168, 164, 'Receptionist Receptionist', 'receptionist3@gmail.com', '$2b$10$V4dr5xmI1ltMe6pltDGpou9cRxOsOzQhUPKh4n7qIt3oYV0u81p76', '9845621357', 7, 33, '2025-12-29 16:56:34.642', 'indore, indore, Madhya Pradesh, 455464', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'indore', 'indore', 'Madhya Pradesh', '455464', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767007594/staff/profile/eqnhdpvme2f0eborczke.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(169, 164, 'Demo Member', 'memberdemo@gmail.com', '$2b$10$hf8flVewCsfxdn3CbvF.NukNV9prXOuH4TC7Boh/FIxJVm5KgXYr.', '7891742645', 4, 33, '2025-12-29 17:06:00.646', 'indore, indore, Madhya Pradesh, 48946', NULL, NULL, NULL, NULL, NULL, 'Active', '2025-12-29', 'Male', 'indore', 'indore', 'Madhya Pradesh', '48946', 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767084270/users/profile/qa26gdzqkf8veywmi6vx.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(177, 164, 'Test', 'test@gmail.com', '$2b$10$JQFPaMODm505YNdSa3bCge63EyiSw7Y2V9WhyitpNzRPZWDebhc9e', '879135465425', 4, NULL, '2025-12-30 17:52:59.452', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', '2025-12-30', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(180, 90, 'Smith', 'smith123@gmail.com', '$2b$10$7ntoDhEWiZlFdlCyOxP9SOfZWfYuITkZmYSbJCMj4X5WyCODhVTb2', '07700900123', 4, NULL, '2026-01-01 15:24:58.429', '123 High Street', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-01', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767262712/users/profile/byjee88vrwtqu5i6x41p.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(182, 164, 'General4', 'general4@gmail.com', '$2b$10$wwyyXWykD5NCndwJV5gXk.RMw8duMKQ64vFQD8GebXZ2oNBlM19xG', '871981682747', 6, 33, '2026-01-01 17:54:18.156', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(183, 164, 'HouseKeeping4', 'house@gmail.com', '$2b$10$yoZ.BHNLBgq6rQi/nwpuPuXraEe46KuvrEUz6w1PIrPjlGMXhZ2VK', '12435346456456', 8, 33, '2026-01-01 18:07:22.012', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(184, 90, 'Aman', 'aman@gmail.com', '$2b$10$ZxtsyaU4dDrneMfMXq.XUeGZUjF.6kfl1Poc/8.gHDTnBKknsVNLO', '456789091', 4, NULL, '2026-01-01 18:36:41.849', '123 High Street', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-01', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767272799/users/profile/uwjjrwnuskexslwdvy2j.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(186, 90, 'Test', 'test456@gmail.com', '$2b$10$CRvGCaT79xkIwEVonQLJg.ChAdZuJkbsStTw/cgJISwxBUUrEl0Si', '34567890', 4, NULL, '2026-01-02 12:21:50.165', '123 Indore Street', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-02', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767336709/users/profile/tq61112zew86fjczatbd.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(188, 90, 'asdf', 'asdf@gmail.com', '$2b$10$P1fIb5egWqxH7S4amwnnqOf1/d7tcelpX77NzFK54Hm5FPewkwOBS', '12345678', 4, NULL, '2026-01-02 14:19:42.765', 'Rau Circle Indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-02', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767343782/users/profile/lnubvnapjqdgz2n1hl1u.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(191, 90, 'Jay', 'jay9977@gmai.com', '$2b$10$KU1zkLdI6QnhXpNbQyJc2OM76Cj23XiXkvWdzFfEwhGFuPhhK6uea', '12345678', 4, NULL, '2026-01-03 12:48:51.513', 'Rau Circle Indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-03', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767424730/users/profile/t3vocb9zaytadfvise0t.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(206, 90, 'demo', 'demo2345@gmail.com', '$2b$10$v6DqlyDOVoU7exUJEUl6.eQCddyeMzj8D5PSWa1.ip3cYCYNRrUVe', '2324343432', 4, NULL, '2026-01-07 16:44:54.892', '123 High Street', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-07', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767784493/users/profile/s5v8jn3owxbhnaclxr4n.jpg', NULL, 5.00, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(207, 90, 'test', 'test56789@gmail.com', '$2b$10$Dmx9ORgIWOrzsWAYKOYFMe.4jsYNP0QsdwdlYnTPCAVlQxaqHiuyi', '123456789', 4, NULL, '2026-01-08 14:51:31.410', '123 High Street', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-01-08', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1767864090/users/profile/yjylix8eylk2x6pkk30j.jpg', NULL, 5.00, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(219, 216, 'kkk', 'kkkk@gmail.com', '$2b$10$X7Egrr8ApuijHOvfJ/vN.uB9wBa5mo7YW7uv7C1dBd0ve.AYj7lfq', '101010101010', 5, 50, '2026-06-13 15:37:22.696', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1781345250/staff/profile/qm4fsxd0zmh0tyc0jgo1.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(220, 216, 'sarah', 'sarah123@gmail.com', '$2b$10$wIknGYilm60SUH302rFVfuK7.RIFP.kfoHc6JxcThONy/vvr1WvUy', '101010101010', 4, NULL, '2026-06-13 15:39:22.634', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', '2003-02-14', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(224, 90, 'demo boy', 'demoboy@gmail.com', '$2b$10$xMgLjnERgs3JU4toOTxGV.W9l0L1bUE39v5/Pi7fTJ24EqhNoRDYK', '7894561234', 4, NULL, '2026-06-15 14:21:59.005', 'demo street, demo city ', NULL, NULL, NULL, NULL, NULL, 'Active', '1998-12-28', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1781513517/users/profile/egljij6lqw3qbkblb80r.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(225, 90, 'Demo girl', 'demogirl@gmail.com', '$2b$10$oQ/0HcuOdFAY/.NkIooRee2HS.XGtlw7.6DI3xwi3AGeN1T6Gsdjq', '457869123', 4, NULL, '2026-06-15 15:11:44.759', 'demo street', NULL, NULL, NULL, NULL, NULL, 'Active', '1999-08-21', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1781516504/users/profile/e9x7ms3n7ay59oj0gc97.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(227, 90, 'Demo Aayush', 'demoaayu@gmail.com', '$2b$10$/qC8JqA2Yq6IxtKKEGJey.btosdudsAV5IQCuoRnb05v0nUyFXd.q', '1234567890', 4, NULL, '2026-06-17 13:28:37.723', 'demo street', NULL, NULL, NULL, NULL, NULL, 'Active', '2002-01-01', NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1781683117/users/profile/f5kzs3ldapiae0kogzzl.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(228, 90, 'Dummy Lead 1', 'dummy.lead1@example.com', '$2b$10$XOroeua9HURQPyWvfQx9ROfv/x.MSxuEGc4ySVMZh0IiNSpreELbG', '9000000001', 4, NULL, '2026-06-17 14:33:22.870', 'xyz', NULL, NULL, NULL, NULL, NULL, 'Active', '2000-08-07', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(230, 90, 'pia b', 'pia@gmail.com', '$2b$10$XM0CxnvFkK3w5zRHZbiw6enP8NceBqljEJr1JLwP2h5whr4b7i.T.', '78945455421', 4, NULL, '2026-06-26 15:29:00.421', 'null', NULL, NULL, NULL, NULL, NULL, 'Active', '1998-02-08', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(231, 90, 'riya ', 'riya@gmail.com', '$2b$10$ZQdCgNH7I//MSIeXYyDz2OvdI.wChFkj0IHFksLeDkrdSNYpV2.Ne', '7849615654', 4, NULL, '2026-06-26 16:06:29.388', 'null', NULL, NULL, NULL, NULL, NULL, 'Active', '1995-06-28', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(244, NULL, '7daysfreetrialgym', '7daysfreetrialgym@gmail.com', '$2b$10$TTDZrDZ.tNXlabUJ6ktcYOrE9DD.0fUmB1.uPwt70lxvEk8NHYrXa', '4561237899', 2, NULL, '2026-07-07 16:22:58.295', NULL, NULL, 'Monthly', '7daysfreetrialgym', '7-Day Free Trial', '0', 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 18.00, NULL, '2026-07-17 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 1, '2026-07-10 05:30:00', '2026-07-17 05:30:00', NULL, 'Basic', 'Active', NULL, NULL, 0),
+(245, NULL, '7dayssecondfree', '7dayssecondfree@gmail.com', '$2b$10$pEB7vU9tT/CxK0jybPKbgursAbfniqZ6qm5q.p6K6vzgUvHBL98CG', '554545545', 2, NULL, '2026-07-07 16:51:03.269', NULL, NULL, 'Yearly', '7dayssecondfree', 'Pro', '11999', 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '52698323', 18.00, NULL, '2027-07-17 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, '2026-07-10 05:30:00', '2026-07-17 05:30:00', NULL, 'Trial', 'None', NULL, NULL, 0),
+(246, NULL, 'aaagym', 'aaagym@gmail.com', '$2b$10$aQGJfOQqQsP0AS9z/s.bHOm/qGgNeF732pD7yzScLasXo8amDThT.', '6565362545', 2, NULL, '2026-07-07 17:17:18.817', NULL, NULL, 'Yearly', 'aaagym', 'Pro', '11999', 'Active', NULL, NULL, NULL, 'noida', NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783424837/users/profile/djb6cg5qtj3jc2urps8z.png', '5869746565', 18.00, NULL, '2027-07-17 05:30:00.000', NULL, 'Basic', NULL, '112233', 0, 0, '2026-07-10 05:30:00', '2026-07-17 05:30:00', NULL, 'Trial', 'None', NULL, NULL, 0),
+(247, NULL, 'zzgym', 'zzgym@gmail.com', '$2b$10$Sl7C5FQ9DzTWzmkaukMRD.mX2WcsgdwwK3fBBIlHSo5LEHAd1xkDG', '456789965', 2, NULL, '2026-07-07 18:33:04.439', NULL, NULL, 'Yearly', 'zzgym', 'Pro', '0.00', 'Active', NULL, NULL, NULL, 'indore', NULL, NULL, NULL, '5689565965', 18.00, NULL, '2027-07-11 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Premium', 'None', NULL, NULL, 0),
+(248, NULL, 'plangym', 'plangym@gmail.com', '$2b$10$ktzZzfQ0DM0c/Mp1dMTFqO6ppsOg0fiP1RA1Vb6upEXwVrxNuW2li', '5522336984', 2, NULL, '2026-07-08 11:01:57.111', NULL, NULL, 'Yearly', 'plangym', 'Pro', '0', 'Active', NULL, NULL, NULL, 'gujrat', NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783488716/users/profile/fl4aezlflkfctqxhcuzn.png', '325698596536', 18.00, NULL, '2027-07-10 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Premium', 'None', NULL, NULL, 0),
+(249, NULL, 'planbgym', 'planbgym@gmail.com', '$2b$10$VcySuVLJxbAN5LmWWlneOe2yvVj.KxeItI9rD2P52h3qpFpLRBsPe', '5689565656', 2, NULL, '2026-07-08 11:11:47.419', NULL, NULL, 'Yearly', 'planbgym', 'Basic', '8999', 'Active', NULL, NULL, NULL, 'suart', NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783489307/users/profile/znhmejtrynlh9uvknhnb.png', '3569563259', 18.00, NULL, '2027-07-10 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(250, NULL, 'plancgym', 'plancgym@gmail.com', '$2b$10$oUb2RMjMtaU6.LhD.NNVh.66Zrt4xqsu1tZmUkagLfegpLoirkpvC', '456136554', 2, NULL, '2026-07-08 11:27:21.074', NULL, NULL, 'Yearly', 'plancgym', 'Gold', '4998', 'Active', NULL, NULL, NULL, 'ahemdabad', NULL, NULL, NULL, '658659856', 18.00, NULL, '2027-07-11 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(251, NULL, 'palnaagym', 'planaagym@gmail.com', '$2b$10$LPQby6pnDcDmx5a9.f.zluXV0NSHMetAooZXy0jKymHsBDgxgT64S', '455656565', 2, NULL, '2026-07-08 11:40:08.004', NULL, NULL, 'Yearly', 'palnaagym', 'Pro', '11999', 'Active', NULL, NULL, NULL, 'ranchi', NULL, NULL, NULL, '565565965', 18.00, NULL, '2027-07-15 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Premium', 'None', NULL, NULL, 0),
+(252, NULL, 'chikkugym', 'Chikkuyadav125@gmail.com', '$2b$10$.hmJXGM3kTRdUTex4ElEVue2TrEn8yhwHvojKssABPJDyCyNS/qxy', '654789656', 2, NULL, '2026-07-08 15:51:22.369', NULL, NULL, 'Yearly', 'chikkugym', 'Pro', '11999', 'Active', NULL, NULL, NULL, 'indore', NULL, NULL, NULL, '659898656598', 18.00, NULL, '2027-07-10 05:30:00.000', NULL, 'Basic', NULL, '123456', 100, 0, NULL, '2026-07-09 00:11:29', '2026-07-12 00:11:29', 'Premium', 'Active', NULL, NULL, 0),
+(253, NULL, 'bhaktigym', 'yadavbhakti287@gmail.com', '$2b$10$fet096L676nQBNKh5nj8eu/4Sn7iicZHdPHEvnrokaI48Cihpq7Ry', '9713391164', 2, NULL, '2026-07-08 17:11:49.062', NULL, NULL, 'Yearly', 'bhaktigym', 'Basic', '8999', 'Active', NULL, NULL, NULL, 'indore', NULL, NULL, NULL, '598568965', 18.00, NULL, '2027-07-08 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(254, 252, 'sarah', 'sarahh@gmail.com', '$2b$10$cnQm.vPQgyYu3QAAl6FcN.oZwXSYtGWpbMtodbvVfppsUm9NOVHZ.', '7067955583', 4, NULL, '2026-07-08 17:18:13.800', 'greater indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2003-02-12', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(255, 90, 'sanni', 'sanni@gmail.com', '$2b$10$DccN17.PS57wQCRIMIHXAuUwhe4a4GMj61C2fl3G3Ubp1pUYFxwUm', '582548666', 4, NULL, '2026-07-08 17:43:25.609', 'greater indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2003-02-05', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(260, NULL, 'bhgaygym', 'bhagyashreeyadav1001@gmail.com', '$2b$10$.ssPrqix.N8qjw96C1.4v.wDI04Z1PHjrvCshfUmERLaeay9/B9o2', '101010101019', 2, NULL, '2026-07-09 11:33:49.438', NULL, NULL, 'Yearly', 'bhgaygym', 'Basic', '91790', 'Active', NULL, NULL, NULL, 'noida', NULL, NULL, NULL, '65898563265', 18.00, NULL, '2027-07-16 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, '2026-07-09 05:30:00', '2026-07-16 05:30:00', NULL, 'Trial', 'None', NULL, NULL, 0),
+(261, 260, 'sneha', 'sneha@gmail.com', '$2b$10$OmTN1sumb.HnDMmfKHHMZ.ECqbU5fua3Xeq/sAIPwiBhdGe.nqVWW', '456321456', 10, NULL, '2026-07-09 13:26:55.519', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(262, 260, 'sonu', 'sonu@gmail.com', '$2b$10$CuaPbQIkmK/GLdr1OdkgqOo2agByAUAWx4GfKRzALaxLiYbgI3pge', '45612396', 5, NULL, '2026-07-09 14:51:30.887', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(263, 260, 'monu', 'monu@gmial.com', '$2b$10$7unVm7pvVeaeQpOVyzICeOllNPBPA.fwlywFolhRDMMyyeCpJru9K', '4895323565', 6, NULL, '2026-07-09 14:52:13.709', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(264, 260, 'sikha', 'sikha@gmail.com', '$2b$10$ZrJAP52YMtsshhdDk2lvJ.Q2C8EN/mip0pQA07EMsD0Tnked9eLhy', '1236559859', 7, NULL, '2026-07-09 14:53:03.041', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(265, 260, 'kumari', 'kumari@gmail.com', '$2b$10$Fe1deV2uQ2w0MCD40ecdC.al1xhLXIXpbVNZoWXOft2151Ok41rEm', '45631236', 8, NULL, '2026-07-09 14:53:57.340', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(266, NULL, 'piasubadmin', 'piasubadmin@gmail.com', '$2b$10$VSHr8vrlCMbc6N0MbcT1jusRo9pCoA6BfhNyRGGg0UJNatqEW2PeS', '656565666', 9, NULL, '2026-07-11 12:16:29.957', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783752391/users/profile/k4guss8rkkpwqgbllqzf.png', NULL, NULL, NULL, NULL, NULL, 'Basic', '[\"Dashboard\",\"Gym Owners\",\"Plans & Pricing\",\"Announcements\",\"Setting\",\"Leads / Inquiries\",\"Request Plan\",\"Payments\",\"Trial & Automation\"]', '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(267, NULL, 'barodpia', 'barodgym@gmail.com', '$2b$10$6bpEadA.SKHoewMkPh8qT.kh/58R1FcNuZ80o.S4nL.ryQVtScP5e', '2546635566', 2, NULL, '2026-07-11 12:55:57.864', 'greater indore', 'Life Time', 'Yearly', 'barodgym', 'Pro', '11999', 'active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '74AS741851529', 18.00, 'greater indore', NULL, NULL, 'Basic', NULL, NULL, 0, 0, '2026-07-11 12:55:57', '2026-07-18 12:55:57', '2026-07-21 12:55:57', 'Basic', 'Active', NULL, NULL, 0),
+(268, NULL, 'piasingh', 'singhgym@gmail.com', '$2b$10$IM8GF5dAVqvlDr8pRnpv2ew3UzHKPotV2vNx/3UoP2sXWvSBbu4Dy', '5566223314', 2, NULL, '2026-07-11 13:05:21.142', 'noida', 'demo', 'Monthly', 'singhgym', 'Basic', '8999', 'active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '74AS741851528', 18.00, 'noida greater', '2026-08-10 00:00:00.000', NULL, 'Basic', NULL, NULL, 0, 0, '2026-07-11 13:05:21', '2026-07-18 13:05:21', '2026-07-21 13:05:21', 'Basic', 'Active', NULL, NULL, 0),
+(269, 90, 'sanu', 'snu@gmail.com', '$2b$10$wUfh0FDZ/jYPzFD2Jh6Wo.PdKJXSYJyBG5zfV1L9G5pPLN7IIFRmS', '5236985745', 10, 48, '2026-07-13 11:17:12.737', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783921635/staff/profile/pbxgzo6o2yyhdyyemcwu.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(270, 90, 'mannu', 'mannu@gmail.com', '$2b$10$TIBagtPAUrno4M8VZjYnDuCi7aKocKl2domXQL4.JoqMLQiibYOPS', '58236974', 10, 48, '2026-07-13 11:44:47.733', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783923289/staff/profile/rsvgxctnme5pxio3ryit.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(271, 90, 'perstrainer1', 'perstrainer1@gmail.com', '$2b$10$R7Ilx7lq0pXHkreo7Sl4Me2NbjbQFW/HVzmyp3zssjNVR5aJhqWR2', '265966565', 5, 48, '2026-07-13 11:56:17.169', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://res.cloudinary.com/dw48hcxi5/image/upload/v1783923979/staff/profile/kr0tey5isyngvcqi7qgw.jpg', NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(272, 90, 'personaltra2', 'personaltra2@gmail.com', '$2b$10$kIS1iuXF32dUv7sG2e3CZeSx2lk4LX5.bTldnVUMn7KiL2kC1VS0W', '45625369', 5, 48, '2026-07-13 11:57:37.362', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(273, 90, 'gentrainer1', 'gentrainer1@gmail.com', '$2b$10$VGn5/yWWEz7qeKe9wd4yDOTfeEvsQi/MW24mTTBUZCh6fTMNUuHCO', '45632178', 6, 48, '2026-07-13 11:59:01.428', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(274, 90, 'gannu', 'gannu@gmail.com', '$2b$10$CyAM7TDLOBUF9xj4ybp4He2w/rFpOLEIvGbe71QK6hs4Z8mrXkjDm', '45698745', 7, 48, '2026-07-13 11:59:49.643', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(275, 90, 'barodjia', 'barodjia@gmail.com', '$2b$10$pBoeBCXkBtpOzAXg3PfoyOA0e5Vqw0RujdkOD.QAdsmsZMlnVkf16', '456563365', 4, 48, '2026-07-13 13:07:51.822', 'greater indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2002-05-02', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(276, NULL, 'piiigym', 'barodpia280897@gmail.com', '$2b$10$GP84PSjC1TE.1SwLl9mnbuzYiSaMvWQSO9OUoPBfISw/WfrCirkYu', '1234567890', 2, NULL, '2026-07-14 11:13:48.559', NULL, NULL, 'Yearly', 'piiigym', 'Basic', '91790', 'Active', NULL, NULL, NULL, 'noida', NULL, NULL, NULL, '74AS741851526', 18.00, NULL, '2027-07-21 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, '2026-07-14 05:30:00', '2026-07-21 05:30:00', NULL, 'Trial', 'None', NULL, NULL, 0),
+(277, 90, 'Default Receptionist', 'receptionist@gmail.com', '$2b$10$maZajeSQyBarlSyYj18l1.AyZXSiCxCgItWRd32C2dJwioiSD0TPi', NULL, 7, 48, '2026-07-14 14:48:45.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(278, 90, 'Default Housekeeping', 'housekeeping@gmail.com', '$2b$10$maZajeSQyBarlSyYj18l1.AyZXSiCxCgItWRd32C2dJwioiSD0TPi', NULL, 8, 48, '2026-07-14 14:48:45.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(279, 90, 'Default Personal Trainer', 'personal@gmail.com', '$2b$10$maZajeSQyBarlSyYj18l1.AyZXSiCxCgItWRd32C2dJwioiSD0TPi', NULL, 5, 48, '2026-07-14 14:48:45.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(280, 90, 'Default General Trainer', 'generaltrainer1@gym.com', '$2b$10$maZajeSQyBarlSyYj18l1.AyZXSiCxCgItWRd32C2dJwioiSD0TPi', NULL, 6, 48, '2026-07-14 14:48:45.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(281, 90, 'Default Sales Agent', 'salesagent@gmail.com', '$2b$10$maZajeSQyBarlSyYj18l1.AyZXSiCxCgItWRd32C2dJwioiSD0TPi', NULL, 10, 48, '2026-07-14 14:48:45.000', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(282, NULL, 'nalinigym', 'naliniparas228@gmail.com', '$2b$10$z5IyJ1UaOFGo4tDVDK5GfeSm58zqAWb/RyKAQg0GY60nPgul9LKwO', '5566223148', 2, NULL, '2026-07-14 15:01:47.303', NULL, NULL, 'Quarterly', 'nalinigym', 'Pro', '2850', 'Active', NULL, NULL, NULL, 'pipli', NULL, NULL, 'https://res.cloudinary.com/fosnfvnp/image/upload/v1784021510/users/profile/q9lscukx_1784021504204.png.png', '74AS741851528', 18.00, NULL, '2026-08-13 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, NULL, NULL, NULL, 'Premium', 'None', NULL, NULL, 0),
+(283, NULL, 'raj_shekar sir', 'rsld2012@gmail.com', '$2b$10$XitaBPwvNx2ialg0z1RqNON/ZsQI6B0VFec2Wv/oPzvhrZTgKPEB2', '5566442563', 2, NULL, '2026-07-14 15:45:43.774', NULL, NULL, 'Yearly', 'raj_shekar sir', 'Pro', '10199', 'Active', NULL, NULL, NULL, 'delhi', NULL, NULL, NULL, '74AS741851527', 18.00, NULL, '2027-07-21 05:30:00.000', NULL, 'Basic', NULL, '123456', 0, 0, '2026-07-14 05:30:00', '2026-07-21 05:30:00', NULL, 'Trial', 'None', NULL, NULL, 0),
+(284, NULL, 'raj_shekar', 'rahssshh@gmail.com', '$2b$10$D53vHk2uvhuHzvJWa26vHu7XZjvXv7k.7muXmks4Aj9JCYs45nDdm', '101010101010', 9, NULL, '2026-07-14 16:09:52.470', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', '[\"Dashboard\",\"Gym Owners\",\"Plans & Pricing\"]', '123456', 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(285, 90, 'rahshekar2', 'rajshekkar12@gmai.com', '$2b$10$wcBrPIxJ3L.OPiH2C4b5Yeb5Azsil/sXqdyiMOPvhgM3MVycd9b96', '545656656', 4, NULL, '2026-07-14 16:38:52.198', 'greater indore', NULL, NULL, NULL, NULL, NULL, 'Active', '2000-01-02', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(286, 279, 'john', 'johne@gmail.com', '$2b$10$Fb6cOPtg6ohLQHYr8AbXXe1EyEb9VCOHsQyIyxs9GO6/HT3QCeqdW', 'smith', 4, NULL, '2026-07-20 11:13:59.745', 'john , mira , dolly', NULL, NULL, NULL, NULL, NULL, 'Active', '2026-07-03', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0),
+(287, 90, 'xyz', 'xyz@gmail.com', '$2b$10$JQY0afoa2hwzT3UJyGkwsuHVCCLz/pt2Y0kntJAIl6MNg5/9v9ojq', '98765432345', 4, NULL, '2026-07-20 12:54:32.648', NULL, NULL, NULL, NULL, NULL, NULL, 'Active', '2026-07-09', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Basic', NULL, NULL, 0, 0, NULL, NULL, NULL, 'Basic', 'None', NULL, NULL, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `whatsapp_credit_transactions`
+--
+
+CREATE TABLE `whatsapp_credit_transactions` (
+  `id` int(11) NOT NULL,
+  `adminId` int(11) NOT NULL,
+  `creditsPurchased` int(11) NOT NULL,
+  `amountPaid` double NOT NULL,
+  `paymentStatus` varchar(50) NOT NULL,
+  `transactionId` varchar(191) DEFAULT NULL,
+  `createdAt` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `whatsapp_credit_transactions`
+--
+
+INSERT INTO `whatsapp_credit_transactions` (`id`, `adminId`, `creditsPurchased`, `amountPaid`, `paymentStatus`, `transactionId`, `createdAt`) VALUES
+(1, 0, 0, 1000, '', NULL, '2026-06-22 16:24:36'),
+(2, 0, 0, 1000, '', NULL, '2026-06-22 16:24:37'),
+(3, 0, 0, 1000, '', NULL, '2026-06-22 16:24:40'),
+(4, 0, 0, 1000, '', NULL, '2026-06-22 16:26:44'),
+(5, 0, 0, 4500, '', NULL, '2026-06-22 16:27:14'),
+(6, 0, 0, 0, '', NULL, '2026-06-26 15:29:00'),
+(7, 0, 0, 0, '', NULL, '2026-06-26 15:29:00'),
+(8, 0, 0, 0, '', NULL, '2026-06-26 16:06:29'),
+(9, 0, 0, 0, '', NULL, '2026-06-26 16:06:29'),
+(10, 0, 0, 0, '', NULL, '2026-07-08 11:14:07'),
+(11, 0, 0, 0, '', NULL, '2026-07-08 12:43:45'),
+(12, 0, 0, 0, '', NULL, '2026-07-08 12:57:04'),
+(13, 0, 0, 0, '', NULL, '2026-07-08 12:58:25'),
+(14, 0, 0, 0, '', NULL, '2026-07-08 13:05:21'),
+(15, 0, 0, 0, '', NULL, '2026-07-08 15:57:40'),
+(16, 0, 0, 0, '', NULL, '2026-07-20 12:54:32'),
+(17, 0, 0, 0, '', NULL, '2026-07-20 12:54:32'),
+(18, 0, 0, 0, '', NULL, '2026-07-20 13:15:53');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `workoutexercise`
+--
+
+CREATE TABLE `workoutexercise` (
+  `id` int(11) NOT NULL,
+  `workoutPlanId` int(11) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `sets` int(11) DEFAULT NULL,
+  `reps` int(11) DEFAULT NULL,
+  `duration` varchar(191) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `workoutexercise`
+--
+
+INSERT INTO `workoutexercise` (`id`, `workoutPlanId`, `name`, `sets`, `reps`, `duration`) VALUES
+(1, 3, 'Shoulder Press', 5, 12, NULL),
+(2, 4, 'Shoulder Press', 5, 12, NULL),
+(3, 5, 'Shoulder Press', 5, 12, NULL),
+(4, 6, 'Pushups', 5, 12, NULL),
+(5, 7, 'Pushups', 5, 12, NULL),
+(6, 8, 'Pushups', 5, 12, NULL),
+(7, 9, 'Bicep Curls', NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `workoutplan`
+--
+
+CREATE TABLE `workoutplan` (
+  `id` int(11) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `notes` varchar(191) DEFAULT NULL,
+  `createdBy` int(11) NOT NULL,
+  `branchId` int(11) NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `workoutplan`
+--
+
+INSERT INTO `workoutplan` (`id`, `title`, `notes`, `createdBy`, `branchId`, `createdAt`) VALUES
+(1, 'Full body stranght', 'rest 60 s  ', 272, 48, '2026-07-13 14:29:48.987'),
+(2, 'full body  staright', 'rest  60 s', 272, 48, '2026-07-13 14:31:28.193'),
+(3, 'full body  staright', 'rest  60 s', 272, 48, '2026-07-13 14:42:19.979'),
+(4, 'full body  staright', 'rest  60 s', 272, 48, '2026-07-13 14:42:26.650'),
+(5, 'full body  staright', 'rest  60 s', 272, 48, '2026-07-13 14:47:17.235'),
+(6, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:49:07.675'),
+(7, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:49:31.706'),
+(8, 'full body workout', 'rest 9s between workout', 272, 48, '2026-07-13 14:53:31.784'),
+(9, 'weight gain week - 4', '', 279, 48, '2026-07-20 11:35:30.827');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `workoutplanassignment`
+--
+
+CREATE TABLE `workoutplanassignment` (
+  `id` int(11) NOT NULL,
+  `workoutPlanId` int(11) NOT NULL,
+  `memberId` int(11) NOT NULL,
+  `assignedAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `workoutplanassignment`
+--
+
+INSERT INTO `workoutplanassignment` (`id`, `workoutPlanId`, `memberId`, `assignedAt`) VALUES
+(1, 8, 161, '2026-07-13 14:53:31.843'),
+(2, 9, 161, '2026-07-20 11:35:30.845');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `alert`
+--
+ALTER TABLE `alert`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `Alert_branchId_idx` (`branchId`),
+  ADD KEY `Alert_memberId_idx` (`memberId`),
+  ADD KEY `Alert_staffId_idx` (`staffId`);
+
+--
+-- Indexes for table `announcement`
+--
+ALTER TABLE `announcement`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `app_settings`
+--
+ALTER TABLE `app_settings`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `automation_settings`
+--
+ALTER TABLE `automation_settings`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `booking`
+--
+ALTER TABLE `booking`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `Booking_memberId_idx` (`memberId`),
+  ADD KEY `Booking_scheduleId_idx` (`scheduleId`);
+
+--
+-- Indexes for table `booking_requests`
+--
+ALTER TABLE `booking_requests`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `branch`
+--
+ALTER TABLE `branch`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `Branch_adminId_fkey` (`adminId`);
+
+--
+-- Indexes for table `classschedule`
+--
+ALTER TABLE `classschedule`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ClassSchedule_branchId_idx` (`adminId`),
+  ADD KEY `ClassSchedule_trainerId_idx` (`trainerId`);
+
+--
+-- Indexes for table `classtype`
+--
+ALTER TABLE `classtype`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `credit_packages`
+--
+ALTER TABLE `credit_packages`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `demo_requests`
+--
+ALTER TABLE `demo_requests`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dietmeal`
+--
+ALTER TABLE `dietmeal`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `DietMeal_dietPlanId_idx` (`dietPlanId`);
+
+--
+-- Indexes for table `dietplan`
+--
+ALTER TABLE `dietplan`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dietplanassignment`
+--
+ALTER TABLE `dietplanassignment`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `DietPlanAssignment_dietPlanId_idx` (`dietPlanId`),
+  ADD KEY `DietPlanAssignment_memberId_idx` (`memberId`);
+
+--
+-- Indexes for table `expense`
+--
+ALTER TABLE `expense`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `Expense_branchId_idx` (`branchId`);
+
+--
+-- Indexes for table `global_settings`
+--
+ALTER TABLE `global_settings`
+  ADD PRIMARY KEY (`key_name`);
+
+--
+-- Indexes for table `group_class_bookings`
+--
+ALTER TABLE `group_class_bookings`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `housekeepingattendance`
+--
+ALTER TABLE `housekeepingattendance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `staffId` (`staffId`),
+  ADD KEY `createdById` (`createdById`);
+
+--
+-- Indexes for table `housekeepingschedule`
+--
+ALTER TABLE `housekeepingschedule`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `staffId` (`staffId`),
+  ADD KEY `createdById` (`createdById`);
+
+--
+-- Indexes for table `landing_page_cms`
+--
+ALTER TABLE `landing_page_cms`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `leads`
+--
+ALTER TABLE `leads`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `leads_adminId_fkey` (`adminId`),
+  ADD KEY `leads_assignedToStaffId_fkey` (`assignedToStaffId`);
+
+--
+-- Indexes for table `marketing_campaigns`
+--
+ALTER TABLE `marketing_campaigns`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `member`
+--
+ALTER TABLE `member`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `Member_email_key` (`email`),
+  ADD KEY `Member_branchId_idx` (`branchId`),
+  ADD KEY `fk_member_user` (`userId`);
+
+--
+-- Indexes for table `memberattendance`
+--
+ALTER TABLE `memberattendance`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `memberplan`
+--
+ALTER TABLE `memberplan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `MemberPlan_adminId_fkey` (`adminId`);
+
+--
+-- Indexes for table `membership_renewal_requests`
+--
+ALTER TABLE `membership_renewal_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `memberId` (`memberId`),
+  ADD KEY `assignmentId` (`assignmentId`),
+  ADD KEY `planId` (`planId`),
+  ADD KEY `requestedBy` (`requestedBy`),
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `member_assessments`
+--
+ALTER TABLE `member_assessments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `member_assessments_memberId_idx` (`memberId`),
+  ADD KEY `idx_leaderboard` (`fitness_goal`,`final_leaderboard_score`);
+
+--
+-- Indexes for table `member_bodybuilding_logs`
+--
+ALTER TABLE `member_bodybuilding_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `memberId` (`memberId`);
+
+--
+-- Indexes for table `member_health_log`
+--
+ALTER TABLE `member_health_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `member_health_log_memberId_fkey` (`memberId`);
+
+--
+-- Indexes for table `member_plan_assignment`
+--
+ALTER TABLE `member_plan_assignment`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `member_plan_assignment_memberId_idx` (`memberId`),
+  ADD KEY `member_plan_assignment_planId_idx` (`planId`),
+  ADD KEY `member_plan_assignment_status_idx` (`status`);
+
+--
+-- Indexes for table `message_templates`
+--
+ALTER TABLE `message_templates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `templateType` (`templateType`);
+
+--
+-- Indexes for table `notificationlog`
+--
+ALTER TABLE `notificationlog`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `NotificationLog_memberId_idx` (`memberId`);
+
+--
+-- Indexes for table `payment`
+--
+ALTER TABLE `payment`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `Payment_invoiceNo_key` (`invoiceNo`),
+  ADD KEY `Payment_memberId_idx` (`memberId`),
+  ADD KEY `Payment_planId_idx` (`planId`);
+
+--
+-- Indexes for table `plan`
+--
+ALTER TABLE `plan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `Plan_branchId_idx` (`branchId`);
+
+--
+-- Indexes for table `product`
+--
+ALTER TABLE `product`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `Product_sku_key` (`sku`),
+  ADD KEY `Product_branchId_idx` (`branchId`);
+
+--
+-- Indexes for table `pt_bookings`
+--
+ALTER TABLE `pt_bookings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_pt_session` (`sessionId`);
+
+--
+-- Indexes for table `purchase`
+--
+ALTER TABLE `purchase`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `role`
+--
+ALTER TABLE `role`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `Role_name_key` (`name`);
+
+--
+-- Indexes for table `saas_payments`
+--
+ALTER TABLE `saas_payments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `saas_payments_adminId_fkey` (`adminId`);
+
+--
+-- Indexes for table `salary`
+--
+ALTER TABLE `salary`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ux_salary_salaryId` (`salaryId`),
+  ADD KEY `idx_salary_staffId` (`staffId`);
+
+--
+-- Indexes for table `session`
+--
+ALTER TABLE `session`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `Session_trainerId_idx` (`trainerId`),
+  ADD KEY `Session_branchId_idx` (`branchId`);
+
+--
+-- Indexes for table `shifts`
+--
+ALTER TABLE `shifts`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `staff`
+--
+ALTER TABLE `staff`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `staffattendance`
+--
+ALTER TABLE `staffattendance`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `stockmovement`
+--
+ALTER TABLE `stockmovement`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `StockMovement_productId_idx` (`productId`);
+
+--
+-- Indexes for table `tasks`
+--
+ALTER TABLE `tasks`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `unified_bookings`
+--
+ALTER TABLE `unified_bookings`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `used_qr_nonces`
+--
+ALTER TABLE `used_qr_nonces`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `used_qr_nonces_nonce_key` (`nonce`),
+  ADD KEY `used_qr_nonces_memberId_fkey` (`memberId`);
+
+--
+-- Indexes for table `user`
+--
+ALTER TABLE `user`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `User_email_key` (`email`),
+  ADD KEY `User_branchId_idx` (`branchId`),
+  ADD KEY `User_roleId_idx` (`roleId`);
+
+--
+-- Indexes for table `whatsapp_credit_transactions`
+--
+ALTER TABLE `whatsapp_credit_transactions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `workoutexercise`
+--
+ALTER TABLE `workoutexercise`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `WorkoutExercise_workoutPlanId_idx` (`workoutPlanId`);
+
+--
+-- Indexes for table `workoutplan`
+--
+ALTER TABLE `workoutplan`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `workoutplanassignment`
+--
+ALTER TABLE `workoutplanassignment`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `WorkoutPlanAssignment_memberId_idx` (`memberId`),
+  ADD KEY `WorkoutPlanAssignment_workoutPlanId_idx` (`workoutPlanId`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `alert`
+--
+ALTER TABLE `alert`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `announcement`
+--
+ALTER TABLE `announcement`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `app_settings`
+--
+ALTER TABLE `app_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `automation_settings`
+--
+ALTER TABLE `automation_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `booking`
+--
+ALTER TABLE `booking`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT for table `booking_requests`
+--
+ALTER TABLE `booking_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `branch`
+--
+ALTER TABLE `branch`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+
+--
+-- AUTO_INCREMENT for table `classschedule`
+--
+ALTER TABLE `classschedule`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+
+--
+-- AUTO_INCREMENT for table `classtype`
+--
+ALTER TABLE `classtype`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `credit_packages`
+--
+ALTER TABLE `credit_packages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `demo_requests`
+--
+ALTER TABLE `demo_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `dietmeal`
+--
+ALTER TABLE `dietmeal`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+
+--
+-- AUTO_INCREMENT for table `dietplan`
+--
+ALTER TABLE `dietplan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `dietplanassignment`
+--
+ALTER TABLE `dietplanassignment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `expense`
+--
+ALTER TABLE `expense`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `group_class_bookings`
+--
+ALTER TABLE `group_class_bookings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `housekeepingattendance`
+--
+ALTER TABLE `housekeepingattendance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `housekeepingschedule`
+--
+ALTER TABLE `housekeepingschedule`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `landing_page_cms`
+--
+ALTER TABLE `landing_page_cms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `leads`
+--
+ALTER TABLE `leads`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
+
+--
+-- AUTO_INCREMENT for table `marketing_campaigns`
+--
+ALTER TABLE `marketing_campaigns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `member`
+--
+ALTER TABLE `member`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
+
+--
+-- AUTO_INCREMENT for table `memberattendance`
+--
+ALTER TABLE `memberattendance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
+
+--
+-- AUTO_INCREMENT for table `memberplan`
+--
+ALTER TABLE `memberplan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+
+--
+-- AUTO_INCREMENT for table `membership_renewal_requests`
+--
+ALTER TABLE `membership_renewal_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `member_assessments`
+--
+ALTER TABLE `member_assessments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `member_bodybuilding_logs`
+--
+ALTER TABLE `member_bodybuilding_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `member_health_log`
+--
+ALTER TABLE `member_health_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `member_plan_assignment`
+--
+ALTER TABLE `member_plan_assignment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+
+--
+-- AUTO_INCREMENT for table `message_templates`
+--
+ALTER TABLE `message_templates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `notificationlog`
+--
+ALTER TABLE `notificationlog`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=584;
+
+--
+-- AUTO_INCREMENT for table `payment`
+--
+ALTER TABLE `payment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `plan`
+--
+ALTER TABLE `plan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `product`
+--
+ALTER TABLE `product`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pt_bookings`
+--
+ALTER TABLE `pt_bookings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `purchase`
+--
+ALTER TABLE `purchase`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT for table `role`
+--
+ALTER TABLE `role`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `saas_payments`
+--
+ALTER TABLE `saas_payments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `salary`
+--
+ALTER TABLE `salary`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `session`
+--
+ALTER TABLE `session`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+
+--
+-- AUTO_INCREMENT for table `shifts`
+--
+ALTER TABLE `shifts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+
+--
+-- AUTO_INCREMENT for table `staff`
+--
+ALTER TABLE `staff`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+
+--
+-- AUTO_INCREMENT for table `staffattendance`
+--
+ALTER TABLE `staffattendance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `stockmovement`
+--
+ALTER TABLE `stockmovement`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tasks`
+--
+ALTER TABLE `tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+
+--
+-- AUTO_INCREMENT for table `unified_bookings`
+--
+ALTER TABLE `unified_bookings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+
+--
+-- AUTO_INCREMENT for table `used_qr_nonces`
+--
+ALTER TABLE `used_qr_nonces`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user`
+--
+ALTER TABLE `user`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=288;
+
+--
+-- AUTO_INCREMENT for table `whatsapp_credit_transactions`
+--
+ALTER TABLE `whatsapp_credit_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `workoutexercise`
+--
+ALTER TABLE `workoutexercise`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `workoutplan`
+--
+ALTER TABLE `workoutplan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `workoutplanassignment`
+--
+ALTER TABLE `workoutplanassignment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `alert`
+--
+ALTER TABLE `alert`
+  ADD CONSTRAINT `Alert_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `Alert_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `Alert_staffId_fkey` FOREIGN KEY (`staffId`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `booking`
+--
+ALTER TABLE `booking`
+  ADD CONSTRAINT `Booking_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `Booking_scheduleId_fkey` FOREIGN KEY (`scheduleId`) REFERENCES `classschedule` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `branch`
+--
+ALTER TABLE `branch`
+  ADD CONSTRAINT `Branch_adminId_fkey` FOREIGN KEY (`adminId`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `classschedule`
+--
+ALTER TABLE `classschedule`
+  ADD CONSTRAINT `ClassSchedule_trainerId_fkey` FOREIGN KEY (`trainerId`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `dietmeal`
+--
+ALTER TABLE `dietmeal`
+  ADD CONSTRAINT `DietMeal_dietPlanId_fkey` FOREIGN KEY (`dietPlanId`) REFERENCES `dietplan` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `dietplanassignment`
+--
+ALTER TABLE `dietplanassignment`
+  ADD CONSTRAINT `DietPlanAssignment_dietPlanId_fkey` FOREIGN KEY (`dietPlanId`) REFERENCES `dietplan` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `DietPlanAssignment_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `expense`
+--
+ALTER TABLE `expense`
+  ADD CONSTRAINT `Expense_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `leads`
+--
+ALTER TABLE `leads`
+  ADD CONSTRAINT `leads_assignedToStaffId_fkey` FOREIGN KEY (`assignedToStaffId`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `member`
+--
+ALTER TABLE `member`
+  ADD CONSTRAINT `Member_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_member_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`);
+
+--
+-- Constraints for table `membership_renewal_requests`
+--
+ALTER TABLE `membership_renewal_requests`
+  ADD CONSTRAINT `membership_renewal_requests_assignmentId_fkey` FOREIGN KEY (`assignmentId`) REFERENCES `member_plan_assignment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `membership_renewal_requests_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `membership_renewal_requests_planId_fkey` FOREIGN KEY (`planId`) REFERENCES `memberplan` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `member_assessments`
+--
+ALTER TABLE `member_assessments`
+  ADD CONSTRAINT `member_assessments_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `member_bodybuilding_logs`
+--
+ALTER TABLE `member_bodybuilding_logs`
+  ADD CONSTRAINT `member_bodybuilding_logs_ibfk_1` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`);
+
+--
+-- Constraints for table `member_health_log`
+--
+ALTER TABLE `member_health_log`
+  ADD CONSTRAINT `member_health_log_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `member_plan_assignment`
+--
+ALTER TABLE `member_plan_assignment`
+  ADD CONSTRAINT `member_plan_assignment_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `member_plan_assignment_planId_fkey` FOREIGN KEY (`planId`) REFERENCES `memberplan` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `notificationlog`
+--
+ALTER TABLE `notificationlog`
+  ADD CONSTRAINT `NotificationLog_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `payment`
+--
+ALTER TABLE `payment`
+  ADD CONSTRAINT `Payment_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `plan`
+--
+ALTER TABLE `plan`
+  ADD CONSTRAINT `Plan_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `product`
+--
+ALTER TABLE `product`
+  ADD CONSTRAINT `Product_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `pt_bookings`
+--
+ALTER TABLE `pt_bookings`
+  ADD CONSTRAINT `fk_pt_session` FOREIGN KEY (`sessionId`) REFERENCES `session` (`id`);
+
+--
+-- Constraints for table `saas_payments`
+--
+ALTER TABLE `saas_payments`
+  ADD CONSTRAINT `saas_payments_adminId_fkey` FOREIGN KEY (`adminId`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `salary`
+--
+ALTER TABLE `salary`
+  ADD CONSTRAINT `fk_salary_staff` FOREIGN KEY (`staffId`) REFERENCES `staff` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `session`
+--
+ALTER TABLE `session`
+  ADD CONSTRAINT `Session_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `Session_trainerId_fkey` FOREIGN KEY (`trainerId`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `stockmovement`
+--
+ALTER TABLE `stockmovement`
+  ADD CONSTRAINT `StockMovement_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `product` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `used_qr_nonces`
+--
+ALTER TABLE `used_qr_nonces`
+  ADD CONSTRAINT `used_qr_nonces_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user`
+--
+ALTER TABLE `user`
+  ADD CONSTRAINT `User_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `branch` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `User_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `role` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `workoutexercise`
+--
+ALTER TABLE `workoutexercise`
+  ADD CONSTRAINT `WorkoutExercise_workoutPlanId_fkey` FOREIGN KEY (`workoutPlanId`) REFERENCES `workoutplan` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `workoutplanassignment`
+--
+ALTER TABLE `workoutplanassignment`
+  ADD CONSTRAINT `WorkoutPlanAssignment_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `member` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `WorkoutPlanAssignment_workoutPlanId_fkey` FOREIGN KEY (`workoutPlanId`) REFERENCES `workoutplan` (`id`) ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

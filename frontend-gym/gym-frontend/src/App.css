@@ -1,0 +1,582 @@
+body, html {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* ========== SIDEBAR ========== */
+.sidebar-container {
+  position: fixed;
+  top: 58px;
+  left: 0;
+  height: calc(100vh - 58px);
+  background-color: #2f6a87;
+  width: 250px;
+  transition: width 0.3s ease, transform 0.3s ease;
+  z-index: 1040;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Desktop collapsed: icon-only sidebar */
+@media (min-width: 769px) {
+  .sidebar-container.collapsed {
+    width: 80px;
+  }
+}
+
+/* Mobile: sidebar slides in/out as overlay */
+@media (max-width: 768px) {
+  .sidebar-container {
+    width: 240px;
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+  .sidebar-container.collapsed {
+    transform: translateX(-100%);
+    width: 240px;
+    box-shadow: none;
+  }
+}
+
+/* ========== SIDEBAR BACKDROP (Mobile Only) ========== */
+.sidebar-backdrop {
+  display: none;
+}
+@media (max-width: 768px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 58px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 1039;
+    animation: fadeIn 0.2s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ========== MAIN CONTENT AREA ========== */
+.right-side-content {
+  margin-left: 250px;
+  padding: 24px;
+  margin-top: 58px;
+  transition: margin-left 0.3s ease;
+  min-height: calc(100vh - 58px);
+  overflow-x: hidden;
+}
+
+.right-side-content.collapsed {
+  margin-left: 80px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .right-side-content {
+    padding: 16px;
+  }
+}
+
+/* Mobile: full width, no sidebar margin */
+@media (max-width: 768px) {
+  .right-side-content,
+  .right-side-content.collapsed {
+    margin-left: 0;
+    padding: 12px;
+  }
+}
+
+/* Very small mobile */
+@media (max-width: 375px) {
+  .right-side-content,
+  .right-side-content.collapsed {
+    padding: 8px;
+  }
+}
+
+/* ========== GLOBAL RESPONSIVE HELPERS ========== */
+
+/* Make all tables responsive by default */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent container overflow */
+.container-fluid {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix Bootstrap card body overflow */
+.card-body {
+  overflow-x: auto;
+}
+
+/* Fix modals on small screens */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 8px;
+    max-width: calc(100vw - 16px);
+  }
+  .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .modal-lg,
+  .modal-xl {
+    max-width: calc(100vw - 16px);
+  }
+}
+
+/* Fix forms on mobile */
+@media (max-width: 576px) {
+  .form-control,
+  .form-select {
+    font-size: 14px;
+  }
+  .btn {
+    font-size: 14px;
+  }
+}
+
+/* Fix charts container on mobile */
+@media (max-width: 768px) {
+  /* Restore min-height for charts */
+  [id*="chart"],
+  [class*="chart"] {
+    min-height: 200px !important;
+  }
+  
+  /* Ensure chart tooltips stay visible */
+  .recharts-tooltip-wrapper {
+    z-index: 1000 !important;
+  }
+  /* Legend text smaller on mobile */
+  .recharts-legend-item-text {
+    font-size: 11px !important;
+  }
+}
+
+/* Pagination fix */
+.active-page {
+  background-color: #2F6A87 !important;
+  color: #fff !important;
+  border: 1px solid #2F6A87 !important;
+}
+
+/* Large desktop: prevent excessive stretch */
+@media (min-width: 1920px) {
+  .right-side-content {
+    max-width: 1800px;
+  }
+}
+
+/* Fix for extremely long unbroken strings (e.g. emails, IDs) on small devices */
+td, th, .text-truncate-mobile {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Custom responsive width utilities */
+@media (min-width: 768px) {
+  .w-md-auto {
+    width: auto !important;
+  }
+}
+
+/* ======================================================
+   COMPREHENSIVE MOBILE RESPONSIVE OVERRIDES
+   Applied globally across all dashboard pages
+   ====================================================== */
+
+/* --- Page Header: Title left, Buttons right, stacks on mobile --- */
+.page-header-responsive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+.page-header-responsive .btn-group-responsive {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+  .page-header-responsive {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .page-header-responsive .btn-group-responsive {
+    width: 100%;
+  }
+  .page-header-responsive .btn-group-responsive .btn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* --- Stat Cards: 2 per row on mobile, 4 on desktop --- */
+@media (max-width: 576px) {
+  .row.g-4 > [class*="col-md-"] {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .row.g-4 > [class*="col-md-"].col-full-mobile {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* --- Scrollable tabs (prevents wrapping on mobile) --- */
+.nav-tabs, .nav-pills {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  white-space: nowrap;
+}
+.nav-tabs::-webkit-scrollbar,
+.nav-pills::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- All tables horizontally scrollable --- */
+.card .table-responsive,
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Minimum widths to keep tables readable */
+.table-responsive > table {
+  min-width: 500px;
+}
+
+/* --- Input groups full width on mobile --- */
+@media (max-width: 576px) {
+  .input-group {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .input-group + .input-group {
+    margin-top: 8px;
+  }
+  /* Card headers with search bars */
+  .card-header .d-flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .card-header .d-flex h5,
+  .card-header .d-flex h4 {
+    margin-bottom: 8px !important;
+  }
+}
+
+/* --- Typography scaling on mobile --- */
+@media (max-width: 576px) {
+  .display-5 { font-size: 1.6rem !important; }
+  .display-4 { font-size: 1.8rem !important; }
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.3rem !important; }
+  h3 { font-size: 1.1rem !important; }
+  h5 { font-size: 1rem !important; }
+  .fs-3 { font-size: 1.1rem !important; }
+}
+
+/* --- Stat cards: smaller text and padding on mobile --- */
+@media (max-width: 576px) {
+  .card-body h3, .card-body .h3 {
+    font-size: 1.4rem !important;
+  }
+  .card-body h6 {
+    font-size: 0.75rem !important;
+  }
+  .card-body .p-3 {
+    padding: 0.6rem !important;
+  }
+  /* Reduce icon size in stat cards */
+  .rounded-circle .svg-inline--fa {
+    font-size: 1.2rem !important;
+  }
+}
+
+/* --- Leaderboard specific responsive fixes --- */
+@media (max-width: 576px) {
+  .leaderboard-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .podium-container {
+    gap: 4px;
+    margin-top: 16px !important;
+    margin-bottom: 24px !important;
+  }
+  .podium-step {
+    margin: 0 !important;
+  }
+  .podium-avatar img {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  .podium-base {
+    width: 60px !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* --- Leads/CRM table action buttons on mobile --- */
+@media (max-width: 576px) {
+  .action-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .action-btn-group .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+/* --- Grid responsive fix: ensure col-md-* stacks properly on xs --- */
+@media (max-width: 575px) {
+  .col-md-1, .col-md-2, .col-md-3, .col-md-4,
+  .col-md-5, .col-md-6, .col-md-7, .col-md-8,
+  .col-md-9, .col-md-10, .col-md-11, .col-md-12 {
+    /* Bootstrap already handles this, but enforce for custom grids */
+    min-width: 0;
+  }
+}
+
+/* --- Buttons: prevent overflow in card-header flex row --- */
+@media (max-width: 576px) {
+  .btn-sm { font-size: 11px; padding: 4px 8px; }
+}
+
+/* --- Prevent page title from overflowing on mobile --- */
+.page-title {
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+  word-break: break-word;
+}
+
+/* --- Padding fix: don't over-pad on mobile --- */
+@media (max-width: 576px) {
+  .p-4 { padding: 1rem !important; }
+  .p-5 { padding: 1.25rem !important; }
+  .px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+  .px-5 { padding-left: 1rem !important; padding-right: 1rem !important; }
+}
+
+/* --- Segmented tab buttons on mobile --- */
+@media (max-width: 576px) {
+  .d-inline-flex.rounded-4 {
+    display: flex !important;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-radius: 1rem !important;
+  }
+  .d-inline-flex.rounded-4 .btn {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
+
+/* ========== SIDEBAR ========== */
+.sidebar-container {
+  position: fixed;
+  top: 58px;
+  left: 0;
+  height: calc(100vh - 58px);
+  background-color: #2f6a87;
+  width: 250px;
+  transition: width 0.3s ease, transform 0.3s ease;
+  z-index: 1040;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Desktop collapsed: icon-only sidebar */
+@media (min-width: 769px) {
+  .sidebar-container.collapsed {
+    width: 80px;
+  }
+}
+
+/* Mobile: sidebar slides in/out as overlay */
+@media (max-width: 768px) {
+  .sidebar-container {
+    width: 240px;
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+  .sidebar-container.collapsed {
+    transform: translateX(-100%);
+    width: 240px;
+    box-shadow: none;
+  }
+}
+
+/* ========== SIDEBAR BACKDROP (Mobile Only) ========== */
+.sidebar-backdrop {
+  display: none;
+}
+@media (max-width: 768px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 58px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 1039;
+    animation: fadeIn 0.2s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ========== MAIN CONTENT AREA ========== */
+.right-side-content {
+  margin-left: 250px;
+  padding: 24px;
+  margin-top: 58px;
+  transition: margin-left 0.3s ease;
+  min-height: calc(100vh - 58px);
+  overflow-x: hidden;
+}
+
+.right-side-content.collapsed {
+  margin-left: 80px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .right-side-content {
+    padding: 16px;
+  }
+}
+
+/* Mobile: full width, no sidebar margin */
+@media (max-width: 768px) {
+  .right-side-content,
+  .right-side-content.collapsed {
+    margin-left: 0;
+    padding: 12px;
+  }
+}
+
+/* Very small mobile */
+@media (max-width: 375px) {
+  .right-side-content,
+  .right-side-content.collapsed {
+    padding: 8px;
+  }
+}
+
+/* ========== GLOBAL RESPONSIVE HELPERS ========== */
+
+/* Make all tables responsive by default */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent container overflow */
+.container-fluid {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix Bootstrap card body overflow */
+.card-body {
+  overflow-x: auto;
+}
+
+/* Fix modals on small screens */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 8px;
+    max-width: calc(100vw - 16px);
+  }
+  .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .modal-lg,
+  .modal-xl {
+    max-width: calc(100vw - 16px);
+  }
+}
+
+/* Fix forms on mobile */
+@media (max-width: 576px) {
+  .form-control,
+  .form-select {
+    font-size: 14px;
+  }
+  .btn {
+    font-size: 14px;
+  }
+}
+
+/* Fix charts container on mobile */
+@media (max-width: 768px) {
+  /* Restore min-height for charts */
+  [id*="chart"],
+  [class*="chart"] {
+    min-height: 200px !important;
+  }
+  
+  /* Ensure chart tooltips stay visible */
+  .recharts-tooltip-wrapper {
+    z-index: 1000 !important;
+  }
+  /* Legend text smaller on mobile */
+  .recharts-legend-item-text {
+    font-size: 11px !important;
+  }
+}
+
+/* Pagination fix */
+.active-page {
+  background-color: #2F6A87 !important;
+  color: #fff !important;
+  border: 1px solid #2F6A87 !important;
+}
+
+/* Large desktop: prevent excessive stretch */
+@media (min-width: 1920px) {
+  .right-side-content {
+    max-width: 1800px;
+  }
+}
+
+/* Fix for extremely long unbroken strings (e.g. emails, IDs) on small devices */
+td, th, .text-truncate-mobile {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Custom responsive width utilities */
+@media (min-width: 768px) {
+  .w-md-auto {
+    width: auto !important;
+  }
+}

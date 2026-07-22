@@ -1,4 +1,5 @@
 import { pool } from "../../config/db.js";
+import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 
 /* -----------------------------------------------------
    1️⃣  MEMBER/ADMIN CHECK-IN  (Manual + QR + Manual Times)
@@ -231,6 +232,22 @@ export const memberCheckIn = async (req, res, next) => {
         ipAddress || null,
       ]
     );
+    // Send check-in notification to member
+    if (isMember && memberRecords && memberRecords.length > 0) {
+      const member = memberRecords[0];
+      const checkInTime = finalCheckIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const checkInDate = finalCheckIn.toLocaleDateString();
+      const message = `Hi ${member.fullName},\n\nYour attendance has been successfully marked for today (${checkInDate}) at ${checkInTime}.\n\nHave a great workout!`;
+
+      dispatchNotification({
+        category: "templates",
+        toEmail: member.email,
+        toPhone: member.phone,
+        memberId: member.id,
+        subject: "Attendance Marked",
+        message: message
+      }).catch(err => console.error("Failed to send attendance notification:", err));
+    }
 
     res.json({
       success: true,

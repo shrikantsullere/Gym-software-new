@@ -122,17 +122,22 @@ export const createAssessment = async (data, createdBy) => {
   
   if (member.email) {
     dispatchNotification({
-      type: "email",
-      to: member.email,
+      category: "templates",
+      toEmail: member.email,
+      toPhone: member.phone,
+      memberId: member.id,
       subject: "Your New Fitness Assessment Report",
       message: reportMessage
     }).catch(err => console.error("Failed to send assessment email notification:", err));
   }
 
-  if (member.phone) {
+  if (member.phone && !member.email) { // if email was there, phone was already covered above, but let's be safe
     dispatchNotification({
-      type: "whatsapp",
-      to: member.phone,
+      category: "templates",
+      toEmail: member.email,
+      toPhone: member.phone,
+      memberId: member.id,
+      subject: "Your New Fitness Assessment Report",
       message: reportMessage
     }).catch(err => console.error("Failed to send assessment whatsapp notification:", err));
   }
@@ -141,12 +146,15 @@ export const createAssessment = async (data, createdBy) => {
   if (calculated.metrics.body_fat_percentage <= 15) {
     const milestoneMessage = `🔥 Milestone Reached! Congratulations ${member.fullName}, your body fat percentage is now down to ${calculated.metrics.body_fat_percentage}%! Exceptional progress!`;
     
-    if (member.phone) {
+    if (member.phone || member.email) {
       dispatchNotification({
-        type: "whatsapp",
-        to: member.phone,
+        category: "templates",
+        toEmail: member.email,
+        toPhone: member.phone,
+        memberId: member.id,
+        subject: "Fitness Milestone Reached!",
         message: milestoneMessage
-      }).catch(err => console.error("Failed to send milestone whatsapp notification:", err));
+      }).catch(err => console.error("Failed to send milestone notification:", err));
     }
   }
 

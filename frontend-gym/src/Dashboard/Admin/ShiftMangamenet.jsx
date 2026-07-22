@@ -15,6 +15,9 @@ const ShiftManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [staffSearch, setStaffSearch] = useState("");
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [selectedStaffFilter, setSelectedStaffFilter] = useState('');
 
   const filteredStaff = staffMembers.filter(staff => {
     // roleId 8 = housekeeping — exclude from shift creation dropdown
@@ -70,7 +73,8 @@ const ShiftManagement = () => {
 
   const [shiftForm, setShiftForm] = useState({
     staffIds: [],
-    shiftDate: '',
+    fromDate: '',
+    toDate: '',
     startTime: '',
     endTime: '',
     shiftType: 'Morning Shift',
@@ -149,36 +153,58 @@ const ShiftManagement = () => {
 
   const handleCreateShift = async () => {
     try {
-      if (!shiftForm.staffIds || !shiftForm.staffIds.length || !shiftForm.shiftDate ||
+      if (!shiftForm.staffIds || !shiftForm.staffIds.length || !shiftForm.fromDate || !shiftForm.toDate ||
         !shiftForm.startTime || !shiftForm.endTime || !shiftForm.shiftType) {
         alert('Please fill all required fields');
         return;
       }
 
-      const response = await axiosInstance.post('shift/create', shiftForm);
-      const data = response.data;
+      const start = new Date(shiftForm.fromDate);
+      const end = new Date(shiftForm.toDate);
 
-      if (data.success) {
-        const shiftsResponse = await axiosInstance.get(`shift/all/${adminId}`);
-        const shiftsData = shiftsResponse.data;
-
-        if (shiftsData.success) {
-          setShifts(shiftsData.data || shiftsData.shifts || []);
-        }
-
-        setShiftForm({
-          staffIds: [],
-          shiftDate: '',
-          startTime: '',
-          endTime: '',
-          shiftType: 'Morning Shift',
-          description: ''
-        });
-        setShowShiftModal(false);
-        alert('Shift created successfully');
-      } else {
-        throw new Error(data.message || 'Failed to create shift');
+      if (end < start) {
+        alert('To Date must be greater than or equal to From Date');
+        return;
       }
+
+      // Generate array of dates
+      const dateList = [];
+      let current = new Date(start);
+      while (current <= end) {
+        dateList.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
+      }
+
+      // Call API sequentially for each date
+      for (const d of dateList) {
+        await axiosInstance.post('shift/create', {
+          staffIds: shiftForm.staffIds,
+          shiftDate: d,
+          startTime: shiftForm.startTime,
+          endTime: shiftForm.endTime,
+          shiftType: shiftForm.shiftType,
+          description: shiftForm.description
+        });
+      }
+
+      const shiftsResponse = await axiosInstance.get(`shift/all/${adminId}`);
+      const shiftsData = shiftsResponse.data;
+
+      if (shiftsData.success) {
+        setShifts(shiftsData.data || shiftsData.shifts || []);
+      }
+
+      setShiftForm({
+        staffIds: [],
+        fromDate: '',
+        toDate: '',
+        startTime: '',
+        endTime: '',
+        shiftType: 'Morning Shift',
+        description: ''
+      });
+      setShowShiftModal(false);
+      alert('Shifts created successfully for the selected date range!');
     } catch (err) {
       console.error('Error creating shift:', err);
       alert('Error creating shift: ' + (err.response?.data?.message || err.message));
@@ -295,13 +321,23 @@ const ShiftManagement = () => {
                       </select>
                     </div>
 
-                    <div className="col-md-6">
-                      <label className="form-label">Date</label>
+                    <div className="col-md-3">
+                      <label className="form-label">From Date</label>
                       <input
                         type="date"
                         className="form-control"
-                        name="shiftDate"
-                        value={shiftForm.shiftDate}
+                        name="fromDate"
+                        value={shiftForm.fromDate}
+                        onChange={handleShiftFormChange}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label">To Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        name="toDate"
+                        value={shiftForm.toDate}
                         onChange={handleShiftFormChange}
                       />
                     </div>
@@ -382,12 +418,42 @@ const ShiftManagement = () => {
     return <div className="container-fluid py-4">Loading...</div>;
   }
 
+  const filteredShifts = shifts?.filter(shift => {
+    // 1. Staff Filter
+    if (selectedStaffFilter) {
+      const staffIdToFind = parseInt(selectedStaffFilter);
+      let ids = shift.staffIds;
+      if (typeof ids === 'string') {
+        try {
+          ids = JSON.parse(ids);
+        } catch (e) {
+          if (ids.includes(',')) {
+            ids = ids.split(',').map(num => parseInt(num));
+          } else {
+            ids = parseInt(ids);
+          }
+        }
+      }
+      
+      if (Array.isArray(ids)) {
+        if (!ids.includes(staffIdToFind)) return false;
+      } else {
+        if (parseInt(ids) !== staffIdToFind) return false;
+      }
+    }
+
+    // 2. Date Filter
+    if (!shift.shiftDate) return true;
+    const formattedShiftDate = formatDate(shift.shiftDate);
+    if (fromDate && formattedShiftDate < fromDate) return false;
+    if (toDate && formattedShiftDate > toDate) return false;
+    return true;
+  });
+
   return (
     <div className="container-fluid py-4">
-      <h2 className="mb-4">Shift Management</h2>
-
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3>Duty Roster</h3>
+        <h2 className="mb-0">Shift Management</h2>
         <button
           className="btn btn-outline-light"
           style={{ backgroundColor: '#2f6a87', color: '#fff' }}
@@ -395,6 +461,67 @@ const ShiftManagement = () => {
         >
           <Plus size={18} className="me-1" /> Create Shift
         </button>
+      </div>
+
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+          <h3 className="mb-0">Duty Roster</h3>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          {/* Staff Filter Dropdown */}
+          <div className="input-group input-group-sm shadow-sm" style={{ width: '220px' }}>
+            <span className="input-group-text bg-white text-muted">Staff</span>
+            <select
+              className="form-select"
+              value={selectedStaffFilter}
+              onChange={(e) => setSelectedStaffFilter(e.target.value)}
+            >
+              <option value="">All Staff</option>
+              {staffMembers.map(staff => {
+                const sId = staff.staffId || staff.id;
+                const sName = staff.fullName || staff.name || staff.userName || staff.email || `Staff #${sId}`;
+                const sRole = staff.roleName ? ` (${staff.roleName})` : '';
+                return (
+                  <option key={sId} value={sId}>
+                    {sName}{sRole}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          <div className="input-group input-group-sm shadow-sm" style={{ width: '200px' }}>
+            <span className="input-group-text bg-white text-muted">From</span>
+            <input
+              type="date"
+              className="form-control"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </div>
+          <div className="input-group input-group-sm shadow-sm" style={{ width: '200px' }}>
+            <span className="input-group-text bg-white text-muted">To</span>
+            <input
+              type="date"
+              className="form-control"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </div>
+          {(fromDate || toDate || selectedStaffFilter) && (
+            <button 
+              className="btn btn-sm btn-secondary" 
+              type="button"
+              onClick={() => {
+                setFromDate('');
+                setToDate('');
+                setSelectedStaffFilter('');
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="table-responsive mb-4">
@@ -410,7 +537,7 @@ const ShiftManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {shifts?.map(shift => (
+            {filteredShifts?.map(shift => (
               <tr key={shift.id}>
                 <td>
                   {getStaffName(shift.staffIds)}

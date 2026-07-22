@@ -343,10 +343,9 @@ function App() {
 
                   {/* booking */}
                   <Route path="/admin/booking/attendance" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><AttendanceReport /></ProtectedRoute>} />
-                  <Route path="/admin/personaltrainings" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTraining /></ProtectedRoute>} />
-                  <Route path="/admin/sessionsbookings" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTrainerSessionBookings /></ProtectedRoute>} />
+                  <Route path="/admin/booking/personal-training" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTraining /></ProtectedRoute>} />
+                  <Route path="/admin/AdminBranches" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "SUBADMIN"]}><SuperAdminBranches /></ProtectedRoute>} />
                   <Route path="/admin/booking-details" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><BookingDetailsList /></ProtectedRoute>} />
-                  <Route path="/admin/inventory" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><InventoryManagement /></ProtectedRoute>} />
                   <Route path="/admin/ClassesSchedule" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><ClassesSchedule /></ProtectedRoute>} />
                   <Route path="/admin/classesSchedule" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><ClassesSchedule /></ProtectedRoute>} />
                   <Route path="/admin/bookings" element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]}><PersonalTrainerSessionBookings /></ProtectedRoute>} />

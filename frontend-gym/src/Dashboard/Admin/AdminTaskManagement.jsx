@@ -193,7 +193,7 @@ const AdminTaskManagement = () => {
   };
 
   const handleCreateTask = async () => {
-    const { roleId, taskTitle, dueDate, priority, description } = taskForm;
+    const { assignedTo, roleId, taskTitle, dueDate, priority, description } = taskForm;
 
     if (!roleId || !taskTitle || !dueDate) {
       alert('Please fill all required fields: Department, Title, and Due Date.');
@@ -202,6 +202,7 @@ const AdminTaskManagement = () => {
 
     try {
       const payload = {
+        assignedTo: assignedTo ? parseInt(assignedTo, 10) : null,
         roleId: parseInt(roleId, 10),
         adminId: parseInt(adminId, 10),
         taskTitle,
@@ -311,14 +312,19 @@ const AdminTaskManagement = () => {
               <div className="modal-body">
                 <form>
                   <div className="row mb-3">
-
                     <div className="col-md-6">
                       <label className="form-label">Department *</label>
                       <select
                         className="form-select"
                         name="roleId"
                         value={taskForm.roleId}
-                        onChange={handleTaskFormChange}
+                        onChange={(e) => {
+                          setTaskForm(prev => ({
+                            ...prev, 
+                            roleId: e.target.value, 
+                            assignedTo: '' // Reset assignedTo when department changes
+                          }));
+                        }}
                         required
                       >
                         <option value="">Select Department</option>
@@ -327,6 +333,26 @@ const AdminTaskManagement = () => {
                             {dept.name}
                           </option>
                         ))}
+                      </select>
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label">Staff Member (Optional)</label>
+                      <select
+                        className="form-select"
+                        name="assignedTo"
+                        value={taskForm.assignedTo}
+                        onChange={handleTaskFormChange}
+                        disabled={!taskForm.roleId}
+                      >
+                        <option value="">Select Staff Member</option>
+                        {staffMembers
+                          .filter(staff => staff.roleId === parseInt(taskForm.roleId))
+                          .map(staff => (
+                            <option key={staff.staffId || staff.id} value={staff.staffId || staff.id}>
+                              {staff.fullName}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>

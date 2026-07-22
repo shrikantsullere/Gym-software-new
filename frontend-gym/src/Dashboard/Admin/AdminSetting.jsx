@@ -47,6 +47,12 @@ const AdminSetting = () => {
     gymName: "",
     razorpayKeyId: "",
     razorpayKeySecret: "",
+    whatsappAccessToken: "",
+    whatsappPhoneNumberId: "",
+    smtpHost: "",
+    smtpPort: "",
+    smtpUser: "",
+    smtpPass: "",
   });
 
   const [previewImages, setPreviewImages] = useState({
@@ -138,7 +144,13 @@ const AdminSetting = () => {
               ...prev,
               gymName: adminRes.data.user?.gymName || adminRes.data.gymName || "",
               razorpayKeyId: adminRes.data.user?.razorpayKeyId || "",
-              razorpayKeySecret: adminRes.data.user?.razorpayKeySecret || ""
+              razorpayKeySecret: adminRes.data.user?.razorpayKeySecret || "",
+              whatsappAccessToken: adminRes.data.user?.whatsappAccessToken || "",
+              whatsappPhoneNumberId: adminRes.data.user?.whatsappPhoneNumberId || "",
+              smtpHost: adminRes.data.user?.smtpHost || "",
+              smtpPort: adminRes.data.user?.smtpPort || "",
+              smtpUser: adminRes.data.user?.smtpUser || "",
+              smtpPass: adminRes.data.user?.smtpPass || ""
             }));
           }
         } catch (err) {
@@ -196,7 +208,13 @@ const AdminSetting = () => {
           await axiosInstance.put(`auth/user/${adminId}`, {
             gymName: formData.gymName,
             razorpayKeyId: formData.razorpayKeyId,
-            razorpayKeySecret: formData.razorpayKeySecret
+            razorpayKeySecret: formData.razorpayKeySecret,
+            whatsappAccessToken: formData.whatsappAccessToken,
+            whatsappPhoneNumberId: formData.whatsappPhoneNumberId,
+            smtpHost: formData.smtpHost,
+            smtpPort: formData.smtpPort,
+            smtpUser: formData.smtpUser,
+            smtpPass: formData.smtpPass
           });
         } catch (err) {
           console.log("Failed to update admin details");
@@ -305,7 +323,7 @@ const AdminSetting = () => {
               onClick={() => setActiveTab('payment')}
               style={{ padding: 'clamp(6px, 2vw, 10px) clamp(12px, 3vw, 20px)', fontSize: 'clamp(12px, 2.5vw, 14px)', transition: 'all 0.3s' }}
             >
-              <FaGlobe className="me-2" />Payment Gateway
+              <FaGlobe className="me-2" />API & Integrations
             </button>
 
             <button
@@ -508,10 +526,94 @@ const AdminSetting = () => {
                       Your keys are stored securely. You can find these in your Razorpay Dashboard under Settings &rarr; API Keys.
                     </Form.Text>
                   </Form.Group>
+                  <hr className="my-4" />
+
+                  <div className="mb-4">
+                    <h5 className="fw-bold mb-1">WhatsApp API Settings</h5>
+                    <p className="text-muted small">Configure Meta Cloud API credentials to send automated WhatsApp messages.</p>
+                  </div>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label className="fw-bold">WhatsApp Access Token</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="whatsappAccessToken"
+                      value={formData.whatsappAccessToken}
+                      onChange={handleChange}
+                      placeholder="EAAG..."
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label className="fw-bold">WhatsApp Phone Number ID</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="whatsappPhoneNumberId"
+                      value={formData.whatsappPhoneNumberId}
+                      onChange={handleChange}
+                      placeholder="e.g. 104XXXXXXXX"
+                    />
+                  </Form.Group>
+                  
+                  <hr className="my-4" />
+
+                  <div className="mb-4">
+                    <h5 className="fw-bold mb-1">SMTP Email Settings</h5>
+                    <p className="text-muted small">Configure your custom SMTP details to send automated emails.</p>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-8">
+                      <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold">SMTP Host</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="smtpHost"
+                          value={formData.smtpHost}
+                          onChange={handleChange}
+                          placeholder="smtp.gmail.com"
+                        />
+                      </Form.Group>
+                    </div>
+                    <div className="col-md-4">
+                      <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold">SMTP Port</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="smtpPort"
+                          value={formData.smtpPort}
+                          onChange={handleChange}
+                          placeholder="587"
+                        />
+                      </Form.Group>
+                    </div>
+                  </div>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label className="fw-bold">SMTP Username</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="smtpUser"
+                      value={formData.smtpUser}
+                      onChange={handleChange}
+                      placeholder="your-email@gmail.com"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label className="fw-bold">SMTP Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="smtpPass"
+                      value={formData.smtpPass}
+                      onChange={handleChange}
+                      placeholder="Enter SMTP App Password"
+                    />
+                  </Form.Group>
 
                   <div className="text-end">
                     <Button type="submit" disabled={loading}>
-                      {loading ? "Saving..." : "Save Payment Settings"}
+                      {loading ? "Saving..." : "Save API Settings"}
                     </Button>
                   </div>
                 </Form>

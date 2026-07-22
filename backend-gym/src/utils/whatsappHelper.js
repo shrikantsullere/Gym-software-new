@@ -8,7 +8,7 @@ const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
  * @param {string} phone - Member's phone number with country code (e.g. "919876543210")
  * @param {string} message - The text message to send
  */
-export const sendWhatsAppMessage = async (phone, message) => {
+export const sendWhatsAppMessage = async (phone, message, token = null, phoneNumberId = null) => {
   try {
     if (!phone) {
       console.warn("⚠️ WhatsApp Helper: Phone number is missing. Cannot send message.");
@@ -18,13 +18,16 @@ export const sendWhatsAppMessage = async (phone, message) => {
     console.log(`💬 [WhatsApp API] Triggering send to ${phone}:`);
     console.log(`"${message}"`);
 
+    const activeToken = token || WHATSAPP_TOKEN;
+    const activePhoneId = phoneNumberId || PHONE_NUMBER_ID;
+
     // If credentials are not set, fallback to dummy simulation
-    if (!WHATSAPP_TOKEN || !PHONE_NUMBER_ID) {
-      console.log("ℹ️ WhatsApp credentials not fully configured in .env. Simulating success in Development Mode.");
+    if (!activeToken || !activePhoneId) {
+      console.log("ℹ️ WhatsApp credentials not fully configured. Simulating success in Development Mode.");
       return true;
     }
 
-    const apiUrl = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    const apiUrl = `https://graph.facebook.com/v19.0/${activePhoneId}/messages`;
     
     // Clean phone number (leave only digits)
     const cleanPhone = phone.replace(/\D/g, "");
@@ -32,7 +35,7 @@ export const sendWhatsAppMessage = async (phone, message) => {
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+        "Authorization": `Bearer ${activeToken}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({

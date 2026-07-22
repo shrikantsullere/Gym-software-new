@@ -2428,6 +2428,7 @@ export const getPTBookingsByAdminId = async (req, res) => {
 
 
 // ➤ GET BOOKING DETAILS FOR ADMIN/TRAINER
+import pool from " ../../config/db.js\;
 export const getBookingDetails = async (req, res) => {
   try {
     const { adminId, trainerId } = req.params;

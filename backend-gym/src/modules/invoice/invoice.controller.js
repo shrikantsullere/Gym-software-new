@@ -85,33 +85,33 @@ export const generateInvoicePdf = async (req, res, next) => {
         .text(`GSTIN ${companyGST}`, detailsX, headerY + 22);
     }
     
-    // Phone with icon
+    // Phone
     let currentY = headerY + 36;
     if (companyPhone) {
       doc
         .fontSize(11)
         .font('Helvetica')
         .fillColor('#4b5563')
-        .text(`📞 ${companyPhone}`, detailsX, currentY);
+        .text(`Mobile No: ${companyPhone}`, detailsX, currentY);
       currentY += 14;
     }
     
-    // Email with icon
+    // Email
     if (companyEmail) {
       doc
         .fontSize(11)
         .font('Helvetica')
         .fillColor('#4b5563')
-        .text(`✉ ${companyEmail}`, detailsX, currentY);
+        .text(`Email: ${companyEmail}`, detailsX, currentY);
       currentY += 14;
     }
     
-    // Address with icon
+    // Address
     doc
       .fontSize(11)
       .font('Helvetica')
       .fillColor('#4b5563')
-      .text(`📍 ${companyAddress}`, detailsX, currentY, { width: detailsWidth });
+      .text(`Address: ${companyAddress}`, detailsX, currentY, { width: detailsWidth });
     
     // Invoice Title (Right aligned)
     doc

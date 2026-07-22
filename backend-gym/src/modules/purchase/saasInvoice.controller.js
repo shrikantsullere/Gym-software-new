@@ -35,12 +35,14 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
 
     doc.pipe(res);
 
-    // Platform / Super Admin details
-    const companyName = "Speed Fitness Software Solutions";
-    const companyAddress = "Speed Fitness HQ, India";
-    const companyGST = "29ABCDE1234F1Z5";
-    const companyPhone = "+91 9876543210";
-    const companyEmail = "support@speedfitness.com";
+    // Platform / Super Admin details (Fetch from user with roleId = 1)
+    const [saRows] = await pool.query("SELECT gymName, gymAddress, gstNumber, phone, email FROM user WHERE roleId = 1 LIMIT 1");
+    const sa = saRows[0] || {};
+    const companyName = sa.gymName || "Speed Fitness Software Solutions";
+    const companyAddress = sa.gymAddress || "Speed Fitness HQ, India";
+    const companyGST = sa.gstNumber || "29ABCDE1234F1Z5";
+    const companyPhone = sa.phone || "+91 9876543210";
+    const companyEmail = sa.email || "support@speedfitness.com";
 
     // Gym Owner / Buyer details
     const cleanStr = (s) => (s && s !== "null" && s !== "undefined" ? String(s) : "");
@@ -63,7 +65,7 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
     const logoBoxX = 50;
     const detailsX = logoBoxX + logoBoxSize + 15;
     const detailsWidth = 350;
-    const invoiceTitleX = 450;
+    const invoiceTitleX = 350;
 
     // Logo box placeholder
     doc
@@ -84,15 +86,15 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .font("Helvetica")
       .fillColor("#4b5563")
       .text(`GSTIN: ${companyGST}`, detailsX, headerY + 22)
-      .text(`📞 ${companyPhone} | ✉ ${companyEmail}`, detailsX, headerY + 36)
-      .text(`📍 ${companyAddress}`, detailsX, headerY + 50, { width: detailsWidth });
+      .text(`Mobile No: ${companyPhone} | Email: ${companyEmail}`, detailsX, headerY + 36)
+      .text(`Address: ${companyAddress}`, detailsX, headerY + 50, { width: detailsWidth });
 
     // Invoice Title
     doc
       .fontSize(22)
       .font("Helvetica-Bold")
       .fillColor("#1e3a8a")
-      .text("TAX INVOICE", invoiceTitleX, headerY + 10, { align: "right", width: 100 });
+      .text("TAX INVOICE", invoiceTitleX, headerY + 10, { align: "right", width: 195 });
 
     // Separator line
     doc.y = headerY + logoBoxSize + 15;
@@ -163,9 +165,9 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .fillColor("#000000")
       .text("No", 58, tableTop + 12)
       .text("SOFTWARE SUBSCRIPTION PLAN", 95, tableTop + 12)
-      .text("Duration", 310, tableTop + 12, { align: "center" })
-      .text("Tax (18%)", 390, tableTop + 12, { align: "right" })
-      .text("Total", 470, tableTop + 12, { align: "right" });
+      .text("Duration", 310, tableTop + 12, { width: 60, align: "center" })
+      .text("Tax (18%)", 390, tableTop + 12, { width: 60, align: "right" })
+      .text("Total", 470, tableTop + 12, { width: 60, align: "right" });
 
     // Table Row
     const rowY = tableTop + itemHeight;
@@ -184,9 +186,9 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .text("Gym Owner Cloud Management Software Subscription", 95, rowY + 22, { width: 210 })
       .fontSize(10)
       .fillColor("#000000")
-      .text(purchase.billingDuration || "Monthly", 310, rowY + 12, { align: "center" })
-      .text(`₹ ${taxAmount.toLocaleString("en-IN")}`, 390, rowY + 12, { align: "right" })
-      .text(`₹ ${subtotal.toLocaleString("en-IN")}`, 470, rowY + 12, { align: "right" });
+      .text(purchase.billingDuration || "Monthly", 310, rowY + 12, { width: 60, align: "center" })
+      .text(`INR ${taxAmount.toLocaleString("en-IN")}`, 390, rowY + 12, { width: 60, align: "right" })
+      .text(`INR ${subtotal.toLocaleString("en-IN")}`, 470, rowY + 12, { width: 60, align: "right" });
 
     doc.y = rowY + itemHeight + 30;
 
@@ -198,29 +200,29 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
     doc
       .lineWidth(1)
       .strokeColor("#d4af37")
-      .rect(summaryX - 10, summaryY - 5, summaryWidth + 20, 85)
+      .rect(summaryX, summaryY - 5, summaryWidth, 85)
       .stroke();
 
     doc
       .fontSize(10)
       .font("Helvetica")
-      .text("Taxable Value", summaryX, summaryY + 5)
-      .text(`₹ ${taxableAmount.toLocaleString("en-IN")}`, summaryX + summaryWidth, summaryY + 5, { align: "right" });
+      .text("Taxable Value", summaryX + 10, summaryY + 5)
+      .text(`INR ${taxableAmount.toLocaleString("en-IN")}`, summaryX, summaryY + 5, { width: summaryWidth - 10, align: "right" });
 
     doc
-      .text("IGST / CGST+SGST (18%)", summaryX, summaryY + 25)
-      .text(`₹ ${taxAmount.toLocaleString("en-IN")}`, summaryX + summaryWidth, summaryY + 25, { align: "right" });
+      .text("IGST / CGST+SGST (18%)", summaryX + 10, summaryY + 25)
+      .text(`INR ${taxAmount.toLocaleString("en-IN")}`, summaryX, summaryY + 25, { width: summaryWidth - 10, align: "right" });
 
     doc
-      .rect(summaryX - 10, summaryY + 48, summaryWidth + 20, 25)
+      .rect(summaryX, summaryY + 48, summaryWidth, 25)
       .fill("#fef3c7");
 
     doc
       .fillColor("#000000")
       .font("Helvetica-Bold")
       .fontSize(11)
-      .text("TOTAL AMOUNT", summaryX, summaryY + 55)
-      .text(`₹ ${subtotal.toLocaleString("en-IN")}`, summaryX + summaryWidth, summaryY + 55, { align: "right" });
+      .text("TOTAL AMOUNT", summaryX + 10, summaryY + 55)
+      .text(`INR ${subtotal.toLocaleString("en-IN")}`, summaryX, summaryY + 55, { width: summaryWidth - 10, align: "right" });
 
     doc.y = summaryY + 95;
 

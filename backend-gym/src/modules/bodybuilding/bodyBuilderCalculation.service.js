@@ -1,26 +1,17 @@
 export const calculateBodyBuilderMetrics = (data) => {
   const gender = (data.gender || 'male').toLowerCase();
-  const age = parseInt(data.age);
-  const weight_kg = parseFloat(data.weight_kg);
-  const height_cm = parseFloat(data.height_cm);
-  const neck_cm = parseFloat(data.neck_cm);
-  const waist_cm = parseFloat(data.waist_cm);
-  const hip_cm = data.hip_cm ? parseFloat(data.hip_cm) : null;
+  const age = data.age !== undefined && data.age !== null && data.age !== '' ? parseInt(data.age) : NaN;
+  const weight_kg = data.weight_kg !== undefined && data.weight_kg !== null && data.weight_kg !== '' ? parseFloat(data.weight_kg) : NaN;
+  const height_cm = data.height_cm !== undefined && data.height_cm !== null && data.height_cm !== '' ? parseFloat(data.height_cm) : NaN;
+  const neck_cm = data.neck_cm !== undefined && data.neck_cm !== null && data.neck_cm !== '' ? parseFloat(data.neck_cm) : NaN;
+  const waist_cm = data.waist_cm !== undefined && data.waist_cm !== null && data.waist_cm !== '' ? parseFloat(data.waist_cm) : NaN;
+  const hip_cm = data.hip_cm !== undefined && data.hip_cm !== null && data.hip_cm !== '' ? parseFloat(data.hip_cm) : null;
   const activity_level = (data.activity_level || 'active').toLowerCase();
   const fitness_goal = (data.fitness_goal || 'muscle gain').toLowerCase().replace(/_/g, ' ');
-  const resting_hr = data.resting_hr ? parseInt(data.resting_hr) : null;
-
-  const isBodyBuilderGoal = fitness_goal === 'body builder' || fitness_goal === 'body_builder' || fitness_goal === 'bodybuilder' || fitness_goal === 'bodybuilding';
-
-  // Basic numeric validation (only enforce if not Body Builder goal)
-  if (!isBodyBuilderGoal) {
-    if (isNaN(age) || isNaN(weight_kg) || isNaN(height_cm) || isNaN(neck_cm) || isNaN(waist_cm)) {
-      throw new Error("Invalid inputs: basic fields must be numeric");
-    }
-  }
+  const resting_hr = data.resting_hr !== undefined && data.resting_hr !== null && data.resting_hr !== '' ? parseInt(data.resting_hr) : null;
 
   // 1. BMI
-  const hasBmiInputs = !isNaN(weight_kg) && !isNaN(height_cm) && height_cm > 0;
+  const hasBmiInputs = !isNaN(weight_kg) && weight_kg > 0 && !isNaN(height_cm) && height_cm > 0;
   const bmi = hasBmiInputs ? weight_kg / Math.pow(height_cm / 100, 2) : null;
   let bmi_status = null;
   if (bmi !== null) {
@@ -36,13 +27,13 @@ export const calculateBodyBuilderMetrics = (data) => {
   }
 
   // 2. BMR (Mifflin-St Jeor)
-  const hasBmrInputs = !isNaN(weight_kg) && !isNaN(height_cm) && !isNaN(age);
+  const hasBmrInputs = !isNaN(weight_kg) && weight_kg > 0 && !isNaN(height_cm) && height_cm > 0 && !isNaN(age) && age > 0;
   let bmr = null;
   if (hasBmrInputs) {
-    if (gender === 'male') {
-      bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5;
-    } else {
+    if (gender === 'female') {
       bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161;
+    } else {
+      bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5;
     }
   }
 
@@ -66,10 +57,9 @@ export const calculateBodyBuilderMetrics = (data) => {
       target_calories = tdee - 500;
     } else if (fitness_goal === 'maintenance') {
       target_calories = tdee;
-    } else if (fitness_goal === 'muscle gain' || fitness_goal === 'muscle_gain' || isBodyBuilderGoal) {
+    } else {
       target_calories = tdee + 350;
     }
-    // Safety boundary
     if (bmr !== null && target_calories < bmr) {
       target_calories = bmr;
     }
@@ -80,37 +70,25 @@ export const calculateBodyBuilderMetrics = (data) => {
   const isFemale = gender === 'female';
   
   if (isFemale) {
-    const hasFInputs = !isNaN(waist_cm) && !isNaN(hip_cm) && !isNaN(neck_cm) && !isNaN(height_cm);
-    if (hasFInputs && height_cm > 0) {
+    const hasFInputs = !isNaN(waist_cm) && waist_cm > 0 && !isNaN(hip_cm) && hip_cm > 0 && !isNaN(neck_cm) && neck_cm > 0 && !isNaN(height_cm) && height_cm > 0;
+    if (hasFInputs) {
       const diff = waist_cm + hip_cm - neck_cm;
-      if (diff <= 0) {
-        if (!isBodyBuilderGoal) {
-          throw new Error("Validation Error: Waist + Hip measurement must be greater than neck measurement for female members.");
-        }
-      } else {
+      if (diff > 0) {
         body_fat_percentage = 163.205 * Math.log10(diff) - 97.684 * Math.log10(height_cm) - 78.387;
       }
-    } else if (!isBodyBuilderGoal) {
-      throw new Error("Validation Error: Missing required fields for body fat percentage calculation.");
     }
   } else {
-    const hasMInputs = !isNaN(waist_cm) && !isNaN(neck_cm) && !isNaN(height_cm);
-    if (hasMInputs && height_cm > 0) {
+    const hasMInputs = !isNaN(waist_cm) && waist_cm > 0 && !isNaN(neck_cm) && neck_cm > 0 && !isNaN(height_cm) && height_cm > 0;
+    if (hasMInputs) {
       const diff = waist_cm - neck_cm;
-      if (diff <= 0) {
-        if (!isBodyBuilderGoal) {
-          throw new Error("Validation Error: Waist measurement must be greater than neck measurement for male members.");
-        }
-      } else {
+      if (diff > 0) {
         body_fat_percentage = 86.010 * Math.log10(diff) - 70.041 * Math.log10(height_cm) + 36.76;
       }
-    } else if (!isBodyBuilderGoal) {
-      throw new Error("Validation Error: Missing required fields for body fat percentage calculation.");
     }
   }
 
   // 6. Lean Body Mass
-  const lean_body_mass_kg = (weight_kg !== null && !isNaN(weight_kg) && body_fat_percentage !== null) 
+  const lean_body_mass_kg = (weight_kg !== null && !isNaN(weight_kg) && weight_kg > 0 && body_fat_percentage !== null && !isNaN(body_fat_percentage)) 
     ? weight_kg * (1 - (body_fat_percentage / 100)) 
     : null;
 
@@ -146,7 +124,7 @@ export const calculateBodyBuilderMetrics = (data) => {
 
   // 9. Waist-to-Hip Ratio
   let waist_to_hip_ratio = null;
-  if (!isNaN(waist_cm) && hip_cm !== null && !isNaN(hip_cm) && hip_cm > 0) {
+  if (!isNaN(waist_cm) && waist_cm > 0 && hip_cm !== null && !isNaN(hip_cm) && hip_cm > 0) {
     waist_to_hip_ratio = waist_cm / hip_cm;
   }
 
@@ -156,7 +134,7 @@ export const calculateBodyBuilderMetrics = (data) => {
   let fat_burn_zone = { low: null, high: null };
   let cardio_endurance_zone = { low: null, high: null };
 
-  if (!isNaN(age) && resting_hr !== null && !isNaN(resting_hr)) {
+  if (!isNaN(age) && age > 0 && resting_hr !== null && !isNaN(resting_hr) && resting_hr > 0) {
     max_heart_rate = 220 - age;
     heart_rate_reserve = max_heart_rate - resting_hr;
     fat_burn_zone = {

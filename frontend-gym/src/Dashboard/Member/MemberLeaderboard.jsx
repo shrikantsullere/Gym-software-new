@@ -9,12 +9,8 @@ import {
   faBalanceScale, 
   faTrophy, 
   faRedo, 
-  faUserCheck, 
   faFileExcel,
-  faCalendarAlt,
-  faArrowUp,
-  faArrowDown,
-  faMinus
+  faCalendarAlt
 } from '@fortawesome/free-solid-svg-icons';
 import * as XLSX from 'xlsx';
 import './MemberLeaderboard.css';
@@ -99,13 +95,19 @@ const MemberLeaderboard = () => {
     }
   };
 
+  const getLeaderboardTitle = () => {
+    if (activeTab === 'fat_loss') return 'Fat Loss Leaderboard';
+    if (activeTab === 'muscle_gain') return 'Muscle Gain Leaderboard';
+    return 'Maintenance Leaderboard';
+  };
+
   const getMetricLabel = (score) => {
     const roundedScore = typeof score === 'number' ? score.toFixed(2) : score;
     if (activeTab === 'fat_loss') {
       return `${roundedScore}% Body Fat Improvement`;
     }
     if (activeTab === 'muscle_gain') {
-      return `${roundedScore}% Lean Mass Improvement`;
+      return `${roundedScore}% Lean Body Mass Improvement`;
     }
     return `${roundedScore} Maintenance Score`;
   };
@@ -132,35 +134,55 @@ const MemberLeaderboard = () => {
   const handleExportExcel = () => {
     if (!leaderboardData || leaderboardData.length === 0) return;
 
-    const exportData = leaderboardData.map(item => ({
-      "Rank": item.rank,
-      "Member ID": item.member_id || item.memberId,
-      "Member Name": item.fullName || item.member_name,
-      "Fitness Goal": item.fitness_goal ? item.fitness_goal.replace('_', ' ').toUpperCase() : '',
-      "Leaderboard Month": item.month_label || item.monthLabel || selectedMonthLabel,
-      "Age": item.age || "-",
-      "Gender": item.gender || "-",
-      "Height (cm)": item.height_cm || "-",
-      "Start Weight (kg)": item.start_weight ?? "-",
-      "Current Weight (kg)": item.current_weight ?? "-",
-      "Weight Change": item.weight_change_str || "-",
-      "Baseline Body Fat %": item.baseline_bf_percent ? `${item.baseline_bf_percent}%` : "-",
-      "Current Body Fat %": item.current_bf_percent ? `${item.current_bf_percent}%` : "-",
-      "Baseline Muscle Mass (kg)": item.baseline_lbm ? `${item.baseline_lbm} kg` : "-",
-      "Current Muscle Mass (kg)": item.current_lbm ? `${item.current_lbm} kg` : "-",
-      "Baseline BMI": item.baseline_bmi ?? "-",
-      "Current BMI": item.current_bmi ?? "-",
-      "Member Gain": item.member_gain || "-",
-      "Member Loss": item.member_loss || "-",
-      "Overall Improvement": item.overall_improvement || "-",
-      "Previous Rank": item.previous_rank ? `#${item.previous_rank}` : "-",
-      "Rank Change": item.rank_change || "NEW",
-      "Status": item.status || "Active"
-    }));
+    const exportData = leaderboardData.map(item => {
+      const commonData = {
+        "Rank": item.rank,
+        "Member ID": item.member_id || item.memberId,
+        "Member Name": item.fullName || item.member_name,
+        "Goal": item.fitness_goal ? item.fitness_goal.replace('_', ' ').toUpperCase() : activeTab.toUpperCase(),
+        "Month": item.month_label || item.monthLabel || selectedMonthLabel,
+        "Age / Gender": `${item.age || '-'} / ${item.gender || '-'}`,
+        "Start Weight (kg)": item.start_weight ?? "-",
+        "Current Weight (kg)": item.current_weight ?? "-",
+        "Weight Change": item.weight_change_str || "-",
+      };
+
+      if (activeTab === 'fat_loss') {
+        return {
+          ...commonData,
+          "Start BF%": item.baseline_bf_percent ? `${item.baseline_bf_percent}%` : "-",
+          "Current BF%": item.current_bf_percent ? `${item.current_bf_percent}%` : "-",
+          "BF Improvement": item.bf_improvement ? `${item.bf_improvement}%` : "-",
+          "Fat Loss Score": item.score !== undefined ? `${item.score}%` : "-",
+          "Rank Change": item.rank_change || "NEW"
+        };
+      } else if (activeTab === 'muscle_gain') {
+        return {
+          ...commonData,
+          "Start LBM (kg)": item.baseline_lbm ? `${item.baseline_lbm} kg` : "-",
+          "Current LBM (kg)": item.current_lbm ? `${item.current_lbm} kg` : "-",
+          "LBM Change": item.lbm_change ? `${item.lbm_change >= 0 ? '+' : ''}${item.lbm_change} kg` : "-",
+          "Muscle Gain Score": item.score !== undefined ? `${item.score}%` : "-",
+          "Rank Change": item.rank_change || "NEW"
+        };
+      } else {
+        return {
+          ...commonData,
+          "Start BF%": item.baseline_bf_percent ? `${item.baseline_bf_percent}%` : "-",
+          "Current BF%": item.current_bf_percent ? `${item.current_bf_percent}%` : "-",
+          "BF Diff": item.bf_diff ? `${item.bf_diff}%` : "-",
+          "Start LBM (kg)": item.baseline_lbm ? `${item.baseline_lbm} kg` : "-",
+          "Current LBM (kg)": item.current_lbm ? `${item.current_lbm} kg` : "-",
+          "LBM Diff": item.lbm_diff ? `${item.lbm_diff} kg` : "-",
+          "Maintenance Score": item.score !== undefined ? item.score : "-",
+          "Rank Change": item.rank_change || "NEW"
+        };
+      }
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Leaderboard");
+    XLSX.utils.book_append_sheet(workbook, worksheet, getLeaderboardTitle());
 
     const monthFileStr = (selectedMonth || 'current').replace('-', '_');
     const fileName = `leaderboard_${activeTab}_${monthFileStr}.xlsx`;
@@ -257,11 +279,38 @@ const MemberLeaderboard = () => {
                 <th className="py-3">Start Wt</th>
                 <th className="py-3">Current Wt</th>
                 <th className="py-3">Wt Change</th>
-                <th className="py-3">Body Fat %</th>
-                <th className="py-3">Muscle Mass</th>
-                <th className="py-3">Member Gain</th>
-                <th className="py-3">Member Loss</th>
-                <th className="py-3 text-center">Overall Improvement</th>
+
+                {/* Dynamic Category Columns */}
+                {activeTab === 'fat_loss' && (
+                  <>
+                    <th className="py-3">Start BF%</th>
+                    <th className="py-3">Current BF%</th>
+                    <th className="py-3">BF Improvement</th>
+                    <th className="py-3 text-center">Fat Loss Score</th>
+                  </>
+                )}
+
+                {activeTab === 'muscle_gain' && (
+                  <>
+                    <th className="py-3">Start LBM</th>
+                    <th className="py-3">Current LBM</th>
+                    <th className="py-3">LBM Change</th>
+                    <th className="py-3 text-center">Muscle Gain Score</th>
+                  </>
+                )}
+
+                {activeTab === 'maintenance' && (
+                  <>
+                    <th className="py-3">Start BF%</th>
+                    <th className="py-3">Current BF%</th>
+                    <th className="py-3">BF Diff</th>
+                    <th className="py-3">Start LBM</th>
+                    <th className="py-3">Current LBM</th>
+                    <th className="py-3">LBM Diff</th>
+                    <th className="py-3 text-center">Maintenance Score</th>
+                  </>
+                )}
+
                 <th className="py-3 text-center px-3">Rank Change</th>
               </tr>
             </thead>
@@ -271,6 +320,11 @@ const MemberLeaderboard = () => {
                 const rankChangeStr = member.rank_change || member.rankChange || 'NEW';
                 const isRankUp = rankChangeStr.includes('↑');
                 const isRankDown = rankChangeStr.includes('↓');
+
+                const bfImprovement = member.bf_improvement !== undefined ? `${member.bf_improvement}%` : '-';
+                const lbmChange = member.lbm_change !== undefined ? `${member.lbm_change >= 0 ? '+' : ''}${member.lbm_change} kg` : '-';
+                const bfDiff = member.bf_diff !== undefined ? `${member.bf_diff}%` : '-';
+                const lbmDiff = member.lbm_diff !== undefined ? `${member.lbm_diff} kg` : '-';
 
                 return (
                   <tr 
@@ -323,23 +377,50 @@ const MemberLeaderboard = () => {
                     <td className={`py-3 fw-bold ${member.weight_change < 0 ? 'text-success' : member.weight_change > 0 ? 'text-danger' : 'text-muted'}`} style={{ fontSize: '13px' }}>
                       {member.weight_change_str || '-'}
                     </td>
-                    <td className="py-3 text-muted" style={{ fontSize: '13px' }}>
-                      <span className="text-secondary">{member.baseline_bf_percent}%</span> → <span className="fw-bold text-dark">{member.current_bf_percent}%</span>
-                    </td>
-                    <td className="py-3 text-muted" style={{ fontSize: '13px' }}>
-                      <span className="text-secondary">{member.baseline_lbm} kg</span> → <span className="fw-bold text-dark">{member.current_lbm} kg</span>
-                    </td>
-                    <td className="py-3 text-success fw-bold" style={{ fontSize: '13px' }}>
-                      {member.member_gain || '-'}
-                    </td>
-                    <td className="py-3 text-primary fw-bold" style={{ fontSize: '13px' }}>
-                      {member.member_loss || '-'}
-                    </td>
-                    <td className="py-3 text-center">
-                      <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill" style={{ fontSize: '12px' }}>
-                        {member.overall_improvement || `${member.score}%`}
-                      </span>
-                    </td>
+
+                    {/* Dynamic Category Body Columns */}
+                    {activeTab === 'fat_loss' && (
+                      <>
+                        <td className="py-3 text-muted" style={{ fontSize: '13px' }}>{member.baseline_bf_percent ? `${member.baseline_bf_percent}%` : '-'}</td>
+                        <td className="py-3 fw-bold text-dark" style={{ fontSize: '13px' }}>{member.current_bf_percent ? `${member.current_bf_percent}%` : '-'}</td>
+                        <td className="py-3 text-success fw-bold" style={{ fontSize: '13px' }}>{bfImprovement}</td>
+                        <td className="py-3 text-center">
+                          <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill" style={{ fontSize: '12px' }}>
+                            {member.fat_loss_score !== null && member.fat_loss_score !== undefined ? `${member.fat_loss_score}%` : `${member.score}%`}
+                          </span>
+                        </td>
+                      </>
+                    )}
+
+                    {activeTab === 'muscle_gain' && (
+                      <>
+                        <td className="py-3 text-muted" style={{ fontSize: '13px' }}>{member.baseline_lbm ? `${member.baseline_lbm} kg` : '-'}</td>
+                        <td className="py-3 fw-bold text-dark" style={{ fontSize: '13px' }}>{member.current_lbm ? `${member.current_lbm} kg` : '-'}</td>
+                        <td className="py-3 text-success fw-bold" style={{ fontSize: '13px' }}>{lbmChange}</td>
+                        <td className="py-3 text-center">
+                          <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill" style={{ fontSize: '12px' }}>
+                            {member.muscle_gain_score !== null && member.muscle_gain_score !== undefined ? `${member.muscle_gain_score}%` : `${member.score}%`}
+                          </span>
+                        </td>
+                      </>
+                    )}
+
+                    {activeTab === 'maintenance' && (
+                      <>
+                        <td className="py-3 text-muted" style={{ fontSize: '13px' }}>{member.baseline_bf_percent ? `${member.baseline_bf_percent}%` : '-'}</td>
+                        <td className="py-3 fw-bold text-dark" style={{ fontSize: '13px' }}>{member.current_bf_percent ? `${member.current_bf_percent}%` : '-'}</td>
+                        <td className="py-3 text-primary fw-bold" style={{ fontSize: '13px' }}>{bfDiff}</td>
+                        <td className="py-3 text-muted" style={{ fontSize: '13px' }}>{member.baseline_lbm ? `${member.baseline_lbm} kg` : '-'}</td>
+                        <td className="py-3 fw-bold text-dark" style={{ fontSize: '13px' }}>{member.current_lbm ? `${member.current_lbm} kg` : '-'}</td>
+                        <td className="py-3 text-primary fw-bold" style={{ fontSize: '13px' }}>{lbmDiff}</td>
+                        <td className="py-3 text-center">
+                          <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill" style={{ fontSize: '12px' }}>
+                            {member.maintenance_score !== null && member.maintenance_score !== undefined ? `${member.maintenance_score} pts` : `${member.score} pts`}
+                          </span>
+                        </td>
+                      </>
+                    )}
+
                     <td className="py-3 text-center px-3">
                       {isRankUp ? (
                         <span className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill" style={{ fontSize: '11px' }}>
@@ -411,7 +492,7 @@ const MemberLeaderboard = () => {
 
         <h2 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', color: '#2f6a87' }}>
           <FontAwesomeIcon icon={faMedal} className="me-2 text-warning" /> 
-          Fitness Leaderboard
+          {getLeaderboardTitle()}
         </h2>
         <p className="text-muted mb-0" style={{ fontSize: 'clamp(13px, 3vw, 15px)' }}>
           Compete with members who share the same fitness goal and track your progress.
@@ -456,7 +537,6 @@ const MemberLeaderboard = () => {
               onChange={(e) => setSelectedMonth(e.target.value)}
               title="Click to select month from calendar"
             />
-
           </div>
         </div>
 

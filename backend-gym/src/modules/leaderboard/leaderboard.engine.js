@@ -31,42 +31,41 @@ export class LeaderboardEngine {
    *
    * 3. Maintenance:
    *    Maintenance Score = MAX(0, 100 - ABS(Current BF% - Baseline BF%) - ABS(Current LBM - Baseline LBM))
+   *
+   * Excluded: body_builder / Body Builder members must NOT participate in any leaderboard.
    */
   static calculateScore(member) {
     const { fitness_goal, baseline_bf, current_bf, baseline_lbm, current_lbm } = member;
+    const goal = (fitness_goal || '').toLowerCase().trim();
 
-    // Safety checks for missing or non-numeric values
-    if (
-      baseline_bf === undefined || baseline_bf === null || isNaN(Number(baseline_bf)) ||
-      current_bf === undefined || current_bf === null || isNaN(Number(current_bf)) ||
-      baseline_lbm === undefined || baseline_lbm === null || isNaN(Number(baseline_lbm)) ||
-      current_lbm === undefined || current_lbm === null || isNaN(Number(current_lbm))
-    ) {
-      return 0.0;
+    // Body Builder is explicitly excluded from leaderboard processing
+    if (goal === 'body_builder' || goal === 'bodybuilder' || goal.includes('body')) {
+      return null;
     }
 
-    const bBF = Number(baseline_bf);
-    const cBF = Number(current_bf);
-    const bLBM = Number(baseline_lbm);
-    const cLBM = Number(current_lbm);
+    const bBF = parseFloat(baseline_bf);
+    const cBF = parseFloat(current_bf);
+    const bLBM = parseFloat(baseline_lbm);
+    const cLBM = parseFloat(current_lbm);
 
-    let score = 0;
+    let score = null;
 
-    if (fitness_goal === 'fat_loss') {
-      if (bBF <= 0) return 0.0; // Prevent division by zero
+    if (goal === 'fat_loss') {
+      if (isNaN(bBF) || bBF <= 0 || isNaN(cBF) || cBF <= 0) return null;
       score = ((bBF - cBF) / bBF) * 100;
-    } else if (fitness_goal === 'muscle_gain') {
-      if (bLBM <= 0) return 0.0; // Prevent division by zero
+    } else if (goal === 'muscle_gain') {
+      if (isNaN(bLBM) || bLBM <= 0 || isNaN(cLBM) || cLBM <= 0) return null;
       score = ((cLBM - bLBM) / bLBM) * 100;
-    } else if (fitness_goal === 'maintenance') {
+    } else if (goal === 'maintenance') {
+      if (isNaN(bBF) || bBF <= 0 || isNaN(cBF) || cBF <= 0 || isNaN(bLBM) || bLBM <= 0 || isNaN(cLBM) || cLBM <= 0) return null;
       const bfDiff = Math.abs(cBF - bBF);
       const lbmDiff = Math.abs(cLBM - bLBM);
       score = Math.max(0, 100 - bfDiff - lbmDiff);
     } else {
-      return 0.0;
+      return null;
     }
 
-    if (isNaN(score) || !isFinite(score)) return 0.0;
+    if (score === null || isNaN(score) || !isFinite(score)) return null;
 
     return parseFloat(score.toFixed(2));
   }

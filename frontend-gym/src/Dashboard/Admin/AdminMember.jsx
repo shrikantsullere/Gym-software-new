@@ -1708,10 +1708,19 @@ const handleDownloadReceipt = async (member) => {
                               <Edit size={16} />
                             </button>
                             <button
-                              className="btn btn-sm"
+                              className="btn btn-sm btn-outline-info"
                               style={{
                                 color: "#6EB2CC",
                                 borderColor: "#6EB2CC",
+                                transition: "all 0.2s ease-in-out"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#6EB2CC";
+                                e.currentTarget.style.color = "#ffffff";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "transparent";
+                                e.currentTarget.style.color = "#6EB2CC";
                               }}
                               onClick={() => handleRenewFormOpen(member)}
                               title="Renew Plan"
@@ -2362,14 +2371,27 @@ const handleDownloadReceipt = async (member) => {
                                       onClick={() => {
                                         const planId = plan.id;
                                         const isChecked = !newMember.planIds.includes(planId);
+                                        const nextPlanIds = isChecked
+                                          ? [...newMember.planIds, planId]
+                                          : newMember.planIds.filter(id => id !== planId);
+                                        
+                                        // Auto-calculate and pre-fill total amount
+                                        let total = 0;
+                                        nextPlanIds.forEach(id => {
+                                          const p = apiPlans.find(ap => ap.id === id);
+                                          if (p) {
+                                            const val = parseFloat(p.price.toString().replace(/[^\d.]/g, ""));
+                                            if (!isNaN(val)) total += val;
+                                          }
+                                        });
+
                                         setNewMember({
                                           ...newMember,
-                                          planIds: isChecked
-                                            ? [...newMember.planIds, planId]
-                                            : newMember.planIds.filter(id => id !== planId),
+                                          planIds: nextPlanIds,
                                           planId: isChecked && newMember.planIds.length === 0 
                                             ? planId 
-                                            : newMember.planId
+                                            : newMember.planId,
+                                          amountPaid: total > 0 ? total.toString() : ""
                                         });
                                       }}
                                     >
@@ -2778,18 +2800,31 @@ const handleDownloadReceipt = async (member) => {
                                 className={`card h-100 ${editMember.planIds.includes(plan.id) ? 'border-primary shadow-sm' : ''}`}
                                 style={{ cursor: "pointer", transition: "all 0.2s", backgroundColor: editMember.planIds.includes(plan.id) ? '#f8f9fc' : '#ffffff' }}
                                 onClick={() => {
-                                  const planId = plan.id;
-                                  const isChecked = !editMember.planIds.includes(planId);
-                                  setEditMember({
-                                    ...editMember,
-                                    planIds: isChecked
+                                    const planId = plan.id;
+                                    const isChecked = !editMember.planIds.includes(planId);
+                                    const nextPlanIds = isChecked
                                       ? [...editMember.planIds, planId]
-                                      : editMember.planIds.filter(id => id !== planId),
-                                    planId: isChecked && editMember.planIds.length === 0 
-                                      ? planId 
-                                      : editMember.planId
-                                  });
-                                }}
+                                      : editMember.planIds.filter(id => id !== planId);
+                                    
+                                    // Auto-calculate and pre-fill total amount
+                                    let total = 0;
+                                    nextPlanIds.forEach(id => {
+                                      const p = apiPlans.find(ap => ap.id === id);
+                                      if (p) {
+                                        const val = parseFloat(p.price.toString().replace(/[^\d.]/g, ""));
+                                        if (!isNaN(val)) total += val;
+                                      }
+                                    });
+
+                                    setEditMember({
+                                      ...editMember,
+                                      planIds: nextPlanIds,
+                                      planId: isChecked && editMember.planIds.length === 0 
+                                        ? planId 
+                                        : editMember.planId,
+                                      amountPaid: total > 0 ? total.toString() : ""
+                                    });
+                                  }}
                               >
                                 <div className="card-body p-3">
                                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -2972,9 +3007,16 @@ const handleDownloadReceipt = async (member) => {
                 <select
                   className="form-select"
                   value={renewPlan.plan}
-                  onChange={(e) =>
-                    setRenewPlan({ ...renewPlan, plan: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const selectedPlanId = e.target.value;
+                    const plan = apiPlans.find(p => String(p.id) === String(selectedPlanId));
+                    const rawPrice = plan ? parseFloat(plan.price.toString().replace(/[^\d.]/g, "")) : "";
+                    setRenewPlan({
+                      ...renewPlan,
+                      plan: selectedPlanId,
+                      amountPaid: rawPrice ? rawPrice.toString() : ""
+                    });
+                  }}
                   required
                 >
                   <option value="">Select Plan</option>

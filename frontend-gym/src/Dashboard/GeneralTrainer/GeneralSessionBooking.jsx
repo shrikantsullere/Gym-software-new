@@ -3,6 +3,7 @@ import { FaCheck, FaTimes, FaEdit, FaTrash, FaSearch, FaFilter, FaUser, FaPlus, 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axiosInstance from '../../Api/axiosInstance';
 import BaseUrl from '../../Api/BaseUrl';
+import BookingDetailsList from '../Admin/Bookings/BookingDetailsList';
 
 const GeneralSessionBooking = () => {
     const [sessions, setSessions] = useState([]);
@@ -483,6 +484,12 @@ const GeneralSessionBooking = () => {
                     <div className="modal-backdrop fade show"></div>
                 </>
             )}
+
+            {/* Embedded Booking Details Section */}
+            <div className="mt-5">
+                <hr className="my-4" />
+                <BookingDetailsList type="sessions" />
+            </div>
         </div>
     );
 };

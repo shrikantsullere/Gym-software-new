@@ -14,6 +14,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../../Api/axiosInstance";
 import BaseUrl from "../../../Api/BaseUrl";
 import GetAdminId from "../../../Api/GetAdminId";
+import CustomTimePicker from "../../Components/CustomTimePicker";
+import BookingDetailsList from "./BookingDetailsList";
 
 const SessionBookingPage = () => {
   const adminId = GetAdminId();
@@ -853,6 +855,12 @@ const SessionBookingPage = () => {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      {/* Embedded Booking Details Section */}
+      <div className="mt-5">
+        <hr className="my-4" />
+        <BookingDetailsList type="sessions" />
+      </div>
     </div>
   );
 };

@@ -956,7 +956,7 @@ const PersonalTrainerClassesSchedule = () => {
       {/* Embedded Booking Details Section */}
       <div className="mt-5">
         <hr className="my-4" />
-        <BookingDetailsList />
+        <BookingDetailsList type="classes" />
       </div>
     </div>
   );

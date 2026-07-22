@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../Api/axiosInstance';
 import { FaDownload, FaCalendarAlt, FaClock, FaUser, FaPhone } from 'react-icons/fa';
 
-const BookingDetailsList = () => {
-  const [activeTab, setActiveTab] = useState('classes');
+const BookingDetailsList = ({ type }) => {
+  const [activeTab, setActiveTab] = useState(type || 'classes');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,30 +95,32 @@ const BookingDetailsList = () => {
         </button>
       </div>
 
-      <div className="d-flex gap-3 mb-4">
-        <button 
-          className="btn px-4 py-2 fw-medium"
-          onClick={() => setActiveTab('classes')}
-          style={
-            activeTab === 'classes' 
-              ? { backgroundColor: '#2f6a87', color: 'white', borderRadius: '8px', border: 'none' } 
-              : { backgroundColor: 'white', color: '#2f6a87', borderRadius: '8px', border: '1px solid #dee2e6' }
-          }
-        >
-          Class Bookings
-        </button>
-        <button 
-          className="btn px-4 py-2 fw-medium"
-          onClick={() => setActiveTab('sessions')}
-          style={
-            activeTab === 'sessions' 
-              ? { backgroundColor: '#2f6a87', color: 'white', borderRadius: '8px', border: 'none' } 
-              : { backgroundColor: 'white', color: '#2f6a87', borderRadius: '8px', border: '1px solid #dee2e6' }
-          }
-        >
-          Session Bookings
-        </button>
-      </div>
+      {!type && (
+        <div className="d-flex gap-3 mb-4">
+          <button 
+            className="btn px-4 py-2 fw-medium"
+            onClick={() => setActiveTab('classes')}
+            style={
+              activeTab === 'classes' 
+                ? { backgroundColor: '#2f6a87', color: 'white', borderRadius: '8px', border: 'none' } 
+                : { backgroundColor: 'white', color: '#2f6a87', borderRadius: '8px', border: '1px solid #dee2e6' }
+            }
+          >
+            Class Bookings
+          </button>
+          <button 
+            className="btn px-4 py-2 fw-medium"
+            onClick={() => setActiveTab('sessions')}
+            style={
+              activeTab === 'sessions' 
+                ? { backgroundColor: '#2f6a87', color: 'white', borderRadius: '8px', border: 'none' } 
+                : { backgroundColor: 'white', color: '#2f6a87', borderRadius: '8px', border: '1px solid #dee2e6' }
+            }
+          >
+            Session Bookings
+          </button>
+        </div>
+      )}
 
       <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
         <div className="card-body p-0">

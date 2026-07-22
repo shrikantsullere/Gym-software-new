@@ -990,13 +990,13 @@ export const getAdminDashboardData = async (adminId, branchId = null, monthStr =
   const groupByRevenue = isOneMonth ? "DATE(p.paymentDate)" : "YEAR(p.paymentDate), MONTH(p.paymentDate)";
   const orderByRevenue = isOneMonth ? "DATE(p.paymentDate)" : "YEAR(p.paymentDate), MONTH(p.paymentDate)";
 
-  const dateFormatExpense = isOneMonth ? "DATE_FORMAT(date, '%d %b')" : "DATE_FORMAT(MIN(date), '%b')";
-  const groupByExpense = isOneMonth ? "DATE(date)" : "YEAR(date), MONTH(date)";
-  const orderByExpense = isOneMonth ? "DATE(date)" : "YEAR(date), MONTH(date)";
+  const dateFormatExpense = isOneMonth ? "DATE_FORMAT(e.date, '%d %b')" : "DATE_FORMAT(MIN(e.date), '%b')";
+  const groupByExpense = isOneMonth ? "DATE(e.date)" : "YEAR(e.date), MONTH(e.date)";
+  const orderByExpense = isOneMonth ? "DATE(e.date)" : "YEAR(e.date), MONTH(e.date)";
 
-  const dateFormatSalary = isOneMonth ? "DATE_FORMAT(periodEnd, '%d %b')" : "DATE_FORMAT(MIN(periodEnd), '%b')";
-  const groupBySalary = isOneMonth ? "DATE(periodEnd)" : "YEAR(periodEnd), MONTH(periodEnd)";
-  const orderBySalary = isOneMonth ? "DATE(periodEnd)" : "YEAR(periodEnd), MONTH(periodEnd)";
+  const dateFormatSalary = isOneMonth ? "DATE_FORMAT(s.periodEnd, '%d %b')" : "DATE_FORMAT(MIN(s.periodEnd), '%b')";
+  const groupBySalary = isOneMonth ? "DATE(s.periodEnd)" : "YEAR(s.periodEnd), MONTH(s.periodEnd)";
+  const orderBySalary = isOneMonth ? "DATE(s.periodEnd)" : "YEAR(s.periodEnd), MONTH(s.periodEnd)";
 
   // 5 CARDS
   const statsQuery = `
@@ -1110,12 +1110,13 @@ const recentActivitiesQuery = `
   const expenseGrowthQuery = `
     SELECT 
       ${dateFormatExpense} AS month,
-      MIN(date) AS rawDate,
-      SUM(amount) AS totalExpense
-    FROM expense
-    WHERE adminId = ?
-      ${bId ? "AND branchId = ?" : ""}
-      AND date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+      MIN(e.date) AS rawDate,
+      SUM(e.amount) AS totalExpense
+    FROM expense e
+    JOIN branch b ON e.branchId = b.id
+    WHERE b.adminId = ?
+      ${bId ? "AND e.branchId = ?" : ""}
+      AND e.date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
     GROUP BY ${groupByExpense}
     ORDER BY ${orderByExpense};
   `;
@@ -1124,12 +1125,13 @@ const recentActivitiesQuery = `
   const salaryGrowthQuery = `
     SELECT 
       ${dateFormatSalary} AS month,
-      MIN(periodEnd) AS rawDate,
-      SUM(netPay) AS totalSalary
-    FROM salary
-    WHERE adminId = ?
-      ${bId ? "AND branchId = ?" : ""}
-      AND periodEnd >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+      MIN(s.periodEnd) AS rawDate,
+      SUM(s.netPay) AS totalSalary
+    FROM salary s
+    JOIN staff st ON s.staffId = st.id
+    WHERE st.adminId = ?
+      ${bId ? "AND st.branchId = ?" : ""}
+      AND s.periodEnd >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
     GROUP BY ${groupBySalary}
     ORDER BY ${orderBySalary};
   `;
@@ -1215,22 +1217,24 @@ const recentActivitiesQuery = `
   const monthlyRevenue = Number(monthRevRow?.total || 0);
 
   const [[monthExpRow]] = await pool.query(
-    `SELECT COALESCE(SUM(amount), 0) AS total 
-     FROM expense
-     WHERE adminId = ?
-       ${bId ? "AND branchId = ?" : ""}
-       AND DATE_FORMAT(date, '%Y-%m') = ?`,
+    `SELECT COALESCE(SUM(e.amount), 0) AS total 
+     FROM expense e
+     JOIN branch b ON e.branchId = b.id
+     WHERE b.adminId = ?
+       ${bId ? "AND e.branchId = ?" : ""}
+       AND DATE_FORMAT(e.date, '%Y-%m') = ?`,
     bId ? [adminId, bId, targetMonth] : [adminId, targetMonth]
-  ).catch(() => [[{ total: 0 }]]);
+  ).catch((err) => { console.error(err); return [[{ total: 0 }]]; });
 
   const [[monthSalRow]] = await pool.query(
-    `SELECT COALESCE(SUM(netPay), 0) AS total 
-     FROM salary
-     WHERE adminId = ?
-       ${bId ? "AND branchId = ?" : ""}
-       AND DATE_FORMAT(periodEnd, '%Y-%m') = ?`,
+    `SELECT COALESCE(SUM(s.netPay), 0) AS total 
+     FROM salary s
+     JOIN staff st ON s.staffId = st.id
+     WHERE st.adminId = ?
+       ${bId ? "AND st.branchId = ?" : ""}
+       AND DATE_FORMAT(s.periodEnd, '%Y-%m') = ?`,
     bId ? [adminId, bId, targetMonth] : [adminId, targetMonth]
-  ).catch(() => [[{ total: 0 }]]);
+  ).catch((err) => { console.error(err); return [[{ total: 0 }]]; });
 
   const monthlyExpenses = Number(monthExpRow?.total || 0) + Number(monthSalRow?.total || 0);
   const monthlyProfit = monthlyRevenue - monthlyExpenses;

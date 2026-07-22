@@ -2447,12 +2447,12 @@ export const getBookingDetails = async (req, res) => {
         ub.createdAt,
         ub.bookingType,
         ub.classId,
-        c.class_name,
+        c.className AS class_name,
         ub.sessionId,
         s.sessionName
       FROM unified_bookings ub
       JOIN member m ON ub.memberId = m.id
-      LEFT JOIN class c ON ub.classId = c.id
+      LEFT JOIN classschedule c ON ub.classId = c.id
       LEFT JOIN session s ON ub.sessionId = s.id
       WHERE m.adminId = ?
     `;

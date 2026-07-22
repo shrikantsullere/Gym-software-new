@@ -265,26 +265,30 @@ const ClassSchedule = () => {
           <p className="text-muted mb-0">View and book available classes and sessions</p>
         </div>
         <div className="col-12">
-          <ul className="nav nav-pills mb-3">
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'classes' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('classes')}
-                style={activeTab === 'classes' ? { backgroundColor: '#2f6a87' } : { color: '#2f6a87' }}
-              >
-                Classes
-              </button>
-            </li>
-            <li className="nav-item ms-2">
-              <button 
-                className={`nav-link ${activeTab === 'sessions' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('sessions')}
-                style={activeTab === 'sessions' ? { backgroundColor: '#2f6a87' } : { color: '#2f6a87' }}
-              >
-                Sessions
-              </button>
-            </li>
-          </ul>
+          <div className="d-flex gap-3 mb-4">
+            <button 
+              className="btn px-4 py-2 fw-medium"
+              onClick={() => setActiveTab('classes')}
+              style={
+                activeTab === 'classes' 
+                  ? { backgroundColor: '#2f6a87', color: 'white', borderRadius: '8px', border: 'none' } 
+                  : { backgroundColor: 'white', color: '#2f6a87', borderRadius: '8px', border: '1px solid #dee2e6' }
+              }
+            >
+              Classes
+            </button>
+            <button 
+              className="btn px-4 py-2 fw-medium"
+              onClick={() => setActiveTab('sessions')}
+              style={
+                activeTab === 'sessions' 
+                  ? { backgroundColor: '#2f6a87', color: 'white', borderRadius: '8px', border: 'none' } 
+                  : { backgroundColor: 'white', color: '#2f6a87', borderRadius: '8px', border: '1px solid #dee2e6' }
+              }
+            >
+              Sessions
+            </button>
+          </div>
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { FaEye, FaEdit, FaTrashAlt, FaUserPlus, FaTimes, FaPlus } from "react-ic
 import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../Api/axiosInstance";
 import CustomTimePicker from "../../Components/CustomTimePicker";
+import BookingDetailsList from "../Admin/Bookings/BookingDetailsList";
 
 const PersonalTrainerClassesSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -951,6 +952,12 @@ const PersonalTrainerClassesSchedule = () => {
           </div>
         </div>
       )}
+
+      {/* Embedded Booking Details Section */}
+      <div className="mt-5">
+        <hr className="my-4" />
+        <BookingDetailsList />
+      </div>
     </div>
   );
 };

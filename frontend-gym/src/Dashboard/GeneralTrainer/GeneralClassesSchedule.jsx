@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../Api/axiosInstance";
 import GetAdminId from "../../Api/GetAdminId";
 import CustomTimePicker from "../../Components/CustomTimePicker";
+import BookingDetailsList from "../Admin/Bookings/BookingDetailsList";
 
 const GeneralClassesSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -851,6 +852,12 @@ const GeneralClassesSchedule = () => {
           </div>
         </div>
       )}
+
+      {/* Embedded Booking Details Section */}
+      <div className="mt-5">
+        <hr className="my-4" />
+        <BookingDetailsList />
+      </div>
     </div>
   );
 };

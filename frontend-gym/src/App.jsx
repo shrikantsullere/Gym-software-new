@@ -152,8 +152,6 @@ import AnnouncementsList from "./Components/AnnouncementsList";
 import AutomationSettings from "./Dashboard/SuperAdmin/AutomationSettings";
 import NotificationCredits from "./Dashboard/Admin/NotificationCredits";
 import Notifications from "./Pages/Notifications";
-import ViewAdminAssessmentForm from "./Dashboard/Admin/ViewAdminAssessmentForm";
-import AdminNotifications from "./Pages/Notifications";
 import BookingDetailsList from "./Dashboard/Admin/Bookings/BookingDetailsList";
 
 // Wrapper to extract memberId from URL params

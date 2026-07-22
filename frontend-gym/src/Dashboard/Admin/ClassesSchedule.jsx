@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye, FaEdit, FaTrashAlt, FaUserPlus, FaTimes, FaDownload } from 'react-icons/fa';
+import { Modal, Button, Form, Tab, Tabs } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -7,6 +9,7 @@ import autoTable from 'jspdf-autotable';
 import GetAdminId from '../../Api/GetAdminId';
 import axiosInstance from '../../Api/axiosInstance';
 import CustomTimePicker from '../../Components/CustomTimePicker';
+import BookingDetailsList from './Bookings/BookingDetailsList';
 
 const ClassesSchedule = () => {
   const adminId = GetAdminId();
@@ -866,6 +869,12 @@ const ClassesSchedule = () => {
           </div>
         </div>
       )}
+
+      {/* Embedded Booking Details Section */}
+      <div className="mt-5">
+        <hr className="my-4" />
+        <BookingDetailsList />
+      </div>
     </div>
   );
 };

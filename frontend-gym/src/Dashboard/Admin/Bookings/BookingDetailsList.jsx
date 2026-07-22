@@ -79,11 +79,11 @@ const BookingDetailsList = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="mt-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-          <h2 className="fw-bold mb-0 text-dark">Booking Details</h2>
-          <p className="text-muted mb-0">Manage and view all members joined</p>
+          <h4 className="fw-bold mb-0 text-dark">Booking Details</h4>
+          <p className="text-muted mb-0">Manage and view all members joined for classes and sessions</p>
         </div>
         <button 
           className="btn btn-primary d-flex align-items-center gap-2"

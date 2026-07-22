@@ -738,7 +738,7 @@ const LendingPage = () => {
                   <FaFire className="badge-icon me-2 " /> #1 Gym Management Software
                 </div>
                 <h1 className="hero-title px-4">
-                  Transform Your <span className="highlight">Gym boy Business</span>
+                  Transform Your <span className="highlight">Gym  Business</span>
                 </h1>
                 <p className="hero-subtitle px-3">
                   The all-in-one solution for modern gyms and fitness centers. Streamline operations,

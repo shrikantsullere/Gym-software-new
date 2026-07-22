@@ -15,6 +15,7 @@ router.post("/", addHealthLog);
 
 // Get health logs for a specific member
 router.get("/member/:memberId", getMemberHealthLogs);
+router.get("/:memberId", getMemberHealthLogs);
 
 // Get all health logs for an admin
 router.get("/all/:adminId", getAllHealthLogs);

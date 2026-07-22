@@ -88,22 +88,37 @@ const BodybuilderAssessmentForm = () => {
         const userStr = localStorage.getItem("user");
         if (userStr) {
           const userObj = JSON.parse(userStr);
-          const adminId = userObj.adminId || userObj.id;
+          const adminId = userObj.adminId || userObj.id || userObj.userId;
           const roleId = Number(userObj.roleId);
-          const roleName = (userObj.roleName || "").toLowerCase();
+          const roleName = (userObj.roleName || userObj.role || localStorage.getItem('userRole') || "").toLowerCase().replace(/\s+/g, '');
           
-          let endpoint = `/members/admin/${adminId}`;
-          if (roleId === 5 || roleName === 'personaltrainer') {
-            const staffId = getCurrentStaffId(userObj);
-            endpoint = `/members/trainer/${staffId}`;
+          let endpoint = adminId ? `/members/admin/${adminId}` : null;
+          const isTrainer = roleId === 5 || roleId === 6 || roleName.includes('trainer');
+          if (isTrainer) {
+            const staffId = getCurrentStaffId(userObj) || userObj.staffId || userObj.id;
+            if (staffId) {
+              endpoint = `/members/trainer/${staffId}`;
+            }
           }
 
-          if (adminId) {
+          if (endpoint) {
             const res = await axiosInstance.get(endpoint);
+            let memberList = [];
             if (res.data && res.data.success) {
-              const allFetchedMembers = res.data.data || [];
-              setMembers(allFetchedMembers);
+              memberList = Array.isArray(res.data.data) ? res.data.data : (res.data.members || []);
+            } else if (Array.isArray(res.data)) {
+              memberList = res.data;
             }
+
+            // Fallback: If trainer endpoint returned 0 members, load admin members
+            if (memberList.length === 0 && isTrainer && adminId) {
+              const fallbackRes = await axiosInstance.get(`/members/admin/${adminId}`);
+              if (fallbackRes.data && fallbackRes.data.success) {
+                memberList = Array.isArray(fallbackRes.data.data) ? fallbackRes.data.data : (fallbackRes.data.members || []);
+              }
+            }
+
+            setMembers(memberList);
           }
         }
       } catch (err) {
@@ -190,8 +205,9 @@ const BodybuilderAssessmentForm = () => {
             } else {
               try {
                 const healthRes = await axiosInstance.get(`/v1/health/${formData.memberId}`);
-                if (healthRes.data && healthRes.data.success !== false && healthRes.data.data && healthRes.data.data.length > 0) {
-                  const latestHealth = healthRes.data.data[0];
+                const logsList = healthRes.data?.data || healthRes.data?.logs || [];
+                if (logsList.length > 0) {
+                  const latestHealth = logsList[0];
                   setFormData(prev => ({
                     ...prev,
                     weight_kg: getDisplayValue(latestHealth.weight, units.weight, 'weight'),

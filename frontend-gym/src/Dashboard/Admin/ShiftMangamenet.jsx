@@ -270,62 +270,29 @@ const ShiftManagement = () => {
                   <div className="row mb-3">
                     <div className="col-md-6">
                       <label className="form-label">Staff</label>
-
-                      <div className="border rounded p-2">
-
-                        {/* 🔍 Search Bar */}
-                        <input
-                          type="text"
-                          className="form-control mb-2"
-                          placeholder="Search staff..."
-                          value={staffSearch}
-                          onChange={(e) => setStaffSearch(e.target.value)}
-                        />
-
-                        {/* 📜 Scrollable Area */}
-                        <div
-                          style={{
-                            maxHeight: "100px",
-                            overflowY: "auto",
-                            overflowX: "auto",
-                            whiteSpace: "nowrap"
-                          }}
-                        >
-                          {filteredStaff.length > 0 ? (
-                            filteredStaff.map(staff => {
-                              const sId = staff.staffId || staff.id;
-                              const sName = staff.fullName || staff.name || staff.userName || staff.email || `Staff #${sId}`;
-                              const sRole = staff.roleName ? ` (${staff.roleName})` : '';
-                              return (
-                                <div
-                                  className="form-check"
-                                  key={sId}
-                                  style={{ minWidth: "250px" }}
-                                >
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id={`staff-${sId}`}
-                                    checked={shiftForm.staffIds.includes(sId)}
-                                    onChange={(e) =>
-                                      handleStaffCheckboxChange(sId, e.target.checked)
-                                    }
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    htmlFor={`staff-${sId}`}
-                                  >
-                                    {sName}{sRole}
-                                  </label>
-                                </div>
-                              );
-                            })
-                          ) : (
-                            <p className="text-muted mb-0">No staff members found</p>
-                          )}
-                        </div>
-
-                      </div>
+                      <select
+                        className="form-select"
+                        value={shiftForm.staffIds[0] || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setShiftForm({
+                            ...shiftForm,
+                            staffIds: val ? [parseInt(val)] : []
+                          });
+                        }}
+                      >
+                        <option value="">-- Select Staff --</option>
+                        {staffMembers.map(staff => {
+                          const sId = staff.staffId || staff.id;
+                          const sName = staff.fullName || staff.name || staff.userName || staff.email || `Staff #${sId}`;
+                          const sRole = staff.roleName ? ` (${staff.roleName})` : '';
+                          return (
+                            <option key={sId} value={sId}>
+                              {sName}{sRole}
+                            </option>
+                          );
+                        })}
+                      </select>
                     </div>
 
                     <div className="col-md-6">

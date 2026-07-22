@@ -1,8 +1,13 @@
 import { pool } from "../../config/db.js";
 
 export const logBodybuildingMetrics = async (memberId, data) => {
-  // Validate basic required inputs
   const parsedAge = parseInt(data.age);
+  const isBodyBuilderGoal = (data.fitness_goal || "").toLowerCase().replace(/_/g, " ") === "body builder";
+
+  if (!memberId || isNaN(parsedAge)) {
+    throw new Error("Missing or invalid required fields: Member and Age are required");
+  }
+
   const parsedWeight = parseFloat(data.weight_kg);
   const parsedHeight = parseFloat(data.height_cm);
   const parsedNeck = parseFloat(data.neck_cm);
@@ -10,12 +15,14 @@ export const logBodybuildingMetrics = async (memberId, data) => {
   const parsedHip = parseFloat(data.hip_cm);
   const isFemale = (data.gender || "").toLowerCase() === "female";
 
-  if (!memberId || isNaN(parsedAge) || isNaN(parsedWeight) || isNaN(parsedHeight) || isNaN(parsedNeck) || isNaN(parsedWaist)) {
-    throw new Error("Missing or invalid required fields");
-  }
+  if (!isBodyBuilderGoal) {
+    if (isNaN(parsedWeight) || isNaN(parsedHeight) || isNaN(parsedNeck) || isNaN(parsedWaist)) {
+      throw new Error("Missing or invalid required fields: Weight, Height, Neck, and Waist are required");
+    }
 
-  if (isFemale && isNaN(parsedHip)) {
-    throw new Error("Hip measurement is required for female members");
+    if (isFemale && isNaN(parsedHip)) {
+      throw new Error("Hip measurement is required for female members");
+    }
   }
 
   const [result] = await pool.query(
@@ -48,14 +55,14 @@ export const logBodybuildingMetrics = async (memberId, data) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       parseInt(memberId),
-      parsedWeight,
+      isNaN(parsedWeight) ? null : parsedWeight,
       data.chest_cm ? parseFloat(data.chest_cm) : null,
       data.shoulders_cm ? parseFloat(data.shoulders_cm) : null,
       data.biceps_cm ? parseFloat(data.biceps_cm) : null, // left_arm_cm
       data.biceps_cm ? parseFloat(data.biceps_cm) : null, // right_arm_cm
       data.forearms_cm ? parseFloat(data.forearms_cm) : null, // left_forearm_cm
       data.forearms_cm ? parseFloat(data.forearms_cm) : null, // right_forearm_cm
-      parsedWaist,
+      isNaN(parsedWaist) ? null : parsedWaist,
       data.thighs_cm ? parseFloat(data.thighs_cm) : null,
       data.calves_cm ? parseFloat(data.calves_cm) : null,
       data.front_photo_url || null,
@@ -64,8 +71,8 @@ export const logBodybuildingMetrics = async (memberId, data) => {
       data.notes || null,
       data.gender || null,
       parsedAge,
-      parsedHeight,
-      parsedNeck,
+      isNaN(parsedHeight) ? null : parsedHeight,
+      isNaN(parsedNeck) ? null : parsedNeck,
       isNaN(parsedHip) ? null : parsedHip,
       data.activity_level || null,
       data.fitness_goal || null,

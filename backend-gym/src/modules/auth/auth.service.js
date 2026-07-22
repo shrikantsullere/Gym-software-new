@@ -480,7 +480,13 @@ export const modifyUser = async (id, data = {}, files) => { // Default to empty 
     tax: existingUser.tax,
     gymAddress: existingUser.gymAddress,
     razorpayKeyId: existingUser.razorpayKeyId,
-    razorpayKeySecret: existingUser.razorpayKeySecret
+    razorpayKeySecret: existingUser.razorpayKeySecret,
+    whatsappAccessToken: existingUser.whatsappAccessToken,
+    whatsappPhoneNumberId: existingUser.whatsappPhoneNumberId,
+    smtpHost: existingUser.smtpHost,
+    smtpPort: existingUser.smtpPort,
+    smtpUser: existingUser.smtpUser,
+    smtpPass: existingUser.smtpPass
   };
 
   // Update fields if provided in the data or files (check if data exists before updating)
@@ -565,6 +571,38 @@ if (data?.razorpayKeyId !== undefined) {
 if (data?.razorpayKeySecret !== undefined) {
   updatedData.razorpayKeySecret = data.razorpayKeySecret;
   updatedFields.push('razorpayKeySecret');
+}
+
+// ✅ WhatsApp Settings
+if (data?.whatsappAccessToken !== undefined) {
+  updatedData.whatsappAccessToken = data.whatsappAccessToken;
+  updatedFields.push('whatsappAccessToken');
+}
+
+if (data?.whatsappPhoneNumberId !== undefined) {
+  updatedData.whatsappPhoneNumberId = data.whatsappPhoneNumberId;
+  updatedFields.push('whatsappPhoneNumberId');
+}
+
+// ✅ SMTP Settings
+if (data?.smtpHost !== undefined) {
+  updatedData.smtpHost = data.smtpHost;
+  updatedFields.push('smtpHost');
+}
+
+if (data?.smtpPort !== undefined) {
+  updatedData.smtpPort = data.smtpPort;
+  updatedFields.push('smtpPort');
+}
+
+if (data?.smtpUser !== undefined) {
+  updatedData.smtpUser = data.smtpUser;
+  updatedFields.push('smtpUser');
+}
+
+if (data?.smtpPass !== undefined) {
+  updatedData.smtpPass = data.smtpPass;
+  updatedFields.push('smtpPass');
 }
 
 // ✅ Subscription Plan (Basic / Growth / Premium)

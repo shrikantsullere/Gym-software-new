@@ -57,14 +57,40 @@ export const dispatchNotification = async ({
     inApp: null,
   };
 
+  // Determine Admin ID to fetch custom credentials & check credits
+  let adminId = adminIdForCredits;
+  if (!adminId && memberId) {
+    const [memRows] = await pool.query("SELECT adminId FROM member WHERE id = ?", [memberId]);
+    if (memRows.length > 0) adminId = memRows[0].adminId;
+  }
+  if (!adminId && toUserId) {
+    const [uRows] = await pool.query("SELECT adminId, roleId, id FROM user WHERE id = ?", [toUserId]);
+    if (uRows.length > 0) {
+      adminId = uRows[0].roleId === 2 ? uRows[0].id : uRows[0].adminId;
+    }
+  }
+
+  let adminCustomSettings = null;
+  if (adminId) {
+    const [settingsRows] = await pool.query("SELECT smtpHost, smtpPort, smtpUser, smtpPass, whatsappAccessToken, whatsappPhoneNumberId FROM user WHERE id = ?", [adminId]);
+    if (settingsRows.length > 0) {
+      adminCustomSettings = settingsRows[0];
+    }
+  }
+
   // 1. Send Email Notification
   if (activeChannels.includes("EMAIL") && toEmail) {
     try {
+      const host = adminCustomSettings?.smtpHost || process.env.SMTP_HOST;
+      const port = adminCustomSettings?.smtpPort || Number(process.env.SMTP_PORT) || 587;
+      const user = adminCustomSettings?.smtpUser || process.env.SMTP_USER;
+      const pass = adminCustomSettings?.smtpPass || process.env.SMTP_PASS;
+
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
+        host: host,
+        port: port,
         secure: false,
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        auth: { user: user, pass: pass },
       });
 
       await transporter.sendMail({
@@ -100,19 +126,6 @@ export const dispatchNotification = async ({
 
   if (activeChannels.includes("WHATSAPP") && toPhone) {
     try {
-      // 2a. Determine the Admin ID to check credits
-      let adminId = adminIdForCredits;
-      if (!adminId && memberId) {
-        const [memRows] = await pool.query("SELECT adminId FROM member WHERE id = ?", [memberId]);
-        if (memRows.length > 0) adminId = memRows[0].adminId;
-      }
-      if (!adminId && toUserId) {
-        const [uRows] = await pool.query("SELECT adminId, roleId, id FROM user WHERE id = ?", [toUserId]);
-        if (uRows.length > 0) {
-          adminId = uRows[0].roleId === 2 ? uRows[0].id : uRows[0].adminId;
-        }
-      }
-
       if (adminId) {
         // 2b. Check credits
         const [uRows] = await pool.query("SELECT whatsappCredits FROM user WHERE id = ?", [adminId]);
@@ -120,7 +133,10 @@ export const dispatchNotification = async ({
 
         if (credits > 0) {
           const cleanPhone = toPhone.trim().replace("+", "");
-          const isSent = await sendWhatsAppMessage(cleanPhone, message);
+          const activeToken = adminCustomSettings?.whatsappAccessToken || null;
+          const activePhoneId = adminCustomSettings?.whatsappPhoneNumberId || null;
+
+          const isSent = await sendWhatsAppMessage(cleanPhone, message, activeToken, activePhoneId);
 
           if (isSent) {
             // Deduct credit

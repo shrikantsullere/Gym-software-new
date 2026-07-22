@@ -14,6 +14,11 @@ const AdminTaskManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const adminId = GetAdminId();
+  
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isAdmin = user && (user.roleName === 'Admin' || user.roleName === 'Superadmin');
+  const loggedInUserId = user ? user.id : null;
 
   const [taskForm, setTaskForm] = useState({
     assignedTo: '', // staffId
@@ -48,8 +53,13 @@ const AdminTaskManagement = () => {
         console.log("Branches fetched:", branchesResponse.data);
         setBranches(branchesResponse.data.branches || []);
 
-        // ✅ Use correct GET endpoint
-        const tasksResponse = await axiosInstance.get(`/housekeepingtask/tasks/admin/${adminId}`);
+        // Fetch tasks conditionally
+        let tasksResponse;
+        if (isAdmin) {
+          tasksResponse = await axiosInstance.get(`/housekeepingtask/tasks/admin/${adminId}`);
+        } else {
+          tasksResponse = await axiosInstance.get(`/housekeepingtask/asignedto/${loggedInUserId}`);
+        }
         console.log("Tasks fetched:", tasksResponse.data);
 
         if (tasksResponse.data.success) {
@@ -400,12 +410,14 @@ const AdminTaskManagement = () => {
           >
             Export CSV
           </button>
-          <button
-            className="btn btn-primary d-flex align-items-center"
-            onClick={() => setShowTaskModal(true)}
-          >
-            <Plus size={18} className="me-1" /> Create Task
-          </button>
+          {isAdmin && (
+            <button
+              className="btn btn-primary d-flex align-items-center"
+              onClick={() => setShowTaskModal(true)}
+            >
+              <Plus size={18} className="me-1" /> Create Task
+            </button>
+          )}
         </div>
       </div>
 
@@ -444,13 +456,15 @@ const AdminTaskManagement = () => {
                     </span>
                   </td>
                   <td>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDeleteTask(task.id)}
-                      title="Delete Task"
-                    >
-                      <FaTrash size={14} />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDeleteTask(task.id)}
+                        title="Delete Task"
+                      >
+                        <FaTrash size={14} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

@@ -409,6 +409,7 @@ function App() {
                   <Route path="/GeneralTrainer/DailyScedule" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><DailyScedule /></ProtectedRoute>} />
                   <Route path="/GeneralTrainer/GroupPlansBookings" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><GroupPlansBookings /></ProtectedRoute>} />
                   <Route path="/generaltrainer/groupplansbookings" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "ADMIN", "SUPERADMIN"]}><GroupPlansBookings /></ProtectedRoute>} />
+                  <Route path="/generaltrainer/task-management" element={<ProtectedRoute allowedRoles={["GENERALTRAINER"]}><AdminTaskManagement /></ProtectedRoute>} />
 
                   <Route path="/member/dashboard" element={<ProtectedRoute allowedRoles={["MEMBER", "ADMIN"]}><MemberDashboard /></ProtectedRoute>} />
                   <Route path="/member/assessment-dashboard" element={<ProtectedRoute allowedRoles={["MEMBER", "ADMIN"]}><MemberAssessmentDashboard memberId={146} /></ProtectedRoute>} />
@@ -456,6 +457,7 @@ function App() {
                   <Route path="/sales/payemnet" element={<Navigate to="/sales/payment" replace />} />
                   <Route path="/sales/reportattendance" element={<ProtectedRoute allowedRoles={["SALES_AGENT", "ADMIN", "SUPERADMIN"]}><ReportsAttendance /></ProtectedRoute>} />
                   <Route path="/sales/report" element={<ProtectedRoute allowedRoles={["SALES_AGENT", "ADMIN", "SUPERADMIN"]}><ReportsClasses /></ProtectedRoute>} />
+                  <Route path="/sales/task-management" element={<ProtectedRoute allowedRoles={["SALES_AGENT"]}><AdminTaskManagement /></ProtectedRoute>} />
 
                   <Route path="/personaltrainer/dashboard" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalTrainerDashboard /></ProtectedRoute>} />
                   <Route path="/personaltrainer/assessment-form" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN", "GENERALTRAINER"]}><TrainerAssessmentForm /></ProtectedRoute>} />
@@ -475,6 +477,7 @@ function App() {
                   <Route path="/personaltrainer/PersonalPlansBookings" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonalPlansBookings /></ProtectedRoute>} />
                   <Route path="/personaltrainer/shift-managment" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonsalTrainerShiftManagement /></ProtectedRoute>} />
                   <Route path="/personaltrainer/report" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER", "ADMIN", "SUPERADMIN"]}><PersonsalReportsClasses /></ProtectedRoute>} />
+                  <Route path="/personaltrainer/task-management" element={<ProtectedRoute allowedRoles={["PERSONALTRAINER"]}><AdminTaskManagement /></ProtectedRoute>} />
 
                   {/* Staff Announcements */}
                   <Route path="/staff/announcements" element={<ProtectedRoute allowedRoles={["GENERALTRAINER", "PERSONALTRAINER", "RECEPTIONIST", "MANAGER", "ADMIN"]}><AnnouncementsList roleGroup="STAFF" /></ProtectedRoute>} />

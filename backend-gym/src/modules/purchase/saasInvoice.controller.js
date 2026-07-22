@@ -86,8 +86,8 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
       .font("Helvetica")
       .fillColor("#4b5563")
       .text(`GSTIN: ${companyGST}`, detailsX, headerY + 22)
-      .text(`📞 ${companyPhone} | ✉ ${companyEmail}`, detailsX, headerY + 36)
-      .text(`📍 ${companyAddress}`, detailsX, headerY + 50, { width: detailsWidth });
+      .text(`Mobile No: ${companyPhone} | Email: ${companyEmail}`, detailsX, headerY + 36)
+      .text(`Address: ${companyAddress}`, detailsX, headerY + 50, { width: detailsWidth });
 
     // Invoice Title
     doc

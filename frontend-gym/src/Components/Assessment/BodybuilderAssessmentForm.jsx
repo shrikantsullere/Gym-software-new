@@ -289,7 +289,8 @@ const BodybuilderAssessmentForm = () => {
       errors.age = "Age must be an integer between 10 and 100.";
     }
 
-    const isBodyBuilderGoal = formData.fitness_goal === 'Body Builder';
+    // On the Body Builder form, all measurement fields are optional
+    const isBodyBuilderGoal = true;
 
     const stdWeight = getStandardValue(formData.weight_kg, units.weight, 'weight');
     if (!isBodyBuilderGoal || formData.weight_kg !== "") {

@@ -43,7 +43,6 @@ export const getAvailableMonths = async (branchId) => {
       }
     }
 
-    // Ensure current month is included
     const now = new Date();
     const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     monthsSet.add(currentKey);
@@ -66,9 +65,14 @@ export const getAvailableMonths = async (branchId) => {
  * Internal helper to calculate monthly rankings for a specific monthKey (YYYY-MM)
  */
 const getMonthlyRankings = async (branchId, targetGoal = 'fat_loss', monthKey) => {
-  const normalizedGoal = targetGoal.toLowerCase();
+  const normalizedGoal = targetGoal.toLowerCase().trim();
 
-  // Determine end of the target month
+  // Explicitly exclude Body Builder members from processing
+  if (normalizedGoal === 'body_builder' || normalizedGoal === 'bodybuilder' || normalizedGoal.includes('body')) {
+    return [];
+  }
+
+  // Determine end of target month
   const [yr, mo] = monthKey.split('-').map(Number);
   const lastDayNum = new Date(yr, mo, 0).getDate();
   const endOfMonthStr = `${monthKey}-${String(lastDayNum).padStart(2, '0')} 23:59:59`;
@@ -143,40 +147,59 @@ const getMonthlyRankings = async (branchId, targetGoal = 'fat_loss', monthKey) =
     const assessments = memberMap[memberIdStr];
     if (!assessments || assessments.length === 0) continue;
 
-    // Baseline assessment: is_baseline = 1 or earliest row
-    const baselineAssessment = assessments.find(a => a.is_baseline === 1 || a.is_baseline === true) || assessments[0];
-
     // Current assessment for this month: latest row on or before end of month
     const currentAssessment = assessments[assessments.length - 1];
 
-    // Verify goal matches target goal strictly
-    const memberGoal = (currentAssessment.fitness_goal || baselineAssessment.fitness_goal || '').toLowerCase();
-    if (memberGoal !== normalizedGoal) continue;
+    // Exclude Body Builder goal completely
+    const rawGoal = (currentAssessment.fitness_goal || '').toLowerCase().trim();
+    if (rawGoal === 'body_builder' || rawGoal === 'bodybuilder' || rawGoal.includes('body')) {
+      continue;
+    }
 
-    // Metrics
+    // Standardize goal matching
+    let currentGoal = rawGoal;
+    if (rawGoal.includes('fat') || rawGoal.includes('loss')) currentGoal = 'fat_loss';
+    else if (rawGoal.includes('muscle') || rawGoal.includes('gain')) currentGoal = 'muscle_gain';
+    else if (rawGoal.includes('maintain') || rawGoal.includes('fitness')) currentGoal = 'maintenance';
+
+    if (currentGoal !== normalizedGoal) continue;
+
+    // Baseline assessment: earliest valid assessment for member
+    const baselineAssessment = assessments.find(a => {
+      const g = (a.fitness_goal || '').toLowerCase().trim();
+      let matchedGoal = g;
+      if (g.includes('fat') || g.includes('loss')) matchedGoal = 'fat_loss';
+      else if (g.includes('muscle') || g.includes('gain')) matchedGoal = 'muscle_gain';
+      else if (g.includes('maintain') || g.includes('fitness')) matchedGoal = 'maintenance';
+      return a.is_baseline === 1 || matchedGoal === currentGoal;
+    }) || assessments[0];
+
+    // Read calculated BF% and LBM from Assessment Engine (Single Source of Truth)
     const bBF = parseFloat(baselineAssessment.body_fat_percentage);
     const cBF = parseFloat(currentAssessment.body_fat_percentage);
     const bLBM = parseFloat(baselineAssessment.lean_body_mass);
     const cLBM = parseFloat(currentAssessment.lean_body_mass);
 
-    if (
-      isNaN(bBF) || bBF <= 0 ||
-      isNaN(bLBM) || bLBM <= 0 ||
-      isNaN(cBF) || cBF < 0 ||
-      isNaN(cLBM) || cLBM < 0
-    ) {
+    // Section 8: Qualification Rules
+    if (normalizedGoal === 'fat_loss') {
+      if (isNaN(bBF) || bBF <= 0 || isNaN(cBF) || cBF <= 0) continue;
+    } else if (normalizedGoal === 'muscle_gain') {
+      if (isNaN(bLBM) || bLBM <= 0 || isNaN(cLBM) || cLBM <= 0) continue;
+    } else if (normalizedGoal === 'maintenance') {
+      if (isNaN(bBF) || bBF <= 0 || isNaN(cBF) || cBF <= 0 || isNaN(bLBM) || bLBM <= 0 || isNaN(cLBM) || cLBM <= 0) continue;
+    } else {
       continue;
     }
 
     const score = LeaderboardEngine.calculateScore({
-      fitness_goal: memberGoal,
+      fitness_goal: normalizedGoal,
       baseline_bf: bBF,
       current_bf: cBF,
       baseline_lbm: bLBM,
       current_lbm: cLBM
     });
 
-    if (isNaN(score) || !isFinite(score)) continue;
+    if (score === null || isNaN(score) || !isFinite(score)) continue;
 
     const bWeight = parseFloat(baselineAssessment.weight_kg) || 0;
     const cWeight = parseFloat(currentAssessment.weight_kg) || 0;
@@ -189,27 +212,27 @@ const getMonthlyRankings = async (branchId, targetGoal = 'fat_loss', monthKey) =
     const gender = currentAssessment.gender_at_assessment || currentAssessment.memberGender || '-';
     const height_cm = currentAssessment.height_cm || baselineAssessment.height_cm || '-';
 
-    // Calculate Gain, Loss, Overall Improvement
-    const lbmDiff = cLBM - bLBM;
-    const bfDiff = bBF - cBF; // Positive if BF decreased
+    const bfDiff = (bBF - cBF);
+    const lbmDiff = (cLBM - bLBM);
+    const bfAbsDiff = Math.abs(cBF - bBF);
+    const lbmAbsDiff = Math.abs(cLBM - bLBM);
 
     let memberGain = '0.00 kg';
     let memberLoss = '0.00%';
     let overallImprovement = `${score.toFixed(2)}%`;
 
     if (normalizedGoal === 'fat_loss') {
-      memberGain = lbmDiff > 0 ? `+${lbmDiff.toFixed(2)} kg` : '0.00 kg';
-      memberLoss = bfDiff > 0 ? `-${bfDiff.toFixed(2)}%` : '0.00%';
       overallImprovement = `${score.toFixed(2)}%`;
-    } else if (normalizedGoal === 'muscle_gain') {
-      memberGain = lbmDiff > 0 ? `+${lbmDiff.toFixed(2)} kg` : '0.00 kg';
-      memberLoss = bfDiff > 0 ? `-${bfDiff.toFixed(2)}%` : '0.00%';
-      overallImprovement = `${score.toFixed(2)}%`;
-    } else if (normalizedGoal === 'maintenance') {
+      memberLoss = `${bfDiff.toFixed(2)}%`;
       memberGain = `${lbmDiff >= 0 ? '+' : ''}${lbmDiff.toFixed(2)} kg`;
-      const bfChange = cBF - bBF;
-      memberLoss = `${bfChange <= 0 ? '' : '+'}${bfChange.toFixed(2)}%`;
+    } else if (normalizedGoal === 'muscle_gain') {
+      overallImprovement = `${score.toFixed(2)}%`;
+      memberGain = `${lbmDiff >= 0 ? '+' : ''}${lbmDiff.toFixed(2)} kg`;
+      memberLoss = `${bfDiff.toFixed(2)}%`;
+    } else if (normalizedGoal === 'maintenance') {
       overallImprovement = `${score.toFixed(2)} pts`;
+      memberGain = `${lbmDiff >= 0 ? '+' : ''}${lbmDiff.toFixed(2)} kg`;
+      memberLoss = `${(cBF - bBF) <= 0 ? '' : '+'}${(cBF - bBF).toFixed(2)}%`;
     }
 
     const latestDate = currentAssessment.assessment_date || currentAssessment.createdAt;
@@ -218,7 +241,7 @@ const getMonthlyRankings = async (branchId, targetGoal = 'fat_loss', monthKey) =
       memberId: parseInt(memberIdStr, 10),
       fullName: currentAssessment.fullName || 'Member',
       profileImage: currentAssessment.profileImage || null,
-      fitness_goal: memberGoal,
+      fitness_goal: normalizedGoal,
       monthKey: monthKey,
       monthLabel: formatMonthLabel(monthKey),
       age: age,
@@ -230,14 +253,21 @@ const getMonthlyRankings = async (branchId, targetGoal = 'fat_loss', monthKey) =
       weight_change_str: `${weightDiff >= 0 ? '+' : ''}${weightDiff.toFixed(2)} kg`,
       baseline_bf_percent: parseFloat(bBF.toFixed(2)),
       current_bf_percent: parseFloat(cBF.toFixed(2)),
+      bf_improvement: parseFloat(bfDiff.toFixed(2)),
+      bf_diff: parseFloat(bfAbsDiff.toFixed(2)),
       baseline_lbm: parseFloat(bLBM.toFixed(2)),
       current_lbm: parseFloat(cLBM.toFixed(2)),
+      lbm_change: parseFloat(lbmDiff.toFixed(2)),
+      lbm_diff: parseFloat(lbmAbsDiff.toFixed(2)),
       baseline_bmi: parseFloat(bBmi.toFixed(2)),
       current_bmi: parseFloat(cBmi.toFixed(2)),
       member_gain: memberGain,
       member_loss: memberLoss,
       overall_improvement: overallImprovement,
       score: parseFloat(score.toFixed(2)),
+      fat_loss_score: normalizedGoal === 'fat_loss' ? parseFloat(score.toFixed(2)) : null,
+      muscle_gain_score: normalizedGoal === 'muscle_gain' ? parseFloat(score.toFixed(2)) : null,
+      maintenance_score: normalizedGoal === 'maintenance' ? parseFloat(score.toFixed(2)) : null,
       latestTimestamp: latestDate ? new Date(latestDate).getTime() : 0
     });
   }
@@ -266,18 +296,14 @@ export const getLeaderboardByGoal = async (branchId, fitnessGoal = 'fat_loss', m
   const normalizedGoal = (fitnessGoal || 'fat_loss').toLowerCase();
   const availableMonths = await getAvailableMonths(branchId);
 
-  // If monthKey not passed or invalid, default to the latest available month
   let selectedMonthKey = monthKey;
   if (!selectedMonthKey || !/^\d{4}-\d{2}$/.test(selectedMonthKey)) {
     selectedMonthKey = availableMonths.length > 0 ? availableMonths[0].key : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
   }
 
   const selectedMonthLabel = formatMonthLabel(selectedMonthKey);
-
-  // Get rankings for selected month
   const currentRankings = await getMonthlyRankings(branchId, normalizedGoal, selectedMonthKey);
 
-  // Get rankings for previous month for Rank Change calculations
   const prevMonthKey = getPreviousMonthKey(selectedMonthKey);
   let prevRankingsMap = new Map();
   if (prevMonthKey) {
@@ -287,7 +313,6 @@ export const getLeaderboardByGoal = async (branchId, fitnessGoal = 'fat_loss', m
     }
   }
 
-  // Attach Rank Change and Previous Rank
   const finalLeaderboard = currentRankings.map(item => {
     const prevRank = prevRankingsMap.has(item.memberId) ? prevRankingsMap.get(item.memberId) : null;
     let rankChange = 'NEW';
@@ -325,14 +350,21 @@ export const getLeaderboardByGoal = async (branchId, fitnessGoal = 'fat_loss', m
       weight_change_str: item.weight_change_str,
       baseline_bf_percent: item.baseline_bf_percent,
       current_bf_percent: item.current_bf_percent,
+      bf_improvement: item.bf_improvement,
+      bf_diff: item.bf_diff,
       baseline_lbm: item.baseline_lbm,
       current_lbm: item.current_lbm,
+      lbm_change: item.lbm_change,
+      lbm_diff: item.lbm_diff,
       baseline_bmi: item.baseline_bmi,
       current_bmi: item.current_bmi,
       member_gain: item.member_gain,
       member_loss: item.member_loss,
       overall_improvement: item.overall_improvement,
       score: item.score,
+      fat_loss_score: item.fat_loss_score,
+      muscle_gain_score: item.muscle_gain_score,
+      maintenance_score: item.maintenance_score,
       previous_rank: prevRank,
       previousRank: prevRank,
       rank_change: rankChange,

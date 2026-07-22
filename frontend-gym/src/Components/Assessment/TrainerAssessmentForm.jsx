@@ -6,6 +6,20 @@ import { getCurrentStaffId } from '../../utils/staffUtils';
 
 const TrainerAssessmentForm = () => {
   const [members, setMembers] = useState([]);
+  const [units, setUnits] = useState({
+    weight: 'kg',
+    height: 'cm',
+    neck: 'cm',
+    shoulders: 'cm',
+    chest: 'cm',
+    waist: 'cm',
+    arms: 'cm',
+    forearms: 'cm',
+    thighs: 'cm',
+    calves: 'cm',
+    hip: 'cm',
+  });
+
   const [formData, setFormData] = useState({
     memberId: '',
     age_at_assessment: '',
@@ -37,32 +51,45 @@ const TrainerAssessmentForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isBodyBuilderGoal = formData.fitness_goal === 'body_builder' || formData.fitness_goal === 'Body Builder';
+
   useEffect(() => {
     const fetchMembers = async () => {
       try {
         const userStr = localStorage.getItem("user");
         if (userStr) {
           const userObj = JSON.parse(userStr);
-          const adminId = userObj.adminId || userObj.id;
+          const adminId = userObj.adminId || userObj.id || userObj.userId;
           const roleId = Number(userObj.roleId);
           const roleName = (userObj.roleName || userObj.role || localStorage.getItem('userRole') || "").toLowerCase().replace(/\s+/g, '');
           
-          let endpoint = `/members/admin/${adminId}`;
-          // If Personal Trainer, fetch only their assigned members
-          const isPersonalTrainer = roleId === 5 || roleName.includes('personaltrainer');
-          if (isPersonalTrainer) {
-            const staffId = getCurrentStaffId(userObj);
-            endpoint = `/members/trainer/${staffId}`;
+          let endpoint = adminId ? `/members/admin/${adminId}` : null;
+          const isTrainer = roleId === 5 || roleId === 6 || roleName.includes('trainer');
+          if (isTrainer) {
+            const staffId = getCurrentStaffId(userObj) || userObj.staffId || userObj.id;
+            if (staffId) {
+              endpoint = `/members/trainer/${staffId}`;
+            }
           }
 
-          if (adminId) {
+          if (endpoint) {
             const res = await axiosInstance.get(endpoint);
+            let memberList = [];
             if (res.data && res.data.success) {
-              const memberList = Array.isArray(res.data.data) ? res.data.data : (res.data.members || []);
-              setMembers(memberList);
+              memberList = Array.isArray(res.data.data) ? res.data.data : (res.data.members || []);
             } else if (Array.isArray(res.data)) {
-              setMembers(res.data);
+              memberList = res.data;
             }
+
+            // Fallback: If trainer endpoint returned 0 members, load admin members
+            if (memberList.length === 0 && isTrainer && adminId) {
+              const fallbackRes = await axiosInstance.get(`/members/admin/${adminId}`);
+              if (fallbackRes.data && fallbackRes.data.success) {
+                memberList = Array.isArray(fallbackRes.data.data) ? fallbackRes.data.data : (fallbackRes.data.members || []);
+              }
+            }
+
+            setMembers(memberList);
           }
         }
       } catch (err) {
@@ -108,6 +135,67 @@ const TrainerAssessmentForm = () => {
     fetchMemberData();
   }, [formData.memberId, members]);
 
+  // Unit conversion helper
+  const handleUnitChange = (e) => {
+    const { name, value: newUnit } = e.target;
+    const oldUnit = units[name];
+    if (oldUnit === newUnit) return;
+
+    setUnits(prev => ({ ...prev, [name]: newUnit }));
+
+    const fieldMap = {
+      weight: 'weight_kg',
+      height: 'height_cm',
+      neck: 'neck_cm',
+      shoulders: 'shoulders_cm',
+      chest: 'chest_cm',
+      waist: 'waist_cm',
+      arms: 'arms_cm',
+      forearms: 'forearms_cm',
+      thighs: 'thighs_cm',
+      calves: 'calves_cm',
+      hip: 'hip_cm',
+    };
+
+    const targetFieldName = fieldMap[name];
+    if (!targetFieldName) return;
+
+    const valStr = formData[targetFieldName];
+    if (!valStr || isNaN(parseFloat(valStr))) return;
+
+    let numVal = parseFloat(valStr);
+    let convertedVal = numVal;
+
+    if (name === 'weight') {
+      if (oldUnit === 'kg' && newUnit === 'lb') {
+        convertedVal = numVal * 2.20462;
+      } else if (oldUnit === 'lb' && newUnit === 'kg') {
+        convertedVal = numVal * 0.453592;
+      }
+    } else {
+      if (oldUnit === 'cm' && newUnit === 'in') {
+        convertedVal = numVal / 2.54;
+      } else if (oldUnit === 'in' && newUnit === 'cm') {
+        convertedVal = numVal * 2.54;
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [targetFieldName]: parseFloat(convertedVal.toFixed(2)).toString()
+    }));
+  };
+
+  const getStandardValue = (valStr, unit, type) => {
+    if (!valStr || isNaN(parseFloat(valStr))) return null;
+    const num = parseFloat(valStr);
+    if (type === 'weight') {
+      return unit === 'lb' ? num * 0.453592 : num;
+    } else {
+      return unit === 'in' ? num * 2.54 : num;
+    }
+  };
+
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files.length > 0) {
@@ -138,9 +226,11 @@ const TrainerAssessmentForm = () => {
         let fitness_goal = formData.fitness_goal || 'fat_loss';
         const memberGoal = (selectedMember.goal || '').toLowerCase();
         
-        if (memberGoal.includes('loss') || memberGoal.includes('fat')) {
+        if (memberGoal.includes('body')) {
+          fitness_goal = 'body_builder';
+        } else if (memberGoal.includes('loss') || memberGoal.includes('fat')) {
           fitness_goal = 'fat_loss';
-        } else if (memberGoal.includes('gain') || memberGoal.includes('muscle') || memberGoal.includes('body')) {
+        } else if (memberGoal.includes('gain') || memberGoal.includes('muscle')) {
           fitness_goal = 'muscle_gain';
         } else if (memberGoal.includes('maintain') || memberGoal.includes('fitness') || memberGoal.includes('general')) {
           fitness_goal = 'maintenance';
@@ -178,16 +268,22 @@ const TrainerAssessmentForm = () => {
 
     try {
       const gender = (formData.gender_at_assessment || 'male').toLowerCase();
-      const waist = parseFloat(formData.waist_cm) || 80;
-      const neck = parseFloat(formData.neck_cm) || (gender === 'male' ? Math.max(30, waist - 10) : 35);
-      const hip = gender === 'female' ? (parseFloat(formData.hip_cm) || waist + 10) : null;
+      const stdWeight = getStandardValue(formData.weight_kg, units.weight, 'weight');
+      const stdHeight = getStandardValue(formData.height_cm, units.height, 'length');
+      const stdWaist = getStandardValue(formData.waist_cm, units.waist, 'length');
+      const stdNeck = getStandardValue(formData.neck_cm, units.neck, 'length');
+      const stdHip = getStandardValue(formData.hip_cm, units.hip, 'length');
+
+      const waist = stdWaist || 80;
+      const neck = stdNeck || (gender === 'male' ? Math.max(30, waist - 10) : 35);
+      const hip = (gender === 'female' && stdHip) ? stdHip : null;
 
       const payload = {
         memberId: parseInt(formData.memberId, 10),
         age_at_assessment: parseInt(formData.age_at_assessment, 10) || 25,
         gender_at_assessment: gender,
-        weight_kg: parseFloat(formData.weight_kg),
-        height_cm: parseFloat(formData.height_cm),
+        weight_kg: stdWeight || parseFloat(formData.weight_kg) || 70,
+        height_cm: stdHeight || parseFloat(formData.height_cm) || 170,
         neck_cm: neck,
         waist_cm: waist,
         hip_cm: hip,
@@ -198,19 +294,18 @@ const TrainerAssessmentForm = () => {
 
       const res = await axiosInstance.post('/v1/assessments', payload);
       if (res.data.success) {
-        // Also save bodybuilding log
         try {
           const bodybuildingPayload = {
-            weight_kg: formData.weight_kg,
-            chest_cm: formData.chest_cm,
-            shoulders_cm: formData.shoulders_cm,
-            left_arm_cm: formData.arms_cm,
-            right_arm_cm: formData.arms_cm,
-            left_forearm_cm: formData.forearms_cm,
-            right_forearm_cm: formData.forearms_cm,
-            waist_cm: formData.waist_cm,
-            thighs_cm: formData.thighs_cm,
-            calves_cm: formData.calves_cm,
+            weight_kg: stdWeight || formData.weight_kg,
+            chest_cm: getStandardValue(formData.chest_cm, units.chest, 'length') || formData.chest_cm,
+            shoulders_cm: getStandardValue(formData.shoulders_cm, units.shoulders, 'length') || formData.shoulders_cm,
+            left_arm_cm: getStandardValue(formData.arms_cm, units.arms, 'length') || formData.arms_cm,
+            right_arm_cm: getStandardValue(formData.arms_cm, units.arms, 'length') || formData.arms_cm,
+            left_forearm_cm: getStandardValue(formData.forearms_cm, units.forearms, 'length') || formData.forearms_cm,
+            right_forearm_cm: getStandardValue(formData.forearms_cm, units.forearms, 'length') || formData.forearms_cm,
+            waist_cm: stdWaist || formData.waist_cm,
+            thighs_cm: getStandardValue(formData.thighs_cm, units.thighs, 'length') || formData.thighs_cm,
+            calves_cm: getStandardValue(formData.calves_cm, units.calves, 'length') || formData.calves_cm,
             notes: formData.coach_notes
           };
           await axiosInstance.post(`/v1/bodybuilding/${formData.memberId}`, bodybuildingPayload);
@@ -311,6 +406,7 @@ const TrainerAssessmentForm = () => {
                       <option value="fat_loss">Fat Loss</option>
                       <option value="maintenance">Maintenance</option>
                       <option value="muscle_gain">Muscle Gain</option>
+                      <option value="body_builder">Body Builder</option>
                     </select>
                   </div>
                 </div>
@@ -318,25 +414,31 @@ const TrainerAssessmentForm = () => {
                 <h5 className="mb-3 text-secondary border-bottom pb-2">Body Measurements</h5>
                 <div className="row g-3 mb-4">
                   <div className="col-md-4">
-                    <label className="form-label fw-semibold">Weight (kg) <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Weight {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required type="number" step="0.1" name="weight_kg" value={formData.weight_kg} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
-                      <span className="input-group-text">kg</span>
+                      <input required={!isBodyBuilderGoal} type="number" step="0.1" name="weight_kg" value={formData.weight_kg} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="weight" value={units.weight} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '80px' }}>
+                        <option value="kg">kg</option>
+                        <option value="lb">lb</option>
+                      </select>
                     </div>
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label fw-semibold">Height (cm) <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Height {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
-                      <input required type="number" step="0.1" name="height_cm" value={formData.height_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
-                      <span className="input-group-text">cm</span>
+                      <input required={!isBodyBuilderGoal} type="number" step="0.1" name="height_cm" value={formData.height_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="height" value={units.height} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '80px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
                     </div>
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label fw-semibold">Resting Heart Rate <span className="text-danger">*</span></label>
+                    <label className="form-label fw-semibold">Resting Heart Rate</label>
                     <div className="input-group">
-                      <input required type="number" min="30" max="250" name="resting_hr" value={formData.resting_hr} onChange={handleChange} className="form-control shadow-none" placeholder="BPM" />
+                      <input type="number" min="30" max="250" name="resting_hr" value={formData.resting_hr} onChange={handleChange} className="form-control shadow-none" placeholder="BPM" />
                       <span className="input-group-text">bpm</span>
                     </div>
                   </div>
@@ -345,49 +447,103 @@ const TrainerAssessmentForm = () => {
                 <h5 className="mb-3 text-secondary border-bottom pb-2">Muscle Group Circumferences</h5>
                 <div className="row g-3 mb-4 bg-light p-3 rounded-3">
                   <div className="col-md-3">
-                    <label className="form-label fw-semibold">Neck (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="neck_cm" value={formData.neck_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Neck {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
+                    <div className="input-group">
+                      <input required={!isBodyBuilderGoal} type="number" step="0.1" name="neck_cm" value={formData.neck_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="neck" value={units.neck} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3">
-                    <label className="form-label fw-semibold">Shoulders (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="shoulders_cm" value={formData.shoulders_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Shoulders</label>
+                    <div className="input-group">
+                      <input type="number" step="0.1" name="shoulders_cm" value={formData.shoulders_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="shoulders" value={units.shoulders} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3">
-                    <label className="form-label fw-semibold">Chest (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="chest_cm" value={formData.chest_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Chest</label>
+                    <div className="input-group">
+                      <input type="number" step="0.1" name="chest_cm" value={formData.chest_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="chest" value={units.chest} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3">
-                    <label className="form-label fw-semibold">Waist (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Waist {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
+                    <div className="input-group">
+                      <input required={!isBodyBuilderGoal} type="number" step="0.1" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="waist" value={units.waist} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3 mt-4">
-                    <label className="form-label fw-semibold">Arms / Biceps (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="arms_cm" value={formData.arms_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Arms / Biceps</label>
+                    <div className="input-group">
+                      <input type="number" step="0.1" name="arms_cm" value={formData.arms_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="arms" value={units.arms} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3 mt-4">
-                    <label className="form-label fw-semibold">Forearms (cm)</label>
-                    <input type="number" step="0.1" name="forearms_cm" value={formData.forearms_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Forearms</label>
+                    <div className="input-group">
+                      <input type="number" step="0.1" name="forearms_cm" value={formData.forearms_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="forearms" value={units.forearms} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3 mt-4">
-                    <label className="form-label fw-semibold">Thighs (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="thighs_cm" value={formData.thighs_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Thighs</label>
+                    <div className="input-group">
+                      <input type="number" step="0.1" name="thighs_cm" value={formData.thighs_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="thighs" value={units.thighs} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3 mt-4">
-                    <label className="form-label fw-semibold">Calves (cm) <span className="text-danger">*</span></label>
-                    <input required type="number" step="0.1" name="calves_cm" value={formData.calves_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                    <label className="form-label fw-semibold">Calves</label>
+                    <div className="input-group">
+                      <input type="number" step="0.1" name="calves_cm" value={formData.calves_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="calves" value={units.calves} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-md-3 mt-4">
-                    <label className="form-label fw-semibold">Hips / Glutes (cm){formData.gender_at_assessment === 'female' && <span className="text-danger"> *</span>}</label>
-                    <input required={formData.gender_at_assessment === 'female'} type="number" step="0.1" name="hip_cm" value={formData.hip_cm} onChange={handleChange} className={`form-control shadow-none ${formData.gender_at_assessment === 'female' ? 'border-warning' : ''}`} placeholder="0.0" />
-                    {formData.gender_at_assessment === 'female' && <small className="text-warning" style={{fontSize: '0.75rem'}}><i className="bi bi-info-circle"></i> Required for females</small>}
+                    <label className="form-label fw-semibold">Hips / Glutes {!isBodyBuilderGoal && formData.gender_at_assessment === 'female' && <span className="text-danger">*</span>}</label>
+                    <div className="input-group">
+                      <input required={!isBodyBuilderGoal && formData.gender_at_assessment === 'female'} type="number" step="0.1" name="hip_cm" value={formData.hip_cm} onChange={handleChange} className={`form-control shadow-none ${!isBodyBuilderGoal && formData.gender_at_assessment === 'female' ? 'border-warning' : ''}`} placeholder="0.0" />
+                      <select name="hip" value={units.hip} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
+                    {!isBodyBuilderGoal && formData.gender_at_assessment === 'female' && <small className="text-warning" style={{fontSize: '0.75rem'}}><i className="bi bi-info-circle"></i> Required for females</small>}
                   </div>
                 </div>
 

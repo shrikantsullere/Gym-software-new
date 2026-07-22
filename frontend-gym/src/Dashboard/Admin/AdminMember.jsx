@@ -459,10 +459,12 @@ const AdminMember = () => {
     try {
       const response = await axiosInstance.get(`${BaseUrl}staff/admin/${effectiveAdminId}`);
       if (response.data && response.data.success) {
-        const trainers = (response.data.data || response.data.staff || []).filter(
+        const rawStaff = response.data.data || response.data.staff || [];
+        const trainers = rawStaff.filter(
           (s) => {
+            const roleIdNum = Number(s.roleId);
             const roleStr = (s.roleName || "").toLowerCase();
-            return [5, 6].includes(s.roleId) || roleStr.includes("trainer") || roleStr.includes("pt") || roleStr.includes("gt");
+            return [3, 5, 6].includes(roleIdNum) || roleStr.includes("trainer") || roleStr.includes("pt") || roleStr.includes("gt");
           }
         );
         setAllTrainers(trainers);
@@ -1481,11 +1483,13 @@ const handleDownloadReceipt = async (member) => {
   };
 
   const getFilteredTrainers = (interestedIn) => {
-    if (interestedIn === "Personal Training") {
-      return allTrainers.filter(t => t.roleId === 5 || (t.roleName || "").toLowerCase().includes("personal") || (t.roleName || "").toLowerCase().includes("pt"));
+    if (!interestedIn) return allTrainers;
+    const lower = (interestedIn || "").toLowerCase();
+    if (lower.includes("personal")) {
+      return allTrainers.filter(t => Number(t.roleId) === 5 || (t.roleName || "").toLowerCase().includes("personal") || (t.roleName || "").toLowerCase().includes("pt"));
     }
-    if (interestedIn === "General Trainer") {
-      return allTrainers.filter(t => t.roleId === 6 || (t.roleName || "").toLowerCase().includes("general") || (t.roleName || "").toLowerCase().includes("gt"));
+    if (lower.includes("general")) {
+      return allTrainers.filter(t => Number(t.roleId) === 6 || (t.roleName || "").toLowerCase().includes("general") || (t.roleName || "").toLowerCase().includes("gt"));
     }
     return allTrainers;
   };

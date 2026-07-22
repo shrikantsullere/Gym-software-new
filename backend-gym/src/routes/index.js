@@ -92,6 +92,7 @@ router.use("/booking", bookingRoutes);
 router.use("/adminSettings", adminSettingsRoutes);
 router.use("/leads", leadRoutes);
 router.use("/health", healthRoutes);
+router.use("/v1/health", healthRoutes);
 router.use("/subadmins", subadminRoutes);
 router.use("/global-settings", globalSettingRoutes);
 router.use("/v1/assessments", assessmentRoutes);

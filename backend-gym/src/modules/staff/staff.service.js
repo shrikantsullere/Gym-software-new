@@ -159,6 +159,7 @@ export const listStaffService = async (adminId) => {
       u.email,
       u.phone,
       u.roleId,
+      r.name AS roleName,
       u.branchId,
       s.adminId,
       s.gender,
@@ -169,6 +170,7 @@ export const listStaffService = async (adminId) => {
       u.status
     FROM staff s
     JOIN user u ON u.id = s.userId
+    LEFT JOIN role r ON r.id = u.roleId
     WHERE s.adminId = ?
     ORDER BY s.id DESC
   `;
@@ -403,6 +405,7 @@ export const getAllStaffService = async (adminId) => {
       u.email,
       u.phone,
       u.roleId,
+      r.name AS roleName,
       u.branchId,
       s.adminId,
       s.gender,
@@ -413,6 +416,7 @@ export const getAllStaffService = async (adminId) => {
       u.status
     FROM staff s
     JOIN user u ON u.id = s.userId
+    LEFT JOIN role r ON r.id = u.roleId
     WHERE s.adminId = ?
     ORDER BY s.id DESC
   `;

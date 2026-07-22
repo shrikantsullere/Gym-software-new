@@ -35,12 +35,14 @@ export const generateSaasInvoicePdf = async (req, res, next) => {
 
     doc.pipe(res);
 
-    // Platform / Super Admin details
-    const companyName = "Speed Fitness Software Solutions";
-    const companyAddress = "Speed Fitness HQ, India";
-    const companyGST = "29ABCDE1234F1Z5";
-    const companyPhone = "+91 9876543210";
-    const companyEmail = "support@speedfitness.com";
+    // Platform / Super Admin details (Fetch from user with roleId = 1)
+    const [saRows] = await pool.query("SELECT gymName, gymAddress, gstNumber, phone, email FROM user WHERE roleId = 1 LIMIT 1");
+    const sa = saRows[0] || {};
+    const companyName = sa.gymName || "Speed Fitness Software Solutions";
+    const companyAddress = sa.gymAddress || "Speed Fitness HQ, India";
+    const companyGST = sa.gstNumber || "29ABCDE1234F1Z5";
+    const companyPhone = sa.phone || "+91 9876543210";
+    const companyEmail = sa.email || "support@speedfitness.com";
 
     // Gym Owner / Buyer details
     const cleanStr = (s) => (s && s !== "null" && s !== "undefined" ? String(s) : "");

@@ -21,6 +21,8 @@ const AdminSettings = () => {
     gymName: '',
     gymAddress: '',
     gstNumber: '',
+    businessPhone: '',
+    businessEmail: '',
 
     // Password Section
     oldPassword: '',
@@ -68,6 +70,8 @@ const AdminSettings = () => {
           gymName: userData.gymName || '',
           gymAddress: userData.gymAddress || '',
           gstNumber: userData.gstNumber || '',
+          businessPhone: userData.phone || '',
+          businessEmail: userData.email || '',
         }));
         
         if (userData.profileImage) {
@@ -193,6 +197,8 @@ const handleSubmit = async (e) => {
       formData.append("gymName", (settingsData.gymName || '').trim());
       formData.append("gymAddress", (settingsData.gymAddress || '').trim());
       formData.append("gstNumber", (settingsData.gstNumber || '').trim());
+      formData.append("phone", (settingsData.businessPhone || '').trim());
+      formData.append("email", (settingsData.businessEmail || '').trim());
       
       if (settingsData.profilePhoto instanceof File) {
         formData.append("profileImage", settingsData.profilePhoto);
@@ -415,6 +421,28 @@ const handleSubmit = async (e) => {
                       id="gstNumber"
                       name="gstNumber"
                       value={settingsData.gstNumber}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="businessPhone" className="form-label">Business Phone</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="businessPhone"
+                      name="businessPhone"
+                      value={settingsData.businessPhone}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="businessEmail" className="form-label">Business Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="businessEmail"
+                      name="businessEmail"
+                      value={settingsData.businessEmail}
                       onChange={handleInputChange}
                     />
                   </div>

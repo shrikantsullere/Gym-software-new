@@ -24,7 +24,8 @@ export const createSessionService = async (data) => {
     time,
     duration,
     description,
-    status
+    status,
+    capacity
   } = data;
 
   if (!adminId) {
@@ -35,8 +36,8 @@ export const createSessionService = async (data) => {
 
   const [result] = await pool.query(
     `INSERT INTO session 
-     (sessionName, trainerId, adminId, date, time, duration, description, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+     (sessionName, trainerId, adminId, date, time, duration, description, status, capacity)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       sessionName,
       Number(trainerId),
@@ -45,7 +46,8 @@ export const createSessionService = async (data) => {
       time,
       Number(duration),
       description || null,
-      status || "Upcoming"
+      status || "Upcoming",
+      capacity ? Number(capacity) : 20
     ]
   );
   
@@ -91,7 +93,8 @@ export const listSessionsService = async ({ adminId, trainerId, search }) => {
     SELECT 
       s.*,
       t.id AS trainerId,
-      t.fullName AS trainerName
+      t.fullName AS trainerName,
+      (SELECT COUNT(*) FROM unified_bookings ub WHERE ub.sessionId = s.id AND ub.bookingStatus != 'Cancelled') AS joinedCount
     FROM session s
     LEFT JOIN user t ON s.trainerId = t.id
     WHERE ${whereClause}
@@ -109,13 +112,13 @@ export const listSessionsService = async ({ adminId, trainerId, search }) => {
 
 // ➤ Update complete session
 export const updateSessionService = async (sessionId, data) => {
-  const { sessionName, trainerId, branchId, date, time, duration, description, status } = data;
+  const { sessionName, trainerId, branchId, date, time, duration, description, status, capacity } = data;
 
   await pool.query(
     `UPDATE session 
-     SET sessionName = ?, trainerId = ?, branchId = ?, date = ?, time = ?, duration = ?, description = ?, status = ?
+     SET sessionName = ?, trainerId = ?, branchId = ?, date = ?, time = ?, duration = ?, description = ?, status = ?, capacity = ?
      WHERE id = ?`,
-    [sessionName, Number(trainerId), Number(branchId), new Date(date), time, Number(duration), description, status, sessionId]
+    [sessionName, Number(trainerId), Number(branchId), new Date(date), time, Number(duration), description, status, capacity ? Number(capacity) : 20, sessionId]
   );
 
   const [updated] = await pool.query(`SELECT * FROM session WHERE id = ?`, [sessionId]);
@@ -136,3 +139,77 @@ export const deleteSessionService = async (sessionId) => {
   await pool.query(`DELETE FROM session WHERE id = ?`, [sessionId]);
   return true;
 };
+
+// ➤ Get Sessions for Member
+export const getMemberSessionsService = async (memberId) => {
+  // First get the member's adminId
+  const [memberRows] = await pool.query(`SELECT adminId FROM member WHERE id = ?`, [memberId]);
+  if (!memberRows.length) throw { status: 404, message: "Member not found" };
+  const adminId = memberRows[0].adminId;
+
+  // List upcoming sessions for this admin, and compute joined count and isJoined boolean
+  const [sessions] = await pool.query(
+    `SELECT 
+      s.*,
+      t.fullName AS trainerName,
+      (SELECT COUNT(*) FROM unified_bookings ub WHERE ub.sessionId = s.id AND ub.bookingStatus != 'Cancelled') AS joinedCount,
+      (SELECT COUNT(*) > 0 FROM unified_bookings ub2 WHERE ub2.sessionId = s.id AND ub2.memberId = ? AND ub2.bookingStatus != 'Cancelled') AS isJoined
+     FROM session s
+     LEFT JOIN user t ON s.trainerId = t.id
+     WHERE s.adminId = ? AND s.status = 'Upcoming'
+     ORDER BY s.date ASC, s.time ASC`,
+    [memberId, adminId]
+  );
+
+  return sessions;
+};
+
+// ➤ Join Session (Member)
+export const joinSessionService = async (memberId, sessionId) => {
+  // Check session exists and get capacity
+  const [sessionRows] = await pool.query(`SELECT * FROM session WHERE id = ?`, [sessionId]);
+  if (!sessionRows.length) throw { status: 404, message: "Session not found" };
+  const session = sessionRows[0];
+
+  // Check if already joined
+  const [existing] = await pool.query(
+    `SELECT id FROM unified_bookings WHERE sessionId = ? AND memberId = ? AND bookingStatus != 'Cancelled'`,
+    [sessionId, memberId]
+  );
+  if (existing.length > 0) throw { status: 400, message: "You have already joined this session" };
+
+  // Check capacity
+  const [countRows] = await pool.query(
+    `SELECT COUNT(*) AS count FROM unified_bookings WHERE sessionId = ? AND bookingStatus != 'Cancelled'`,
+    [sessionId]
+  );
+  const currentCount = countRows[0].count;
+  if (currentCount >= (session.capacity || 20)) {
+    throw { status: 400, message: "Session is full" };
+  }
+
+  // Join the session
+  await pool.query(
+    `INSERT INTO unified_bookings 
+     (memberId, trainerId, sessionId, date, startTime, endTime, bookingType, bookingStatus, paymentStatus, branchId)
+     VALUES (?, ?, ?, ?, ?, ?, 'GROUP', 'Booked', 'Pending', ?)`,
+    [memberId, session.trainerId, sessionId, session.date, session.time, null, session.branchId || null]
+  );
+
+  return { message: "Successfully joined session" };
+};
+
+// ➤ Get members joined in a session
+export const getSessionMembersService = async (sessionId) => {
+  const [members] = await pool.query(
+    `SELECT 
+      m.id, m.fullName, m.phone, m.email, ub.bookingStatus, ub.createdAt
+     FROM unified_bookings ub
+     JOIN member m ON ub.memberId = m.id
+     WHERE ub.sessionId = ? AND ub.bookingStatus != 'Cancelled'
+     ORDER BY ub.createdAt DESC`,
+    [sessionId]
+  );
+  return members;
+};
+

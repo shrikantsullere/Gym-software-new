@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const adminId = GetAdminId();
   const memberGrowthChartRef = useRef(null);
   const revenueChartRef = useRef(null);
+  const profitChartRef = useRef(null);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!dashboardData) return;
 
-    let memberChart, revenueChart;
+    let memberChart, revenueChart, profitChart;
 
     if (memberGrowthChartRef.current) {
       memberChart = echarts.init(memberGrowthChartRef.current);
@@ -79,12 +80,16 @@ const AdminDashboard = () => {
     if (revenueChartRef.current) {
       revenueChart = echarts.init(revenueChartRef.current);
     }
+    if (profitChartRef.current) {
+      profitChart = echarts.init(profitChartRef.current);
+    }
     
     setChartInitialized(true);
 
     const handleResize = () => {
       if (memberChart) memberChart.resize();
       if (revenueChart) revenueChart.resize();
+      if (profitChart) profitChart.resize();
     };
     
     window.addEventListener("resize", handleResize);
@@ -93,6 +98,7 @@ const AdminDashboard = () => {
       window.removeEventListener("resize", handleResize);
       if (memberChart) memberChart.dispose();
       if (revenueChart) revenueChart.dispose();
+      if (profitChart) profitChart.dispose();
       setChartInitialized(false);
     };
   }, [dashboardData]);
@@ -214,6 +220,65 @@ const AdminDashboard = () => {
         revenueChart.setOption(revenueOption);
       }
     }
+
+    if (profitChartRef.current) {
+      const profitChart = echarts.getInstanceByDom(profitChartRef.current);
+      if (profitChart) {
+        const profitData = generateProfitData(dashboardData);
+        const profitOption = {
+          animation: false,
+          grid: { top: 20, right: 20, bottom: 40, left: 50 },
+          xAxis: {
+            type: "category",
+            data: profitData.months,
+            axisLine: { show: true, lineStyle: { color: "#E5E7EB" } },
+            axisTick: { show: true, lineStyle: { color: "#E5E7EB" } },
+            axisLabel: { color: "#6B7280", fontSize: 12 },
+          },
+          yAxis: {
+            type: "value",
+            axisLine: { show: true, lineStyle: { color: "#E5E7EB" } },
+            axisTick: { show: true, lineStyle: { color: "#E5E7EB" } },
+            axisLabel: { 
+              color: "#6B7280", 
+              fontSize: 12,
+              formatter: (value) => {
+                if (value >= 1000 || value <= -1000) {
+                  return '₹' + (value / 1000) + 'k';
+                }
+                return '₹' + value;
+              }
+            },
+            splitLine: { lineStyle: { color: "#F3F4F6" } },
+          },
+          series: [
+            {
+              data: profitData.values,
+              type: "line",
+              smooth: true,
+              itemStyle: { color: "#6366f1" },
+              lineStyle: { width: 3, color: "#6366f1" },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: "rgba(99, 102, 241, 0.4)" },
+                  { offset: 1, color: "rgba(99, 102, 241, 0.05)" }
+                ])
+              }
+            },
+          ],
+          tooltip: {
+            trigger: "axis",
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            borderColor: "#E5E7EB",
+            textStyle: { color: "#1F2937" },
+            formatter: (params) => {
+              return `${params[0].name}<br/>Net Profit: ₹${params[0].value}`;
+            },
+          },
+        };
+        profitChart.setOption(profitOption);
+      }
+    }
   }, [chartInitialized, dashboardData]);
 
   const generateMemberGrowthData = (data) => {
@@ -240,6 +305,20 @@ const AdminDashboard = () => {
 
     const months = data.revenueGrowth.map((item) => item.month);
     const values = data.revenueGrowth.map((item) => item.totalRevenue || 0);
+
+    return { months, values };
+  };
+
+  const generateProfitData = (data) => {
+    if (!data || !data.profitGrowth || data.profitGrowth.length === 0) {
+      return {
+        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        values: [0, 0, 0, 0, 0, 0],
+      };
+    }
+
+    const months = data.profitGrowth.map((item) => item.month);
+    const values = data.profitGrowth.map((item) => item.totalProfit || 0);
 
     return { months, values };
   };
@@ -539,6 +618,20 @@ const AdminDashboard = () => {
               </div>
               <div className="card-body">
                 <div ref={revenueChartRef} style={{ height: "300px", width: "100%" }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row g-3 mb-4">
+          {/* Net Profit Chart */}
+          <div className="col-12">
+            <div className="card shadow-sm h-100" data-testid="profit-growth-chart">
+              <div className="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h3 className="h5 fw-semibold mb-0">Net Profit Chart (Revenue - Expenses)</h3>
+              </div>
+              <div className="card-body">
+                <div ref={profitChartRef} style={{ height: "300px", width: "100%" }}></div>
               </div>
             </div>
           </div>

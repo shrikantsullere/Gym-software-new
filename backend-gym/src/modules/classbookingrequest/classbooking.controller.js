@@ -4,6 +4,7 @@
 -------------------------------------------------------- */
 import { pool } from "../../config/db.js";
 import bcrypt from "bcryptjs";
+import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 
 const generate6DigitPassword = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -1481,6 +1482,24 @@ export const createUnifiedBooking = async (req, res) => {
         branchId
       ]
     );
+
+    try {
+      const [mRows] = await pool.query("SELECT id, fullName, email, phone FROM member WHERE id = ?", [memberId]);
+      if (mRows.length > 0) {
+        const member = mRows[0];
+        const msg = `Hi ${member.fullName},\n\nYour ${bookingType} booking on ${date} at ${startTime} has been successfully confirmed.`;
+        dispatchNotification({
+          category: "templates",
+          toEmail: member.email,
+          toPhone: member.phone,
+          memberId: member.id,
+          subject: "Class/Session Booking Confirmed",
+          message: msg
+        }).catch(err => console.error("Class Booking notification err:", err));
+      }
+    } catch (err) {
+      console.error("Failed to fetch member for class booking notification:", err);
+    }
 
     res.json({
       success: true,

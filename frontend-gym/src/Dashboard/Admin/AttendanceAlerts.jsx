@@ -289,7 +289,7 @@ const AttendanceAlerts = () => {
             <div className="card-body p-4">
               <h6 className="text-muted mb-2 fw-semibold text-uppercase">Moderate Risk (Blue Badge)</h6>
               <h3 className="fw-bold text-dark mb-0">{members.filter(m => m.badge === 'Blue').length} Members</h3>
-              <p className="text-info small mt-2 mb-0">75% - 90% attendance or absent &gt; 3 days</p>
+              <p className="text-info small mt-2 mb-0">90% - 100% attendance or absent &gt; 3 days</p>
             </div>
           </div>
         </div>

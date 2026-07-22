@@ -3,7 +3,10 @@ import {
   listSessionsService,
   updateSessionService,
   updateSessionStatusService,
-  deleteSessionService
+  deleteSessionService,
+  getMemberSessionsService,
+  joinSessionService,
+  getSessionMembersService
 } from "./session.service.js";
 
 // ➤ Create

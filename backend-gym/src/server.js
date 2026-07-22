@@ -27,6 +27,20 @@ initTrialCronJobs();
     }
   }
 
+  try {
+    await pool.query(`ALTER TABLE member 
+      ADD COLUMN trainerId INT DEFAULT NULL,
+      ADD COLUMN trainerType VARCHAR(255) DEFAULT NULL;
+    `);
+    console.log("Trainer columns added to member table successfully.");
+  } catch (e) {
+    if (e.code === 'ER_DUP_FIELDNAME') {
+      console.log("Trainer columns already exist in member table.");
+    } else {
+      console.error("Failed to add trainer columns to member table:", e.message);
+    }
+  }
+
   // ─── Ensure equipment tables exist (safe: IF NOT EXISTS) ──────────────────
   try {
     await pool.query(`

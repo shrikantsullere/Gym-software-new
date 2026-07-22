@@ -418,6 +418,18 @@ const handleSubmit = async (e) => {
                       onChange={handleInputChange}
                     />
                   </div>
+                  <div className="col-md-6">
+                    <label htmlFor="phone" className="form-label">Mobile Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="phone"
+                      name="phone"
+                      value={settingsData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Enter mobile number"
+                    />
+                  </div>
                   <div className="col-12">
                     <label htmlFor="gymAddress" className="form-label">Business Address</label>
                     <textarea

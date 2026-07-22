@@ -146,7 +146,7 @@ router.get("/getptDetailsByAdminId/:adminId", getPTBookingsByAdminId);
 import { getBookingDetails } from "./classbooking.controller.js";
 import { verifyToken } from "../../middlewares/auth.js";
 
-router.get("/admin-details/:adminId", verifyToken(["Superadmin", "Admin", "Staff"]), getBookingDetails);
-router.get("/admin-details/:adminId/:trainerId", verifyToken(["Superadmin", "Admin", "Staff"]), getBookingDetails);
+router.get("/admin-details/:adminId", verifyToken(["Superadmin", "Admin", "Staff", "PersonalTrainer", "GeneralTrainer"]), getBookingDetails);
+router.get("/admin-details/:adminId/:trainerId", verifyToken(["Superadmin", "Admin", "Staff", "PersonalTrainer", "GeneralTrainer"]), getBookingDetails);
 
 export default router;

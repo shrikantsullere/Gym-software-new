@@ -14,7 +14,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../../Api/axiosInstance";
 import BaseUrl from "../../../Api/BaseUrl";
 import GetAdminId from "../../../Api/GetAdminId";
-import CustomTimePicker from "../../Components/CustomTimePicker";
+import CustomTimePicker from "../../../Components/CustomTimePicker";
 import BookingDetailsList from "./BookingDetailsList";
 
 const SessionBookingPage = () => {

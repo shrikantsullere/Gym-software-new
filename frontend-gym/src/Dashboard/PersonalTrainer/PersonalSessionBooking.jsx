@@ -13,6 +13,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../Api/axiosInstance";
 import BaseUrl from "../../Api/BaseUrl";
+import BookingDetailsList from "../Admin/Bookings/BookingDetailsList";
 
 const PersonalSessionBooking = () => {
   const [sessions, setSessions] = useState([]);
@@ -620,6 +621,12 @@ const PersonalSessionBooking = () => {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      {/* Embedded Booking Details Section */}
+      <div className="mt-5">
+        <hr className="my-4" />
+        <BookingDetailsList type="sessions" />
+      </div>
     </div>
   );
 };

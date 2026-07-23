@@ -192,7 +192,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Workout Builder", icon: faDumbbell, path: "/generaltrainer/workout-builder" },
       { name: "Health & BMI Log", icon: faHeartbeat, path: "/generaltrainer/health-log" },
       { name: "Classes Schedule", icon: faCalendar, path: "/generaltrainer/classesschedule" },
-      { name: "Bookings", icon: faCalendar, path: "/generaltrainer/bookings" },
+      // { name: "Bookings", icon: faCalendar, path: "/generaltrainer/bookings" },
       { name: "Shift Management", icon: faClock, path: "/GeneralTrainer/shift-managment" },
       { name: "Attendance", icon: faClipboardCheck, path: "/generaltrainer/attendance" },
       { name: "QR Check-in", icon: faQrcode, path: "/generaltrainer/qrcheckin" },

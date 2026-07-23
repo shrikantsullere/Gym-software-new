@@ -178,12 +178,13 @@ export const deleteAttendanceRecord = async (req, res) => {
 export const getDashboardData = async (req, res) => {
   try {
     const adminId = req.query.adminId || req.params.adminId;
+    const attendancePeriod = req.query.attendancePeriod || req.query.period || "7days";
 
     if (!adminId) {
       return res.status(400).json({ message: "adminId is required" });
     }
 
-    const dashboardData = await getDashboardDataService(adminId);
+    const dashboardData = await getDashboardDataService(adminId, attendancePeriod);
 
     res.status(200).json(dashboardData);
   } catch (error) {

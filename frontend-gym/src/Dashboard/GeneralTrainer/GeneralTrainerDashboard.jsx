@@ -29,6 +29,7 @@ const GeneralTrainerDashboard = () => {
     classesThisWeek: { total: 0, completed: 0 },
     dailyClassSchedule: []
   });
+  const [attendancePeriod, setAttendancePeriod] = useState("7days");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -50,11 +51,11 @@ const GeneralTrainerDashboard = () => {
   const adminId = user?.adminId || 90;
   const fullName = user?.fullName || null;
 
-  const fetchDashboardData = async (showLoadingState = true) => {
+  const fetchDashboardData = async (showLoadingState = true, period = attendancePeriod) => {
     try {
       if (showLoadingState) setLoading(true);
       // Using axios instead of fetch
-      const response = await axiosInstance.get(`generaltrainer/dashboard?adminId=${adminId}`);
+      const response = await axiosInstance.get(`generaltrainer/dashboard?adminId=${adminId}&attendancePeriod=${period}`);
       
       // Process the response data to convert statistics to English
       const data = response.data;
@@ -89,10 +90,10 @@ const GeneralTrainerDashboard = () => {
     }
   };
 
-  // Fetch data on mount
+  // Fetch data on mount & when attendancePeriod changes
   useEffect(() => {
-    fetchDashboardData(true);
-  }, [adminId]);
+    fetchDashboardData(true, attendancePeriod);
+  }, [adminId, attendancePeriod]);
 
   // Set up socket listener for real-time updates
   useEffect(() => {
@@ -283,11 +284,17 @@ const GeneralTrainerDashboard = () => {
           <div className="col-12 mb-4 mb-lg-0">
             <div className="bg-white rounded shadow-sm p-3 p-md-4 border">
               <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-                <h3 className="h5 h4-md fw-semibold text-dark mb-2 mb-md-0">Weekly Attendance Trend</h3>
-                <select className="form-select form-select-sm w-auto">
-                  <option>Last 7 Days</option>
-                  <option>Last 30 Days</option>
-                  <option>Last 3 Months</option>
+                <h3 className="h5 h4-md fw-semibold text-dark mb-2 mb-md-0">
+                  {attendancePeriod === '30days' ? '30 Days Attendance Trend' : attendancePeriod === '3months' ? '3 Months Attendance Trend' : 'Weekly Attendance Trend'}
+                </h3>
+                <select 
+                  className="form-select form-select-sm w-auto"
+                  value={attendancePeriod}
+                  onChange={(e) => setAttendancePeriod(e.target.value)}
+                >
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="3months">Last 3 Months</option>
                 </select>
               </div>
               <div className="overflow-x-auto">

@@ -1,343 +1,103 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "./CustomDatePicker.css";
 
 const CustomDatePicker = ({
   value,
   onChange,
   label,
   required = false,
-  placeholder = "Select Date",
+  placeholder = "DD/MM/YYYY",
   minYear = 1940,
   maxYear = 2035,
   className = "",
   disabled = false
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState("days"); // 'days' | 'years'
+  const [selectedDate, setSelectedDate] = useState(null);
 
-  // Parse current selected date (YYYY-MM-DD format)
-  const parseDate = (val) => {
-    if (!val) return new Date();
-    const parts = String(val).split("T")[0].split("-");
-    if (parts.length === 3) {
-      const y = parseInt(parts[0], 10);
-      const m = parseInt(parts[1], 10) - 1;
-      const d = parseInt(parts[2], 10);
-      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-        return new Date(y, m, d);
-      }
-    }
-    const parsed = new Date(val);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
-  };
-
-  const selectedDate = value ? parseDate(value) : null;
-
-  // Viewing state (Month & Year)
-  const [currentYear, setCurrentYear] = useState(
-    selectedDate ? selectedDate.getFullYear() : new Date().getFullYear()
-  );
-  const [currentMonth, setCurrentMonth] = useState(
-    selectedDate ? selectedDate.getMonth() : new Date().getMonth()
-  );
-
-  const containerRef = useRef(null);
-
+  // Parse incoming YYYY-MM-DD string value
   useEffect(() => {
     if (value) {
-      const d = parseDate(value);
-      setCurrentYear(d.getFullYear());
-      setCurrentMonth(d.getMonth());
+      const datePart = String(value).split("T")[0]; // handle ISO strings or YYYY-MM-DD
+      const parts = datePart.split("-");
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const parsedDate = new Date(y, m, d);
+        if (!isNaN(parsedDate.getTime())) {
+          setSelectedDate(parsedDate);
+          return;
+        }
+      }
+      // Fallback
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) {
+        setSelectedDate(parsed);
+      } else {
+        setSelectedDate(null);
+      }
+    } else {
+      setSelectedDate(null);
     }
   }, [value]);
 
-  // Close popup when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-        setView("days");
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const daysOfWeek = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-
-  // Generate Year Array (minYear to maxYear, descending)
-  const years = [];
-  for (let y = maxYear; y >= minYear; y--) {
-    years.push(y);
-  }
-
-  // Days in current month
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  // First day index of month (0 = Sunday)
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const handleDateClick = (day) => {
-    const mStr = String(currentMonth + 1).padStart(2, "0");
-    const dStr = String(day).padStart(2, "0");
-    const formatted = `${currentYear}-${mStr}-${dStr}`;
-    onChange(formatted);
-    setIsOpen(false);
-    setView("days");
-  };
-
-  const handleYearSelect = (y) => {
-    setCurrentYear(y);
-    setView("days");
-  };
-
-  const prevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(prev => prev - 1);
+  const handleChange = (date) => {
+    setSelectedDate(date);
+    if (date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      const formatted = `${y}-${m}-${d}`;
+      onChange(formatted);
     } else {
-      setCurrentMonth(prev => prev - 1);
+      onChange("");
     }
   };
-
-  const nextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(prev => prev + 1);
-    } else {
-      setCurrentMonth(prev => prev + 1);
-    }
-  };
-
-  // Format value for display (DD/MM/YYYY)
-  const displayValue = value
-    ? (() => {
-        const d = parseDate(value);
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const yr = d.getFullYear();
-        return `${day}/${month}/${yr}`;
-      })()
-    : "";
-
-  const daysInMonthCount = getDaysInMonth(currentYear, currentMonth);
-  const firstDayIndex = getFirstDayOfMonth(currentYear, currentMonth);
 
   return (
-    <div className="position-relative w-100" ref={containerRef}>
+    <div className="w-100 custom-datepicker-container">
       {label && (
         <label className="form-label fw-medium mb-1">
           {label} {required && <span className="text-danger">*</span>}
         </label>
       )}
-
-      {/* Input Group */}
-      <div className="input-group">
-        <input
-          type="text"
-          className={`form-control ${className}`}
-          placeholder={placeholder || "DD/MM/YYYY"}
-          value={displayValue}
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          readOnly
+      <div className="position-relative">
+        <DatePicker
+          selected={selectedDate}
+          onChange={handleChange}
           disabled={disabled}
-          style={{ cursor: disabled ? "not-allowed" : "pointer", backgroundColor: "#fff" }}
+          placeholderText={placeholder}
+          dateFormat="dd/MM/yyyy"
+          className={`form-control bg-white ${className}`}
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          minDate={new Date(minYear, 0, 1)}
+          maxDate={new Date(maxYear, 11, 31)}
+          isClearable={!required && !disabled}
+          wrapperClassName="w-100"
         />
-        <button
-          type="button"
-          className="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          disabled={disabled}
-        >
-          <Calendar size={18} />
-        </button>
-      </div>
-
-      {/* Calendar Popup */}
-      {isOpen && (
-        <div
-          className="card border-0 shadow-lg position-absolute mt-1"
-          style={{
-            zIndex: 1060,
-            top: "100%",
-            left: 0,
-            width: "300px",
-            borderRadius: "12px",
-            overflow: "hidden",
-            backgroundColor: "#ffffff",
+        {/* Calendar Icon for visual enhancement */}
+        <span 
+          className="position-absolute" 
+          style={{ 
+            right: '12px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            pointerEvents: 'none',
+            color: '#6c757d'
           }}
         >
-          {/* Header */}
-          <div className="card-header bg-primary text-white p-2 d-flex align-items-center justify-content-between">
-            <button
-              type="button"
-              className="btn btn-sm text-white p-1"
-              onClick={prevMonth}
-              title="Previous Month"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            <div className="d-flex align-items-center gap-1">
-              {/* Month Dropdown */}
-              <select
-                className="form-select form-select-sm bg-white text-dark border-0 fw-bold"
-                style={{ cursor: "pointer", width: "auto", fontSize: "13px", paddingRight: "20px" }}
-                value={currentMonth}
-                onChange={(e) => setCurrentMonth(parseInt(e.target.value, 10))}
-              >
-                {monthNames.map((m, idx) => (
-                  <option key={m} value={idx}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-
-              {/* Direct Select Year Dropdown (Option 1) */}
-              <select
-                className="form-select form-select-sm bg-white text-dark border-0 fw-bold"
-                style={{ cursor: "pointer", width: "auto", fontSize: "13px", paddingRight: "20px" }}
-                value={currentYear}
-                onChange={(e) => setCurrentYear(parseInt(e.target.value, 10))}
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="button"
-              className="btn btn-sm text-white p-1"
-              onClick={nextMonth}
-              title="Next Month"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="card-body p-2">
-            {/* View Mode Toggle Bar */}
-            <div className="d-flex justify-content-center gap-2 mb-2">
-              <button
-                type="button"
-                className={`btn btn-xs ${view === "days" ? "btn-primary" : "btn-light text-dark"}`}
-                style={{ fontSize: "12px", padding: "2px 10px", borderRadius: "15px" }}
-                onClick={() => setView("days")}
-              >
-                Calendar
-              </button>
-              <button
-                type="button"
-                className={`btn btn-xs ${view === "years" ? "btn-primary" : "btn-light text-dark"}`}
-                style={{ fontSize: "12px", padding: "2px 10px", borderRadius: "15px" }}
-                onClick={() => setView("years")}
-              >
-                Year Grid
-              </button>
-            </div>
-
-            {/* YEAR GRID VIEW (Option 2) */}
-            {view === "years" && (
-              <div
-                style={{
-                  maxHeight: "180px",
-                  overflowY: "auto",
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "6px",
-                  padding: "4px",
-                }}
-              >
-                {years.map((y) => (
-                  <button
-                    key={y}
-                    type="button"
-                    className={`btn btn-sm ${
-                      y === currentYear ? "btn-primary" : "btn-outline-secondary"
-                    }`}
-                    style={{ fontSize: "13px", padding: "6px 0", borderRadius: "6px" }}
-                    onClick={() => handleYearSelect(y)}
-                  >
-                    {y}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* DAYS CALENDAR VIEW */}
-            {view === "days" && (
-              <>
-                {/* Day Labels */}
-                <div className="d-grid text-center text-muted fw-semibold mb-1" style={{ gridTemplateColumns: "repeat(7, 1fr)", fontSize: "12px" }}>
-                  {daysOfWeek.map((day) => (
-                    <div key={day} className="py-1">{day}</div>
-                  ))}
-                </div>
-
-                {/* Days Grid */}
-                <div className="d-grid text-center" style={{ gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
-                  {/* Empty slots for first week */}
-                  {Array.from({ length: firstDayIndex }).map((_, i) => (
-                    <div key={`empty-${i}`} />
-                  ))}
-
-                  {/* Day Buttons */}
-                  {Array.from({ length: daysInMonthCount }).map((_, i) => {
-                    const day = i + 1;
-                    const isSelected =
-                      selectedDate &&
-                      selectedDate.getFullYear() === currentYear &&
-                      selectedDate.getMonth() === currentMonth &&
-                      selectedDate.getDate() === day;
-
-                    const isToday =
-                      new Date().getFullYear() === currentYear &&
-                      new Date().getMonth() === currentMonth &&
-                      new Date().getDate() === day;
-
-                    return (
-                      <button
-                        key={day}
-                        type="button"
-                        className={`btn btn-sm p-0 rounded-circle ${
-                          isSelected
-                            ? "btn-primary text-white"
-                            : isToday
-                            ? "btn-outline-primary fw-bold"
-                            : "btn-light text-dark"
-                        }`}
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          lineHeight: "32px",
-                          margin: "auto",
-                          fontSize: "13px",
-                        }}
-                        onClick={() => handleDateClick(day)}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </span>
+      </div>
     </div>
   );
 };

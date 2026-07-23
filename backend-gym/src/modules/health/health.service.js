@@ -98,9 +98,9 @@ export const getMemberHealthLogsService = async (memberIdParam) => {
             m.fullName, m.phone
      FROM member_health_log h
      JOIN member m ON h.memberId = m.id
-     WHERE h.memberId = ? OR h.memberId = ?
+     WHERE h.memberId = ? OR h.memberId = ? OR m.userId = ? OR m.id = ?
      ORDER BY h.recordedAt DESC`,
-    [realMemberId, memberId]
+    [realMemberId, memberId, memberId, memberId]
   );
 
   // 3. Fetch from member_assessments
@@ -110,9 +110,9 @@ export const getMemberHealthLogsService = async (memberIdParam) => {
             m.fullName, m.phone
      FROM member_assessments ma
      JOIN member m ON ma.memberId = m.id
-     WHERE ma.memberId = ? OR ma.memberId = ?
+     WHERE ma.memberId = ? OR ma.memberId = ? OR m.userId = ? OR m.id = ?
      ORDER BY ma.id DESC`,
-    [realMemberId, memberId]
+    [realMemberId, memberId, memberId, memberId]
   );
 
   const formatBmiStatus = (bmiVal) => {
@@ -209,10 +209,29 @@ export const getHealthLogsByTrainerIdService = async (trainerId) => {
 /**
  * Update an existing health log
  */
-export const updateHealthLogService = async (id, data) => {
+export const updateHealthLogService = async (idParam, data) => {
   const { weight, height, notes, dietChart } = data;
+  const isAssessment = String(idParam).startsWith('a_');
+  const numericId = parseInt(String(idParam).replace(/^h_|^a_/, ''), 10);
 
-  const [[existing]] = await pool.query("SELECT * FROM member_health_log WHERE id = ?", [id]);
+  if (isAssessment) {
+    const [[existing]] = await pool.query("SELECT * FROM member_assessments WHERE id = ?", [numericId]);
+    if (!existing) {
+      throw { status: 404, message: "Health log not found" };
+    }
+    const newWeight = weight !== undefined ? weight : existing.weight_kg;
+    const newHeight = height !== undefined ? height : existing.height_cm;
+    const { bmi } = calculateBMI(newWeight, newHeight);
+
+    await pool.query(
+      `UPDATE member_assessments SET weight_kg = ?, height_cm = ?, bmi = ? WHERE id = ?`,
+      [newWeight, newHeight, bmi, numericId]
+    );
+    const [[updatedLog]] = await pool.query("SELECT * FROM member_assessments WHERE id = ?", [numericId]);
+    return updatedLog;
+  }
+
+  const [[existing]] = await pool.query("SELECT * FROM member_health_log WHERE id = ?", [numericId]);
   if (!existing) {
     throw { status: 404, message: "Health log not found" };
   }
@@ -231,18 +250,22 @@ export const updateHealthLogService = async (id, data) => {
       notes = COALESCE(?, notes),
       dietChart = COALESCE(?, dietChart)
      WHERE id = ?`,
-    [newWeight, newHeight, bmi, bmiStatus, notes !== undefined ? notes : null, dietChart !== undefined ? dietChart : null, id]
+    [newWeight, newHeight, bmi, bmiStatus, notes !== undefined ? notes : null, dietChart !== undefined ? dietChart : null, numericId]
   );
 
-  const [[updatedLog]] = await pool.query("SELECT * FROM member_health_log WHERE id = ?", [id]);
+  const [[updatedLog]] = await pool.query("SELECT * FROM member_health_log WHERE id = ?", [numericId]);
   return updatedLog;
 };
 
 /**
  * Delete a health log
  */
-export const deleteHealthLogService = async (id) => {
-  const [result] = await pool.query("DELETE FROM member_health_log WHERE id = ?", [id]);
+export const deleteHealthLogService = async (idParam) => {
+  const isAssessment = String(idParam).startsWith('a_');
+  const numericId = parseInt(String(idParam).replace(/^h_|^a_/, ''), 10);
+
+  const table = isAssessment ? "member_assessments" : "member_health_log";
+  const [result] = await pool.query(`DELETE FROM ${table} WHERE id = ?`, [numericId]);
   if (result.affectedRows === 0) {
     throw { status: 404, message: "Health log not found" };
   }

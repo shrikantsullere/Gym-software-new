@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axiosInstance from '../../Api/axiosInstance';
 import AnnouncementBanner from '../../Components/AnnouncementBanner';
+import { useSocket } from '../../Context/SocketContext';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 const PersonalTrainerDashboard = () => {
+  const socket = useSocket();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notifications, setNotifications] = useState(3);
@@ -40,6 +42,55 @@ const PersonalTrainerDashboard = () => {
   const user = getUserFromStorage();
   const userId = user?.id || null;
 
+  const fetchDashboardData = async (showLoadingState = true) => {
+    try {
+      if (showLoadingState) setLoading(true);
+      const response = await axiosInstance.get(`personal-trainer-dashboard/trainer/${userId}`);
+      if (response.data.success && response.data.data) {
+        // Process the API response to match frontend expectations
+        const apiData = response.data.data;
+        
+        // Transform earnings data
+        const transformedEarnings = apiData.earningsOverview.map(item => {
+          // Extract day from date
+          const dateObj = new Date(item.date);
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+          
+          return {
+            day: dayName,
+            amount: item.total || 0
+          };
+        });
+        
+        // Transform recent activities
+        const transformedActivities = apiData.recentActivities.map(item => ({
+          id: item.id,
+          memberId: item.memberId,
+          name: item.memberName,
+          action: `${item.status} - ${item.notes}`,
+          time: new Date(item.time).toLocaleString(),
+          image: `https://ui-avatars.com/api/?name=${item.memberName}&background=random`
+        }));
+        
+        // Set the transformed data
+        setDashboardData({
+          totalMembers: apiData.totalMembers || 0,
+          todaysCheckIns: apiData.todaysCheckIns || 0,
+          earningsOverview: transformedEarnings,
+          sessionsOverview: apiData.sessionsOverview || { completed: 0, upcoming: 0, cancelled: 0 },
+          recentActivities: transformedActivities,
+        });
+      } else {
+        setError('Failed to load dashboard data');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard:', err);
+      setError('An error occurred while fetching data');
+    } finally {
+      if (showLoadingState) setLoading(false);
+    }
+  };
+
   // Fetch data on component mount
   useEffect(() => {
     if (!userId) {
@@ -47,57 +98,25 @@ const PersonalTrainerDashboard = () => {
       setLoading(false);
       return;
     }
+    fetchDashboardData(true);
+  }, [userId]);
 
-    const fetchDashboardData = async () => {
-      try {
-        const response = await axiosInstance.get(`personal-trainer-dashboard/trainer/${userId}`);
-        if (response.data.success && response.data.data) {
-          // Process the API response to match frontend expectations
-          const apiData = response.data.data;
-          
-          // Transform earnings data
-          const transformedEarnings = apiData.earningsOverview.map(item => {
-            // Extract day from date
-            const dateObj = new Date(item.date);
-            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-            
-            return {
-              day: dayName,
-              amount: item.total || 0
-            };
-          });
-          
-          // Transform recent activities
-          const transformedActivities = apiData.recentActivities.map(item => ({
-            id: item.id,
-            memberId: item.memberId,
-            name: item.memberName,
-            action: `${item.status} - ${item.notes}`,
-            time: new Date(item.time).toLocaleString(),
-            image: `https://ui-avatars.com/api/?name=${item.memberName}&background=random`
-          }));
-          
-          // Set the transformed data
-          setDashboardData({
-            totalMembers: apiData.totalMembers || 0,
-            todaysCheckIns: apiData.todaysCheckIns || 0,
-            earningsOverview: transformedEarnings,
-            sessionsOverview: apiData.sessionsOverview || { completed: 0, upcoming: 0, cancelled: 0 },
-            recentActivities: transformedActivities,
-          });
-        } else {
-          setError('Failed to load dashboard data');
-        }
-      } catch (err) {
-        console.error('Error fetching dashboard:', err);
-        setError('An error occurred while fetching data');
-      } finally {
-        setLoading(false);
-      }
+  // Set up socket listener for real-time updates
+  useEffect(() => {
+    if (!socket || !userId) return;
+
+    const handleCheckinUpdate = (payload) => {
+      console.log("⚡ Real-time check-in/out update received on Personal Trainer Dashboard:", payload);
+      // Silent refresh
+      fetchDashboardData(false);
     };
 
-    fetchDashboardData();
-  }, [userId]);
+    socket.on("checkin_update", handleCheckinUpdate);
+
+    return () => {
+      socket.off("checkin_update", handleCheckinUpdate);
+    };
+  }, [socket, userId]);
 
   // Format earnings data for chart
   const earningsData = {

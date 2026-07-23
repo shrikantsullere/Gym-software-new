@@ -331,10 +331,24 @@ const MemberLeaderboard = () => {
                     key={member.member_id || member.memberId || member.rank}
                     className={isMe ? 'bg-primary bg-opacity-10' : ''}
                   >
-                    <td className="px-3 py-3 fw-bold text-dark">
-                      <span className={`badge rounded-circle p-2 ${member.rank === 1 ? 'bg-warning text-dark' : member.rank === 2 ? 'bg-secondary text-white' : member.rank === 3 ? 'bg-amber text-white' : 'bg-light text-dark'}`} style={{ width: '28px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {member.rank}
-                      </span>
+                    <td className="px-3 py-3 fw-bold text-dark text-center">
+                      {member.rank === 1 ? (
+                        <span className="badge rounded-circle shadow-sm fw-bold" style={{ width: '34px', height: '34px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)', color: '#78350F', fontSize: '14px', border: '2px solid #D97706', boxShadow: '0 2px 6px rgba(245, 158, 11, 0.4)' }}>
+                          🥇 1
+                        </span>
+                      ) : member.rank === 2 ? (
+                        <span className="badge rounded-circle shadow-sm fw-bold text-white" style={{ width: '34px', height: '34px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #9CA3AF 0%, #4B5563 100%)', color: '#FFFFFF', fontSize: '14px', border: '2px solid #374151', boxShadow: '0 2px 6px rgba(75, 85, 99, 0.4)' }}>
+                          🥈 2
+                        </span>
+                      ) : member.rank === 3 ? (
+                        <span className="badge rounded-circle shadow-sm fw-bold text-white" style={{ width: '34px', height: '34px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #D97706 0%, #78350F 100%)', color: '#FFFFFF', fontSize: '14px', border: '2px solid #92400E', boxShadow: '0 2px 6px rgba(146, 64, 14, 0.4)' }}>
+                          🥉 3
+                        </span>
+                      ) : (
+                        <span className="badge rounded-circle shadow-sm fw-bold" style={{ width: '30px', height: '30px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#F1F5F9', color: '#0F172A', fontSize: '13px', border: '1px solid #CBD5E1' }}>
+                          {member.rank}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3">
                       <div className="d-flex align-items-center">

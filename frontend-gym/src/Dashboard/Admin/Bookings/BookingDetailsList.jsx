@@ -27,13 +27,14 @@ const BookingDetailsList = ({ type }) => {
       }
       
       const response = await axiosInstance.get(`${endpoint}?type=${type}`);
+      console.log("FETCH BOOKINGS RESPONSE:", response.data);
       if (response.data.success) {
         setBookings(response.data.data);
       } else {
         throw new Error(response.data.message || 'Failed to fetch bookings');
       }
     } catch (err) {
-      console.error(err);
+      console.error("FETCH BOOKINGS ERROR:", err);
       setError('Error loading booking details.');
     } finally {
       setLoading(false);

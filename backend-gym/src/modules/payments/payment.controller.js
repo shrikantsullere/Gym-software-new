@@ -8,6 +8,8 @@ import {
 
 import { assignPlansToMember } from "../memberPlanAssignment/memberPlanAssignment.service.js";
 
+import { getIO } from "../../config/socket.js";
+
 export const recordPayment = async (req, res, next) => {
   try {
     const payload = {
@@ -37,6 +39,18 @@ export const recordPayment = async (req, res, next) => {
       });
     } catch (assignErr) {
       console.warn("Notice: Plan assignment warning:", assignErr.message);
+    }
+
+    // ⚡ Realtime Socket Emission for Instant Dashboard & Revenue Sync
+    try {
+      const io = getIO();
+      if (io) {
+        io.emit("dashboardStatsUpdated", { type: "PAYMENT_COMPLETED", adminId, amount: req.body.amount });
+        io.emit("paymentCompleted", { adminId, amount: req.body.amount });
+        io.emit("revenueUpdated", { adminId, amount: req.body.amount });
+      }
+    } catch (socErr) {
+      console.warn("Socket emission notice:", socErr.message);
     }
 
     res.json({ success: true, payment: p });

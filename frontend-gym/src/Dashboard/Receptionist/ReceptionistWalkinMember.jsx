@@ -6,6 +6,7 @@ import {
   Search,
   UserPlus,
   Eye,
+  EyeOff,
   Edit,
   Trash2,
   RefreshCw,
@@ -36,6 +37,7 @@ const ReceptionistWalkinMember = () => {
   const [showRenewForm, setShowRenewForm] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [filterStatus, setFilterStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -83,7 +85,7 @@ const ReceptionistWalkinMember = () => {
     fullName: "",
     phone: "",
     email: "",
-    password: "",
+    password: "123456",
     planId: "",
     planIds: [], // NEW: Support multiple plans
     address: "",
@@ -497,7 +499,7 @@ const ReceptionistWalkinMember = () => {
           fullName: "",
           phone: "",
           email: "",
-          password: "",
+          password: "123456",
           planId: "",
           planIds: [],
           address: "",
@@ -1817,18 +1819,28 @@ const handleDownloadReceipt = async (member) => {
                       <label className="form-label">
                         Password <span className="text-danger">*</span>
                       </label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        value={newMember.password}
-                        onChange={(e) =>
-                          setNewMember({
-                            ...newMember,
-                            password: e.target.value,
-                          })
-                        }
-                        required
-                      />
+                      <div className="input-group">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className="form-control"
+                          value={newMember.password}
+                          onChange={(e) =>
+                            setNewMember({
+                              ...newMember,
+                              password: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                          onClick={() => setShowPassword(!showPassword)}
+                          title={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </div>
                     <div className="col-12 col-md-6">
                       <label className="form-label">Date of Birth</label>
@@ -2804,7 +2816,25 @@ const handleDownloadReceipt = async (member) => {
       )}
     </div>
 
-
+    <style jsx>{`
+      input[type="date"] {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        min-height: 42px !important;
+      }
+      @media (max-width: 768px) {
+        input[type="date"] {
+          width: 100% !important;
+          font-size: 16px !important;
+          padding: 8px 10px !important;
+          -webkit-appearance: none;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          padding: 4px;
+          cursor: pointer;
+        }
+      }
+    `}</style>
     </>
   );
 };

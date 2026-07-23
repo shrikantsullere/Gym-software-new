@@ -826,7 +826,14 @@ export const changeUserPassword = async (id, oldPassword, newPassword) => {
   }
 
   // 2. Compare old password
-  const match = await bcrypt.compare(oldPassword, user.password);
+  let match = false;
+  try {
+    match = await bcrypt.compare(oldPassword, user.password);
+  } catch (e) {}
+
+  if (!match && user.password === oldPassword) match = true;
+  if (!match && user.visiblePassword === oldPassword) match = true;
+
   if (!match) {
     throw { status: 400, message: "Old password is incorrect" };
   }

@@ -345,7 +345,16 @@ const ReceptionistPaymentCollection = () => {
                 style={activeTab === 'payment' ? { backgroundColor: '#218ebaff', color: 'white', borderRadius: '8px 8px 0 0' } : {}}
                 onClick={() => setActiveTab('payment')}
               >
-                <FaMoneyBillWave className="me-2" /> Payment Collection
+                <FaMoneyBillWave className="me-2" /> Payment & Invoice
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link px-4 ${activeTab === 'attendance' ? 'active' : ''}`}
+                style={activeTab === 'attendance' ? { backgroundColor: '#218ebaff', color: 'white', borderRadius: '8px 8px 0 0' } : {}}
+                onClick={() => setActiveTab('attendance')}
+              >
+                <FaCalendarAlt className="me-2" /> Member Attendance
               </button>
             </li>
             <li className="nav-item">
@@ -355,15 +364,6 @@ const ReceptionistPaymentCollection = () => {
                 onClick={() => setActiveTab('plans')}
               >
                 <FaTags className="me-2" /> Subscription Plans
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link px-4 ${activeTab === 'attendance' ? 'active' : ''}`}
-                style={activeTab === 'attendance' ? { backgroundColor: '#218ebaff', color: 'white', borderRadius: '8px 8px 0 0' } : {}}
-                onClick={() => setActiveTab('attendance')}
-              >
-                <FaCalendarAlt className="me-2" /> Daily Attendance Report
               </button>
             </li>
           </ul>

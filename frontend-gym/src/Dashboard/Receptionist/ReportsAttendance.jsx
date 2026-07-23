@@ -465,8 +465,8 @@ const ReportsAttendance = () => {
       {/* Header */}
       <div className="row mb-3 mb-md-4 align-items-center">
         <div className="col-12 col-md-8 mb-2 mb-md-0">
-          <h2 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)' }}>Staff Attendance Records</h2>
-          <p className="text-muted mb-0 d-none d-md-block">Track staff attendance via QR scan or manual entry.</p>
+          <h2 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)' }}>Renewals & Follow-ups</h2>
+          <p className="text-muted mb-0 d-none d-md-block">Manage member plan renewals, expiring memberships, and follow-ups.</p>
         </div>
         <div className="col-12 col-md-4 text-md-end">
           {/* Export Data Dropdown */}

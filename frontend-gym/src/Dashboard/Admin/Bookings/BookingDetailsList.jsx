@@ -18,8 +18,11 @@ const BookingDetailsList = ({ type }) => {
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user) throw new Error("User not found");
       
-      const adminId = user.role === 'Admin' || user.role === 'Superadmin' ? user.id : user.adminId;
-      const isTrainer = user.role !== 'Admin' && user.role !== 'Superadmin';
+      const role = user.roleName || user.role || '';
+      const isAdminOrSuper = role === 'Admin' || role === 'Superadmin' || role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'SUPERADMIN';
+      
+      const adminId = isAdminOrSuper ? user.id : user.adminId;
+      const isTrainer = !isAdminOrSuper;
       
       let endpoint = `booking/admin-details/${adminId}`;
       if (isTrainer) {
@@ -56,9 +59,13 @@ const BookingDetailsList = ({ type }) => {
     };
 
     socket.on("bookingCreated", handleRefresh);
+    socket.on("bookingUpdated", handleRefresh);
+    socket.on("bookingCancelled", handleRefresh);
 
     return () => {
       socket.off("bookingCreated", handleRefresh);
+      socket.off("bookingUpdated", handleRefresh);
+      socket.off("bookingCancelled", handleRefresh);
     };
   }, [socket, activeTab]);
 

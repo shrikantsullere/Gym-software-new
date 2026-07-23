@@ -145,6 +145,10 @@ export const listSessionsService = async ({ adminId, trainerId, search }) => {
 export const updateSessionService = async (sessionId, data) => {
   const { sessionName, trainerId, branchId, date, time, duration, description, status, capacity } = data;
 
+  const [existingRows] = await pool.query("SELECT * FROM session WHERE id = ?", [sessionId]);
+  const exists = existingRows[0];
+  if (!exists) throw { status: 404, message: "Session not found" };
+
   await pool.query(
     `UPDATE session 
      SET sessionName = ?, trainerId = ?, branchId = ?, date = ?, time = ?, duration = ?, description = ?, status = ?, capacity = ?
@@ -153,6 +157,34 @@ export const updateSessionService = async (sessionId, data) => {
   );
 
   const [updated] = await pool.query(`SELECT * FROM session WHERE id = ?`, [sessionId]);
+
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const io = getIO();
+    const bid = exists.branchId || null;
+
+    if (Number(trainerId) && Number(trainerId) !== exists.trainerId) {
+      // Trainer Changed
+      const oldTrainerMsg = `You have been removed from session: ${exists.sessionName}`;
+      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Session Assignment", oldTrainerMsg, exists.trainerId, bid]);
+      
+      const newTrainerMsg = `You have been assigned to session: ${sessionName}`;
+      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Session Assignment", newTrainerMsg, trainerId, bid]);
+      
+      if (io) {
+        emitToUser(exists.trainerId, "new_notification", { message: oldTrainerMsg });
+        emitToUser(trainerId, "new_notification", { message: newTrainerMsg });
+        io.emit("trainerAssigned", { sessionId, oldTrainerId: exists.trainerId, newTrainerId: trainerId });
+      }
+    }
+
+    if (capacity !== undefined && capacity !== exists.capacity) {
+      if (io) io.emit("capacityUpdated", { sessionId, newCapacity: capacity });
+    }
+  } catch (err) {
+    console.error("Failed to process session update notifications/sockets:", err);
+  }
+
   return updated[0];
 };
 
@@ -165,8 +197,30 @@ export const updateSessionStatusService = async (sessionId, status) => {
 
 // ➤ Delete session
 export const deleteSessionService = async (sessionId) => {
+  const [existingRows] = await pool.query("SELECT * FROM session WHERE id = ?", [sessionId]);
+  const exists = existingRows[0];
+  if (!exists) throw { status: 404, message: "Session not found" };
+
   await pool.query(`DELETE FROM pt_bookings WHERE sessionId = ?`, [sessionId]);
   await pool.query(`DELETE FROM unified_bookings WHERE sessionId = ?`, [sessionId]);
+
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const io = getIO();
+    const bid = exists.branchId || null;
+    
+    // Notify Trainer
+    const cancelMsg = `Session Cancelled: ${exists.sessionName}`;
+    await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Session Cancellation", cancelMsg, exists.trainerId, bid]);
+    
+    if (io) {
+      emitToUser(exists.trainerId, "new_notification", { message: cancelMsg });
+      io.emit("sessionCancelled", { sessionId });
+    }
+  } catch (err) {
+    console.error("Failed to process delete notifications/sockets:", err);
+  }
+
   await pool.query(`DELETE FROM session WHERE id = ?`, [sessionId]);
   return true;
 };

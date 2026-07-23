@@ -680,6 +680,34 @@ export const updateScheduleService = async (id, data) => {
     values
   );
 
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const io = getIO();
+    const branchId = exists.branchId || null;
+
+    if (data.trainerId && data.trainerId !== exists.trainerId) {
+      // Trainer Changed!
+      const oldTrainerMsg = `You have been removed from class: ${exists.className}`;
+      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Class Assignment", oldTrainerMsg, exists.trainerId, branchId]);
+      
+      const newTrainerMsg = `You have been assigned to class: ${exists.className || data.className}`;
+      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Class Assignment", newTrainerMsg, data.trainerId, branchId]);
+      
+      if (io) {
+        emitToUser(exists.trainerId, "new_notification", { message: oldTrainerMsg });
+        emitToUser(data.trainerId, "new_notification", { message: newTrainerMsg });
+        io.emit("trainerAssigned", { classId: id, oldTrainerId: exists.trainerId, newTrainerId: data.trainerId });
+      }
+    }
+    
+    if (data.capacity !== undefined && data.capacity !== exists.capacity) {
+       if (io) io.emit("capacityUpdated", { classId: id, newCapacity: data.capacity });
+    }
+
+  } catch (err) {
+    console.error("Failed to process update notifications/sockets:", err);
+  }
+
   return { ...exists, ...data };
 };
 
@@ -767,6 +795,25 @@ export const deleteScheduleService = async (id) => {
 
   // Delete bookings first
   await pool.query("DELETE FROM booking WHERE scheduleId = ?", [id]);
+  await pool.query("DELETE FROM unified_bookings WHERE classId = ?", [id]);
+
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const io = getIO();
+    const branchId = existing.branchId || null;
+    
+    // Notify Trainer
+    const cancelMsg = `Class Cancelled: ${existing.className}`;
+    await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Class Cancellation", cancelMsg, existing.trainerId, branchId]);
+    if (io) {
+      emitToUser(existing.trainerId, "new_notification", { message: cancelMsg });
+      io.emit("classCancelled", { classId: id });
+    }
+    
+    // We could notify members if we loop through unified_bookings before deleting
+  } catch (err) {
+    console.error("Failed to process delete notifications/sockets:", err);
+  }
 
   // Delete schedule
   await pool.query("DELETE FROM classschedule WHERE id = ?", [id]);

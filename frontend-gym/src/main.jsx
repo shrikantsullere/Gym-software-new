@@ -4,10 +4,13 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/profile-images.css';
+import { SocketProvider } from './Context/SocketContext';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <App />
+    <SocketProvider>
+      <App />
+    </SocketProvider>
   </BrowserRouter>
 );

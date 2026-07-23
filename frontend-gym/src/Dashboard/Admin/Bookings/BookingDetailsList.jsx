@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../Api/axiosInstance';
 import { FaDownload, FaCalendarAlt, FaClock, FaUser, FaPhone } from 'react-icons/fa';
+import { useSocket } from '../../../Context/SocketContext';
 
 const BookingDetailsList = ({ type }) => {
   const [activeTab, setActiveTab] = useState(type || 'classes');
@@ -39,9 +40,26 @@ const BookingDetailsList = ({ type }) => {
     }
   };
 
+  const socket = useSocket();
+
   useEffect(() => {
     fetchBookings(activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleRefresh = () => {
+      console.log("Socket event received in BookingDetailsList, refreshing bookings...");
+      fetchBookings(activeTab);
+    };
+
+    socket.on("bookingCreated", handleRefresh);
+
+    return () => {
+      socket.off("bookingCreated", handleRefresh);
+    };
+  }, [socket, activeTab]);
 
   const exportToCSV = () => {
     if (bookings.length === 0) return;

@@ -8,6 +8,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Download } from "lucide-react";
+import CustomDatePicker from '../../../Components/CustomDatePicker';
 
 const ManageStaff = () => {
   const adminId = GetAdminId();
@@ -973,14 +974,11 @@ const ManageStaff = () => {
                         </select>
                       </div>
                       <div className="col-12 col-md-6">
-                        <label className="form-label">Date of Birth <span className="text-danger">*</span></label>
-                        <input
-                          type="date"
-                          className="form-control rounded-3"
-                          name="dateOfBirth"
+                        <CustomDatePicker
+                          label="Date of Birth"
+                          required={true}
                           value={formData.dateOfBirth}
-                          onChange={handleInputChange}
-                          required
+                          onChange={(val) => setFormData(prev => ({ ...prev, dateOfBirth: val }))}
                         />
                       </div>
                       <div className="col-12">

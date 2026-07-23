@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye, FaEdit, FaTrashAlt } from 'react-icons/fa';
+import CustomDatePicker from '../../../Components/CustomDatePicker';
 
 const ManageMember = () => {
     const [members, setMembers] = useState([
@@ -500,8 +501,7 @@ const ManageMember = () => {
                                             </div>
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Date Of Birth *</label>
-                                            <input type="date" className="form-control rounded-3" name="dob" required />
+                                            <CustomDatePicker label="Date Of Birth" required={true} value="" onChange={() => {}} />
                                         </div>
                                         <div className="col-md-4">
                                             <label className="form-label">Group</label>

@@ -31,3 +31,34 @@
   -webkit-overflow-scrolling: touch;
   width: 100%;
 }
+
+/* =============================================
+   Mobile Responsive Date & Dropdown Selector Fix
+   ============================================= */
+input[type="date"] {
+  min-height: 42px;
+  font-size: 15px;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+select.form-select {
+  min-height: 42px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  input[type="date"] {
+    min-height: 44px;
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  
+  select.form-select {
+    min-height: 44px;
+    font-size: 13px;
+    padding-left: 6px;
+    padding-right: 20px;
+  }
+}

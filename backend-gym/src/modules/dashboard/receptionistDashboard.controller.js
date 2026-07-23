@@ -9,7 +9,8 @@ export const getReceptionistDashboard = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "adminId is required" });
     }
 
-    const data = await receptionistDashboardService(adminId, branchId);
+    const month = req.query.month || new Date().toISOString().slice(0, 7);
+    const data = await receptionistDashboardService(adminId, branchId, month);
 
     return res.status(200).json({
       success: true,

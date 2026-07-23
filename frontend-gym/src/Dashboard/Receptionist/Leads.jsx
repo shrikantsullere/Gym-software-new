@@ -16,6 +16,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Download } from "lucide-react";
+import CustomDatePicker from "../../Components/CustomDatePicker";
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
@@ -1022,8 +1023,12 @@ const Leads = () => {
                             </select>
                           </div>
                           <div className="col-md-6">
-                            <label className="form-label">Follow Up Date</label>
-                            <input type="date" className="form-control" name="followUpDate" value={formData.followUpDate} onChange={handleChange} disabled={modalType === 'view'} />
+                            <CustomDatePicker
+                              label="Follow Up Date"
+                              value={formData.followUpDate}
+                              onChange={(val) => setFormData(prev => ({ ...prev, followUpDate: val }))}
+                              disabled={modalType === 'view'}
+                            />
                           </div>
                         </div>
                         <div className="mb-3">

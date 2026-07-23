@@ -27,7 +27,7 @@ import * as XLSX from "xlsx";
 import GymLogo from "../../assets/Logo/Logo1.png";
 import { numberToWords } from "../../utils/numberToWords";
 import MemberPlansDisplay from "../../Components/MemberPlansDisplay";
-import ImageCropper from "../../Components/ImageCropper";
+import CustomDatePicker from "../../Components/CustomDatePicker";
 
 const ReceptionistWalkinMember = () => {
   const location = useLocation();
@@ -1843,15 +1843,13 @@ const handleDownloadReceipt = async (member) => {
                       </div>
                     </div>
                     <div className="col-12 col-md-6">
-                      <label className="form-label">Date of Birth</label>
-                      <input
-                        type="date"
-                        className="form-control"
+                      <CustomDatePicker
+                        label="Date of Birth"
                         value={newMember.dateOfBirth}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setNewMember({
                             ...newMember,
-                            dateOfBirth: e.target.value,
+                            dateOfBirth: val,
                           })
                         }
                       />
@@ -2123,20 +2121,16 @@ const handleDownloadReceipt = async (member) => {
                       )}
                     </div>
                     <div className="col-12 col-md-6">
-                      <label className="form-label">
-                        Start Date <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
+                      <CustomDatePicker
+                        label="Start Date"
+                        required={true}
                         value={newMember.startDate}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setNewMember({
                             ...newMember,
-                            startDate: e.target.value,
+                            startDate: val,
                           })
                         }
-                        required
                       />
                     </div>
                     <div className="col-12 col-md-6">

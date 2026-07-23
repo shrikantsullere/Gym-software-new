@@ -1,6 +1,8 @@
 import { pool } from "../../config/db.js";
 
-export const receptionistDashboardService = async (adminId, branchId) => {
+export const receptionistDashboardService = async (adminId, branchId, monthParam) => {
+  const targetMonthStr = monthParam || new Date().toISOString().slice(0, 7);
+
   // 1. Today's walk-in check-ins (member attendance today)
   const [todayCheckins] = await pool.query(
     `SELECT COUNT(*) as count FROM memberattendance
@@ -8,11 +10,11 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     []
   );
 
-  // 2. New registrations today
+  // 2. New registrations in selected month
   const [newRegistrations] = await pool.query(
     `SELECT COUNT(*) as count FROM member
-     WHERE DATE(joinDate) = CURDATE() AND adminId = ?`,
-    [adminId]
+     WHERE DATE_FORMAT(joinDate, '%Y-%m') = ? AND (adminId = ? OR ? IS NULL)`,
+    [targetMonthStr, adminId, adminId]
   );
 
   // 3. Pending payments (members without full payment recorded or unpaid)
@@ -74,7 +76,7 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     []
   );
 
-  // 7. Revenue calculations (Today, Month, Total)
+  // 7. Revenue calculations (Today, Selected Month, Total)
   const [[revRow]] = await pool.query(
     `SELECT 
       COALESCE((
@@ -92,12 +94,12 @@ export const receptionistDashboardService = async (adminId, branchId) => {
         SELECT SUM(p.amount)
         FROM payment p
         JOIN member m ON p.memberId = m.id
-        WHERE (m.adminId = ? OR ? IS NULL) AND DATE_FORMAT(p.paymentDate, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+        WHERE (m.adminId = ? OR ? IS NULL) AND DATE_FORMAT(p.paymentDate, '%Y-%m') = ?
       ), 0) +
       COALESCE((
         SELECT SUM(m.amountPaid)
         FROM member m
-        WHERE (m.adminId = ? OR ? IS NULL) AND DATE_FORMAT(m.joinDate, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+        WHERE (m.adminId = ? OR ? IS NULL) AND DATE_FORMAT(m.joinDate, '%Y-%m') = ?
       ), 0) AS monthRev,
       COALESCE((
         SELECT SUM(p.amount)
@@ -110,7 +112,7 @@ export const receptionistDashboardService = async (adminId, branchId) => {
         FROM member m
         WHERE (m.adminId = ? OR ? IS NULL)
       ), 0) AS totalRev`,
-    [adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId]
+    [adminId, adminId, adminId, adminId, adminId, adminId, targetMonthStr, adminId, adminId, targetMonthStr, adminId, adminId, adminId, adminId]
   ).catch(() => [[{ todayRev: 0, monthRev: 0, totalRev: 0 }]]);
 
   // 8. Members with renewals due soon (for follow-up)

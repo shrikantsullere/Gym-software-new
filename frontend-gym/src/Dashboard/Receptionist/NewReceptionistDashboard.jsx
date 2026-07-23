@@ -27,11 +27,27 @@ const NewReceptionistDashboard = () => {
   const branchId = user?.branchId || 1;
   const name = user?.fullName || "Receptionist";
 
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
+
+  const availableMonths = React.useMemo(() => {
+    const list = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      list.push({ value, label });
+    }
+    return list;
+  }, []);
+
   const fetchData = async (showLoadingState = true) => {
     try {
       if (showLoadingState) setLoading(true);
       const res = await axiosInstance.get(
-        `receptionist-dashboard?adminId=${adminId}&branchId=${branchId}`
+        `receptionist-dashboard?adminId=${adminId}&branchId=${branchId}&month=${selectedMonth}`
       );
       if (res.data?.success) {
         setData(res.data.receptionistDashboard);
@@ -46,7 +62,7 @@ const NewReceptionistDashboard = () => {
   useEffect(() => {
     if (adminId) fetchData(true);
     else setLoading(false);
-  }, [adminId, branchId]);
+  }, [adminId, branchId, selectedMonth]);
 
   // Set up socket listener for real-time updates
   useEffect(() => {
@@ -121,15 +137,32 @@ const NewReceptionistDashboard = () => {
   return (
     <div className="container-fluid py-4 px-3 px-md-4" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       {/* Header */}
-      <div className="mb-4">
-        <h2 className="fw-bold mb-1" style={{ color: "#1e293b" }}>
-          Welcome, {name}! 👋
-        </h2>
-        <p className="text-muted mb-0">
-          {new Date().toLocaleDateString("en-IN", {
-            weekday: "long", year: "numeric", month: "long", day: "numeric",
-          })}
-        </p>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+        <div>
+          <h2 className="fw-bold mb-1" style={{ color: "#1e293b" }}>
+            Welcome, {name}! 👋
+          </h2>
+          <p className="text-muted mb-0">
+            {new Date().toLocaleDateString("en-IN", {
+              weekday: "long", year: "numeric", month: "long", day: "numeric",
+            })}
+          </p>
+        </div>
+        <div className="d-flex align-items-center bg-white rounded shadow-sm px-3 py-2 border">
+          <span className="me-2 fw-medium text-dark small">Month:</span>
+          <select
+            className="form-select form-select-sm border-0 bg-transparent fw-semibold text-primary focus-none"
+            style={{ cursor: "pointer", width: "auto" }}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          >
+            {availableMonths.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Announcement Banner */}

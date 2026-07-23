@@ -18,8 +18,10 @@ import {
   FaFilter,
   FaUserCog,
   FaFilePdf,
+  FaFileExcel,
 } from "react-icons/fa";
 import axiosInstance from "../../../Api/axiosInstance";
+import CustomDatePicker from "../../../Components/CustomDatePicker";
 import GetAdminId from "../../../Api/GetAdminId";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -495,21 +497,17 @@ export default function SalesReport() {
           <div className="card-body">
             <div className="row g-3 align-items-end">
               <div className="col-6 col-md-3">
-                <label className="form-label"><FaCalendarAlt className="me-2" /> From</label>
-                <input
-                  type="date"
+                <CustomDatePicker
+                  label="From"
                   value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="form-control"
+                  onChange={(val) => setDateFrom(val)}
                 />
               </div>
               <div className="col-6 col-md-3">
-                <label className="form-label"><FaCalendarAlt className="me-2" /> To</label>
-                <input
-                  type="date"
+                <CustomDatePicker
+                  label="To"
                   value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="form-control"
+                  onChange={(val) => setDateTo(val)}
                 />
               </div>
 

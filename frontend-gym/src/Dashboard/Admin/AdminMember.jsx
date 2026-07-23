@@ -32,6 +32,7 @@ import GymLogo from "../../assets/Logo/Logo1.png";
 import { numberToWords } from "../../utils/numberToWords";
 import ImageCropper from "../../Components/ImageCropper";
 import MemberPlansDisplay from "../../Components/MemberPlansDisplay";
+import CustomDatePicker from "../../Components/CustomDatePicker";
 
 const AdminMember = () => {
   const navigate = useNavigate();
@@ -2064,15 +2065,13 @@ const handleDownloadReceipt = async (member) => {
                       </div>
                     </div>
                     <div className="col-12 col-md-6">
-                      <label className="form-label">Date of Birth</label>
-                      <input
-                        type="date"
-                        className="form-control"
+                      <CustomDatePicker
+                        label="Date of Birth"
                         value={newMember.dateOfBirth}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setNewMember({
                             ...newMember,
-                            dateOfBirth: e.target.value,
+                            dateOfBirth: val,
                           })
                         }
                       />
@@ -2434,20 +2433,16 @@ const handleDownloadReceipt = async (member) => {
                       )}
                     </div>
                     <div className="col-12 col-md-6">
-                      <label className="form-label">
-                        Start Date <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
+                      <CustomDatePicker
+                        label="Start Date"
+                        required={true}
                         value={newMember.startDate}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setNewMember({
                             ...newMember,
-                            startDate: e.target.value,
+                            startDate: val,
                           })
                         }
-                        required
                       />
                     </div>
                     <div className="col-12 col-md-6">
@@ -2865,20 +2860,16 @@ const handleDownloadReceipt = async (member) => {
                 )}
               </div>
               <div className="col-12 col-md-6">
-                <label className="form-label">
-                  Start Date (for new plans) <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="date"
-                  className="form-control"
+                <CustomDatePicker
+                  label="Start Date (for new plans)"
+                  required={true}
                   value={editMember.startDate}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setEditMember({
                       ...editMember,
-                      startDate: e.target.value,
+                      startDate: val,
                     })
                   }
-                  required
                 />
                 <small className="text-muted">
                   This date will be used for newly assigned plans
@@ -2903,15 +2894,13 @@ const handleDownloadReceipt = async (member) => {
                 </select>
               </div>
               <div className="col-12 col-md-6">
-                <label className="form-label">Date of Birth</label>
-                <input
-                  type="date"
-                  className="form-control"
+                <CustomDatePicker
+                  label="Date of Birth"
                   value={editMember.dateOfBirth}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setEditMember({
                       ...editMember,
-                      dateOfBirth: e.target.value,
+                      dateOfBirth: val,
                     })
                   }
                 />

@@ -41,7 +41,26 @@ const SalesDashboard = () => {
   const [padLeft, setPadLeft] = useState(0); // px
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState("1"); // "1" = One Month, "6" = Six Months
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7) // e.g. '2026-07'
+  );
+
+  const availableMonths = useMemo(() => {
+    const list = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      list.push({ value, label });
+    }
+    return list;
+  }, []);
+
+  const getSelectedMonthLabel = (val) => {
+    const found = availableMonths.find((m) => m.value === val);
+    return found ? found.label : val;
+  };
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const branchId = user.branchId || "";
@@ -117,7 +136,7 @@ const SalesDashboard = () => {
         setError(null);
 
         const response = await axiosInstance.get(
-          `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&period=${selectedPeriod}`
+          `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&month=${selectedMonth}`
         );
 
         if (response.data && response.data.success) {
@@ -209,7 +228,7 @@ const SalesDashboard = () => {
     };
 
     fetchDashboardData();
-  }, [adminId, branchId, selectedPeriod]);
+  }, [adminId, branchId, selectedMonth]);
 
   // Real-time socket listener for instant dashboard sync
   useEffect(() => {
@@ -220,7 +239,7 @@ const SalesDashboard = () => {
       const refetch = async () => {
         try {
           const response = await axiosInstance.get(
-            `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&period=${selectedPeriod}`
+            `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&month=${selectedMonth}`
           );
           if (response.data && response.data.success) {
             const data = response.data.dashboard;
@@ -256,13 +275,13 @@ const SalesDashboard = () => {
       socket.off("membershipRenewed", handleSocketUpdate);
       socket.off("revenueUpdated", handleSocketUpdate);
     };
-  }, [socket, adminId, branchId, selectedPeriod]);
+  }, [socket, adminId, branchId, selectedMonth]);
 
   // Export functions respecting selected filter
   const exportToExcel = () => {
-    const periodName = selectedPeriod === "1" ? "One_Month" : "Six_Months";
+    const periodName = getSelectedMonthLabel(selectedMonth).replace(/\s+/g, "_");
     const exportData = [
-      { Metric: "Period", Value: selectedPeriod === "1" ? "One Month" : "Six Months" },
+      { Metric: "Month", Value: getSelectedMonthLabel(selectedMonth) },
       { Metric: "Total Revenue", Value: `₹${dashboardData.summary.totalRevenue}` },
       { Metric: "New Registrations", Value: dashboardData.summary.newRegistrations },
       { Metric: "Active Leads", Value: dashboardData.summary.activeLeads },
@@ -276,11 +295,11 @@ const SalesDashboard = () => {
   };
 
   const exportToPDF = () => {
-    const periodName = selectedPeriod === "1" ? "One Month" : "Six Months";
+    const periodName = getSelectedMonthLabel(selectedMonth);
     const doc = new jsPDF();
     doc.text(`Sales Dashboard Report (${periodName})`, 14, 15);
     const tableRows = [
-      ["Period", periodName],
+      ["Month", periodName],
       ["Total Revenue", `₹${dashboardData.summary.totalRevenue}`],
       ["New Registrations", String(dashboardData.summary.newRegistrations)],
       ["Active Leads", String(dashboardData.summary.activeLeads)],
@@ -291,7 +310,7 @@ const SalesDashboard = () => {
       head: [["Metric", "Value"]],
       body: tableRows,
     });
-    doc.save(`Sales_Dashboard_Report_${selectedPeriod === "1" ? "1M" : "6M"}_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Sales_Dashboard_Report_${selectedMonth}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const barOptions = {
@@ -341,18 +360,21 @@ const SalesDashboard = () => {
                   </p>
                 </div>
                 <div className="d-flex align-items-center gap-2 flex-wrap">
-                  {/* Time Period Filter Dropdown */}
+                  {/* Month Selection Dropdown */}
                   <div className="d-flex align-items-center bg-white rounded shadow-sm px-3 py-2 border">
                     <FaFilter className="text-primary me-2" />
-                    <span className="me-2 fw-medium text-dark small">Filter:</span>
+                    <span className="me-2 fw-medium text-dark small">Month:</span>
                     <select
                       className="form-select form-select-sm border-0 bg-transparent fw-semibold text-primary focus-none"
                       style={{ cursor: "pointer", width: "auto" }}
-                      value={selectedPeriod}
-                      onChange={(e) => setSelectedPeriod(e.target.value)}
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
                     >
-                      <option value="1">One Month</option>
-                      <option value="6">Six Months</option>
+                      {availableMonths.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -395,7 +417,7 @@ const SalesDashboard = () => {
                   <div className="card border-0 shadow-sm h-100 w-100">
                     <div className="card-body d-flex justify-content-between align-items-center">
                       <div>
-                        <p className="text-muted small mb-1">Revenue (This Month)</p>
+                        <p className="text-muted small mb-1">Revenue ({getSelectedMonthLabel(selectedMonth)})</p>
                         <p className="fw-bold mb-1 text-success" style={{ fontSize: "1.75rem" }}>
                           ₹{dashboardData.summary.totalRevenue.toLocaleString()}
                         </p>
@@ -415,7 +437,7 @@ const SalesDashboard = () => {
                         <p className="fw-bold mb-1 text-primary" style={{ fontSize: "1.75rem" }}>
                           {dashboardData.summary.newRegistrations}
                         </p>
-                        <p className="text-muted small mb-0">This Week</p>
+                        <p className="text-muted small mb-0">{getSelectedMonthLabel(selectedMonth)}</p>
                       </div>
                       <div className="d-flex align-items-center justify-content-center rounded-2" style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", width: "3rem", height: "3rem" }}>
                         <RiUserAddLine className="text-primary" style={{ fontSize: "1.5rem" }} />
@@ -449,7 +471,7 @@ const SalesDashboard = () => {
                         <p className="fw-bold mb-1 text-danger" style={{ fontSize: "1.75rem" }}>
                           {dashboardData.summary.pendingRenewals}
                         </p>
-                        <p className="text-muted small mb-0">Next 7 Days</p>
+                        <p className="text-muted small mb-0">Action Required</p>
                       </div>
                       <div className="d-flex align-items-center justify-content-center rounded-2" style={{ backgroundColor: "rgba(239, 68, 68, 0.2)", width: "3rem", height: "3rem" }}>
                         <RiCalendarCheckLine className="text-danger" style={{ fontSize: "1.5rem" }} />
@@ -465,7 +487,7 @@ const SalesDashboard = () => {
                   <div className="card border-0 shadow-sm w-100">
                     <div className="card-body">
                       <h5 className="fw-bold mb-3">
-                        Revenue vs Expenses ({selectedPeriod === "1" ? "One Month" : "Last 6 Months"})
+                        Revenue vs Expenses ({getSelectedMonthLabel(selectedMonth)})
                       </h5>
                       <div className="w-100" style={{ position: "relative", height: "300px" }}>
                         <Bar data={dashboardData.revenueVsExpenseData} options={barOptions} />

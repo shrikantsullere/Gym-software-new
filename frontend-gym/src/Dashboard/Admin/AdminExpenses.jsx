@@ -12,6 +12,7 @@ import {
   faSync,
   faFilter,
 } from "@fortawesome/free-solid-svg-icons";
+import CustomDatePicker from "../../Components/CustomDatePicker";
 
 const AdminExpenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -411,17 +412,11 @@ const AdminExpenses = () => {
                     </div>
 
                     <div className="col-6 mb-3">
-                      <label className="form-label fw-semibold small text-uppercase">
-                        Payment Date
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        required
+                      <CustomDatePicker
+                        label="Payment Date"
+                        required={true}
                         value={formData.date}
-                        onChange={(e) =>
-                          setFormData({ ...formData, date: e.target.value })
-                        }
+                        onChange={(val) => setFormData({ ...formData, date: val })}
                       />
                     </div>
                   </div>

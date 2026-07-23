@@ -18,6 +18,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axiosInstance from '../../Api/axiosInstance';
+import CustomDatePicker from '../../Components/CustomDatePicker';
 import BaseUrl from '../../Api/BaseUrl';
 
 const ReportsAttendance = () => {
@@ -689,15 +690,12 @@ const ReportsAttendance = () => {
                       </select>
                     </div>
                     <div className="col-6">
-                      <label className="form-label fw-semibold" style={{ fontSize: '0.8rem' }}>Date</label>
-                      <input
-                        name="date"
-                        type="date"
-                        className="form-control form-control-sm"
+                      <CustomDatePicker
+                        label="Date"
+                        required={true}
                         value={selectedRecord?.date || new Date().toISOString().split('T')[0]}
-                        onChange={(e) => setSelectedRecord({ ...selectedRecord, date: e.target.value })}
-                        readOnly={modalType === 'view'}
-                        required
+                        onChange={(val) => setSelectedRecord({ ...selectedRecord, date: val })}
+                        disabled={modalType === 'view'}
                       />
                     </div>
                     <div className="col-6">

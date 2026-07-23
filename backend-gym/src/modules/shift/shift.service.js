@@ -1,5 +1,7 @@
 import { pool } from "../../config/db.js";
 
+import { sendAppNotification } from "../../utils/notificationHelper.js";
+
 export const createShiftService = async (data) => {
   const {
     staffIds,
@@ -30,7 +32,34 @@ export const createShiftService = async (data) => {
   const [rows] = await pool.query(`SELECT * FROM shifts WHERE id = ?`, [
     result.insertId,
   ]);
-  return rows[0];
+  const newShift = rows[0];
+
+  // Notification Logic
+  if (staffIds) {
+    const idsArray = staffIds.toString().split(",");
+    if (idsArray.length > 0) {
+      const placeholders = idsArray.map(() => "?").join(",");
+      const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id IN (${placeholders}) OR userId IN (${placeholders})`, [...idsArray, ...idsArray]);
+      
+      const msg = `New Shift Assigned
+Shift Type: ${shiftType}
+Date: ${shiftDate}
+Time: ${startTime} - ${endTime}`;
+
+      for (let s of staffRows) {
+        if (s.userId) {
+          await sendAppNotification(s.userId, msg, {
+            title: "New Shift Assigned",
+            sender_id: createdById,
+            reference_type: "SHIFT",
+            reference_id: result.insertId
+          });
+        }
+      }
+    }
+  }
+
+  return newShift;
 };
 export const getAllShiftsService = async (adminId) => {
   const [rows] = await pool.query(
@@ -212,11 +241,64 @@ export const updateShiftService = async (id, data) => {
     `SELECT * FROM shifts WHERE id = ?`,
     [id]
   );
+  const updatedShift = rows[0];
 
-  return rows[0];
+  // Notification Logic
+  if (finalStaffIds) {
+    const idsArray = finalStaffIds.toString().split(",");
+    if (idsArray.length > 0) {
+      const placeholders = idsArray.map(() => "?").join(",");
+      const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id IN (${placeholders}) OR userId IN (${placeholders})`, [...idsArray, ...idsArray]);
+      
+      const msg = `Shift Updated
+Type: ${finalShiftType}
+Date: ${finalShiftDate}
+Time: ${finalStartTime} - ${finalEndTime}`;
+
+      for (let s of staffRows) {
+        if (s.userId) {
+          await sendAppNotification(s.userId, msg, {
+            title: "Shift Updated",
+            sender_id: existing.createdById,
+            reference_type: "SHIFT",
+            reference_id: id
+          });
+        }
+      }
+    }
+  }
+
+  return updatedShift;
 };
 
 export const deleteShiftService = async (id) => {
+  const [existingRows] = await pool.query(`SELECT * FROM shifts WHERE id = ?`, [id]);
+  if (existingRows.length > 0) {
+    const existing = existingRows[0];
+    if (existing.staffIds) {
+      const idsArray = existing.staffIds.toString().split(",");
+      if (idsArray.length > 0) {
+        const placeholders = idsArray.map(() => "?").join(",");
+        const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id IN (${placeholders}) OR userId IN (${placeholders})`, [...idsArray, ...idsArray]);
+        
+        const msg = `Shift Cancelled
+Type: ${existing.shiftType}
+Date: ${existing.shiftDate}`;
+
+        for (let s of staffRows) {
+          if (s.userId) {
+            await sendAppNotification(s.userId, msg, {
+              title: "Shift Cancelled",
+              sender_id: existing.createdById,
+              reference_type: "SHIFT",
+              reference_id: id
+            });
+          }
+        }
+      }
+    }
+  }
+
   await pool.query(`DELETE FROM shifts WHERE id = ?`, [id]);
   return { message: "Shift deleted successfully" };
 };

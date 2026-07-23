@@ -1,4 +1,5 @@
 import { pool } from "../../config/db.js";
+import { sendAppNotification } from "../../utils/notificationHelper.js";
 
 // staffId = staff.id (from frontend)
 export const staffCheckIn = async (req, res, next) => {
@@ -41,7 +42,7 @@ export const staffCheckIn = async (req, res, next) => {
     }
 
     // Insert attendance
-    await pool.query(
+    const [result] = await pool.query(
       `INSERT INTO staffattendance 
        (staffId, branchId, checkIn, checkOut, mode, status, notes)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -55,6 +56,17 @@ export const staffCheckIn = async (req, res, next) => {
         notes || null
       ]
     );
+
+    // Notification Logic: Notify Admin
+    const [staffRows] = await pool.query(`SELECT s.adminId, u.fullName FROM staff s JOIN user u ON s.userId = u.id WHERE s.id = ?`, [staffId]);
+    if (staffRows.length > 0 && staffRows[0].adminId) {
+      const msg = `${staffRows[0].fullName} has checked in.`;
+      await sendAppNotification(staffRows[0].adminId, msg, {
+        title: "Staff Checked In",
+        reference_type: "ATTENDANCE",
+        reference_id: result.insertId
+      });
+    }
 
     res.json({
       success: true,
@@ -104,6 +116,17 @@ export const staffCheckOut = async (req, res, next) => {
       `,
       [finalCheckOut, attendanceId]
     );
+
+    // Notification Logic: Notify Admin
+    const [staffRows] = await pool.query(`SELECT s.adminId, u.fullName FROM staff s JOIN user u ON s.userId = u.id WHERE s.id = ?`, [record.staffId]);
+    if (staffRows.length > 0 && staffRows[0].adminId) {
+      const msg = `${staffRows[0].fullName} has checked out.`;
+      await sendAppNotification(staffRows[0].adminId, msg, {
+        title: "Staff Checked Out",
+        reference_type: "ATTENDANCE",
+        reference_id: attendanceId
+      });
+    }
 
     res.json({
       success: true,

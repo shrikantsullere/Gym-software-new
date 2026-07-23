@@ -3,19 +3,41 @@ import { pool } from "../../config/db.js";
 // Generate Member Report Service
 export const generateMemberReportService = async (adminId, fromDate, toDate, status) => {
   try {
-    // Build date filter clause
-    const dateClause = fromDate && toDate
-      ? `AND DATE(ub.createdAt) BETWEEN '${fromDate}' AND '${toDate}'`
-      : '';
+    let dateClausePayment = '';
+    let dateClauseBooking = '';
+
+    if (fromDate && toDate) {
+      if (fromDate === toDate) {
+        // If single date selected, show month-to-date up to selected date for full visibility
+        const monthStart = fromDate.substring(0, 7) + '-01';
+        dateClausePayment = `AND DATE(p.paymentDate) BETWEEN '${monthStart}' AND '${toDate}'`;
+        dateClauseBooking = `AND (DATE(ub.createdAt) BETWEEN '${monthStart}' AND '${toDate}' OR DATE(ub.date) BETWEEN '${monthStart}' AND '${toDate}')`;
+      } else {
+        dateClausePayment = `AND DATE(p.paymentDate) BETWEEN '${fromDate}' AND '${toDate}'`;
+        dateClauseBooking = `AND (DATE(ub.createdAt) BETWEEN '${fromDate}' AND '${toDate}' OR DATE(ub.date) BETWEEN '${fromDate}' AND '${toDate}')`;
+      }
+    }
+
     const statusClause = status && status !== 'All'
       ? `AND ub.bookingStatus = '${status}'`
       : '';
 
-    // Get booking statistics from unified_bookings table
+    // 1️⃣ Payments Revenue
+    const [paymentStats] = await pool.query(
+      `SELECT 
+        COUNT(*) AS totalPayments,
+        COALESCE(SUM(p.amount), 0) AS totalPaymentRevenue
+       FROM payment p
+       INNER JOIN member m ON p.memberId = m.id
+       WHERE m.adminId = ? ${dateClausePayment}`,
+      [adminId]
+    );
+
+    // 2️⃣ Booking statistics from unified_bookings table
     const [bookingStats] = await pool.query(
       `SELECT 
         COUNT(*) AS totalBookings,
-        SUM(ub.price) AS totalRevenue,
+        COALESCE(SUM(ub.price), 0) AS totalBookingRevenue,
         AVG(ub.price) AS avgTicket,
         SUM(CASE WHEN ub.bookingStatus = 'Completed' THEN 1 ELSE 0 END) as completed,
         SUM(CASE WHEN ub.bookingStatus = 'Confirmed' THEN 1 ELSE 0 END) as confirmed,
@@ -23,11 +45,11 @@ export const generateMemberReportService = async (adminId, fromDate, toDate, sta
         SUM(CASE WHEN ub.bookingStatus = 'Booked' THEN 1 ELSE 0 END) as booked
       FROM unified_bookings ub
       INNER JOIN member m ON ub.memberId = m.id
-      WHERE m.adminId = ? ${dateClause} ${statusClause}`,
+      WHERE m.adminId = ? ${dateClauseBooking} ${statusClause}`,
       [adminId]
     );
 
-    // Get bookings by day
+    // 3️⃣ Bookings & Payments by day
     const [bookingsByDay] = await pool.query(
       `SELECT 
         DATE(ub.createdAt) AS date,
@@ -35,55 +57,76 @@ export const generateMemberReportService = async (adminId, fromDate, toDate, sta
         SUM(ub.price) AS revenue
       FROM unified_bookings ub
       INNER JOIN member m ON ub.memberId = m.id
-      WHERE m.adminId = ? ${dateClause} ${statusClause}
+      WHERE m.adminId = ? ${dateClauseBooking} ${statusClause}
       GROUP BY DATE(ub.createdAt)
       ORDER BY date ASC`,
       [adminId]
     );
 
-    // Get booking status distribution
+    // 4️⃣ Booking status distribution
     const [bookingStatusRows] = await pool.query(
       `SELECT 
         ub.bookingStatus,
         COUNT(*) AS count
       FROM unified_bookings ub
       INNER JOIN member m ON ub.memberId = m.id
-      WHERE m.adminId = ? ${dateClause}
+      WHERE m.adminId = ? ${dateClauseBooking}
       GROUP BY ub.bookingStatus`,
       [adminId]
     );
 
-    // Get recent transactions
+    // 5️⃣ Unified Recent Transactions (Payments + Bookings)
     const [transactions] = await pool.query(
-      `SELECT 
-        ub.date,
-        u.fullName as trainer,
-        m.fullName as username,
-        CASE 
-          WHEN ub.bookingType = 'PT' THEN 'Personal Training' 
-          WHEN ub.bookingType = 'GROUP' THEN 'Group Class' 
-          ELSE COALESCE(ub.bookingType, 'Booking')
-        END as type,
-        ub.startTime as time,
-        ub.bookingStatus as status,
-        ub.price
-      FROM unified_bookings ub
-      LEFT JOIN member m ON ub.memberId = m.id
-      LEFT JOIN user u ON ub.trainerId = u.id
-      WHERE m.adminId = ? ${dateClause} ${statusClause}
-      ORDER BY ub.createdAt DESC
+      `(
+        SELECT 
+          DATE_FORMAT(p.paymentDate, '%Y-%m-%d') as date,
+          'System' as trainer,
+          m.fullName as username,
+          'Membership Plan Payment' as type,
+          DATE_FORMAT(p.paymentDate, '%H:%i:%s') as time,
+          'Completed' as status,
+          p.amount as price,
+          p.paymentDate as rawTime
+        FROM payment p
+        LEFT JOIN member m ON p.memberId = m.id
+        WHERE m.adminId = ? ${dateClausePayment}
+      )
+      UNION ALL
+      (
+        SELECT 
+          DATE_FORMAT(ub.date, '%Y-%m-%d') as date,
+          COALESCE(u.fullName, 'N/A') as trainer,
+          m.fullName as username,
+          CASE 
+            WHEN ub.bookingType = 'PT' THEN 'Personal Training' 
+            WHEN ub.bookingType = 'GROUP' THEN 'Group Class' 
+            ELSE COALESCE(ub.bookingType, 'Booking')
+          END as type,
+          COALESCE(ub.startTime, '00:00:00') as time,
+          ub.bookingStatus as status,
+          ub.price as price,
+          ub.createdAt as rawTime
+        FROM unified_bookings ub
+        LEFT JOIN member m ON ub.memberId = m.id
+        LEFT JOIN user u ON ub.trainerId = u.id
+        WHERE m.adminId = ? ${dateClauseBooking} ${statusClause}
+      )
+      ORDER BY rawTime DESC
       LIMIT 100`,
-      [adminId]
+      [adminId, adminId]
     );
 
+    const totalRevenueSum = Number(paymentStats[0]?.totalPaymentRevenue || 0) + Number(bookingStats[0]?.totalBookingRevenue || 0);
+    const totalCountSum = Number(paymentStats[0]?.totalPayments || 0) + Number(bookingStats[0]?.totalBookings || 0);
+
     const formattedStats = {
-      totalBookings: bookingStats[0].totalBookings || 0,
-      totalRevenue: bookingStats[0].totalRevenue || 0,
-      avgTicket: bookingStats[0].avgTicket || 0,
-      completed: bookingStats[0].completed || 0,
-      confirmed: bookingStats[0].confirmed || 0,
-      cancelled: bookingStats[0].cancelled || 0,
-      booked: bookingStats[0].booked || 0,
+      totalBookings: totalCountSum,
+      totalRevenue: totalRevenueSum,
+      avgTicket: totalCountSum > 0 ? (totalRevenueSum / totalCountSum).toFixed(2) : 0,
+      completed: (Number(bookingStats[0]?.completed || 0) + Number(paymentStats[0]?.totalPayments || 0)),
+      confirmed: Number(bookingStats[0]?.confirmed || 0),
+      cancelled: Number(bookingStats[0]?.cancelled || 0),
+      booked: Number(bookingStats[0]?.booked || 0),
     };
 
     const formattedTransactions = transactions.map((t) => ({
@@ -93,7 +136,7 @@ export const generateMemberReportService = async (adminId, fromDate, toDate, sta
       type: t.type,
       time: t.time,
       status: t.status,
-      price: t.price || 0,
+      price: Number(t.price || 0),
     }));
 
     return {

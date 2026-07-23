@@ -27,6 +27,12 @@ import html2canvas from "html2canvas";
 export default function SalesReport() {
   const adminId = GetAdminId();
   
+  // Get 1st day of current month in YYYY-MM-DD format
+  const getMonthStartDate = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+  };
+
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
@@ -49,7 +55,7 @@ export default function SalesReport() {
     { value: "general_trainer", label: "General Trainer" },
   ];
 
-  const [dateFrom, setDateFrom] = useState(getTodayDate());
+  const [dateFrom, setDateFrom] = useState(getMonthStartDate());
   const [dateTo, setDateTo] = useState(getTodayDate());
   const [bookingStatus, setBookingStatus] = useState("All");
   const statuses = ["All", "Booked", "Confirmed", "Cancelled", "Completed"];

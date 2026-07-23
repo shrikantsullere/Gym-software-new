@@ -231,7 +231,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Payments & Invoicing", icon: faMoneyCheckAlt, path: "/sales/payment" },
       { name: "Renewals & Follow-ups", icon: faCalendarCheck, path: "/sales/reportattendance" },
       { name: "Task Management", icon: faTasks, path: "/sales/task-management" },
-      { name: " Reports", icon: faChartPie, path: "/sales/report" },
+      { name: "Member Attendance Report", icon: faChartPie, path: "/sales/report" },
       { name: " Equipment & Inventory ", icon: faBoxes, path: "/admin/inventory" },
     ],
 

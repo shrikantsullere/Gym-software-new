@@ -217,8 +217,8 @@ const handleSubmit = async (e) => {
         return;
       }
 
-      const passwordPromise = axios.put(`${BaseUrl}/auth/changepassword`, {
-        id: userId,          // 🔑 CRITICAL — add user ID
+      const passwordPromise = axiosInstance.put("auth/changepassword", {
+        id: userId,
         oldPassword: oldP,
         newPassword: newP
       });

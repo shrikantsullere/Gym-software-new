@@ -400,13 +400,25 @@ const Navbar = ({ toggleSidebar }) => {
                         key={n.id} 
                         className="list-group-item list-group-item-action p-3 border-bottom"
                         style={{ cursor: 'pointer', background: "#f8faff", transition: "background-color 0.15s" }}
-                        onClick={() => markNotificationRead(n.id)}
+                        onClick={() => {
+                          markNotificationRead(n.id);
+                          if (n.reference_type === 'CLASS') {
+                            if (profile.role === 'Member') navigate('/member/classschedule');
+                            else if (profile.role === 'Trainer' || profile.role === 'General Trainer' || profile.role === 'Personal Trainer') navigate('/trainer/classesschedule');
+                            else navigate('/admin/classesschedule');
+                          } else if (n.reference_type === 'SESSION') {
+                            if (profile.role === 'Member') navigate('/member/sessions');
+                            else if (profile.role === 'Trainer' || profile.role === 'General Trainer' || profile.role === 'Personal Trainer') navigate('/trainer/sessions');
+                            else navigate('/admin/personaltraining');
+                          }
+                          setShowNotifDropdown(false);
+                        }}
                         onMouseEnter={e => e.currentTarget.style.background = "#eef3ff"}
                         onMouseLeave={e => e.currentTarget.style.background = "#f8faff"}
                       >
                         <div className="d-flex w-100 justify-content-between align-items-center mb-1">
                           <small className="text-primary fw-bold" style={{ fontSize: "0.8rem" }}>
-                            🔵 {n.type}
+                            🔵 {n.title || n.type}
                           </small>
                           <small className="text-muted" style={{ fontSize: "0.7rem" }}>
                             {new Date(n.createdAt).toLocaleString()}

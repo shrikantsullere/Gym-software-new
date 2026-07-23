@@ -10,7 +10,8 @@ import {
   getUserAnnouncementsService,
   sendPersonalNotificationService,
   getPersonalNotifHistoryService,
-  deleteAnnouncementService
+  deleteAnnouncementService,
+  markAllAsReadService
 } from "./notif.service.js";
 import { uploadToCloudinary } from "../../config/cloudinary.js";
 
@@ -48,6 +49,16 @@ export const markAsRead = async (req, res, next) => {
     const { id } = req.params;
     await markAsReadService(id);
     res.json({ success: true, message: "Notification marked as read" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const markAllAsRead = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    await markAllAsReadService(userId);
+    res.json({ success: true, message: "All notifications marked as read" });
   } catch (err) {
     next(err);
   }

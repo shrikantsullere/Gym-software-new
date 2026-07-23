@@ -172,6 +172,8 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
   }
 };
 
+import { formatISTDate } from "../../utils/dateHelper.js";
+
 export const getUserNotificationsService = async (userId) => {
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
@@ -181,7 +183,10 @@ export const getUserNotificationsService = async (userId) => {
      ORDER BY createdAt DESC LIMIT 20`,
     [userId.toString()]
   );
-  return rows;
+  return rows.map(r => ({
+    ...r,
+    ...formatISTDate(r.createdAt)
+  }));
 };
 
 export const getAllUserNotificationsService = async (userId) => {
@@ -192,14 +197,44 @@ export const getAllUserNotificationsService = async (userId) => {
      ORDER BY createdAt DESC LIMIT 100`,
     [userId.toString()]
   );
-  return rows;
+  return rows.map(r => ({
+    ...r,
+    ...formatISTDate(r.createdAt)
+  }));
 };
 
 export const markAsReadService = async (id) => {
+  const [rows] = await pool.query(`SELECT \`to\` FROM notificationlog WHERE id = ?`, [id]);
+  
   await pool.query(
     `UPDATE notificationlog SET status = 'READ', is_read = TRUE WHERE id = ?`,
     [id]
   );
+  
+  if (rows.length > 0) {
+    const userId = rows[0].to;
+    import("../../config/socket.js").then(({ getIO, emitToUser }) => {
+      const io = getIO();
+      if (io) {
+        emitToUser(userId, "notification_read", { id });
+      }
+    });
+  }
+  return true;
+};
+
+export const markAllAsReadService = async (userId) => {
+  await pool.query(
+    `UPDATE notificationlog SET status = 'READ', is_read = TRUE WHERE \`to\` = ? AND (status != 'READ' OR is_read = FALSE)`,
+    [userId.toString()]
+  );
+  
+  import("../../config/socket.js").then(({ getIO, emitToUser }) => {
+    const io = getIO();
+    if (io) {
+      emitToUser(userId.toString(), "all_notifications_read", {});
+    }
+  });
   return true;
 };
 

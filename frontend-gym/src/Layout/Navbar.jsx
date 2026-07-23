@@ -124,8 +124,11 @@ const Navbar = ({ toggleSidebar }) => {
   // Mark ALL unread notifications as read
   const markAllRead = async () => {
     try {
-      await Promise.all(notifications.map(n => axiosInstance.put(`/notif/read/${n.id}`)));
-      setNotifications([]);
+      const u = getUserFromLocalStorage();
+      if (u && u.id) {
+        await axiosInstance.put(`/notif/read-all/${u.id}`);
+        setNotifications([]);
+      }
     } catch (err) {
       console.error("Failed to mark all as read:", err);
     }
@@ -141,10 +144,22 @@ const Navbar = ({ toggleSidebar }) => {
       setNotifications(prev => [data, ...prev]);
     };
 
+    const handleNotificationRead = (data) => {
+      setNotifications(prev => prev.filter(n => n.id !== data.id));
+    };
+
+    const handleAllNotificationsRead = () => {
+      setNotifications([]);
+    };
+
     socket.on("new_notification", handleNewNotification);
+    socket.on("notification_read", handleNotificationRead);
+    socket.on("all_notifications_read", handleAllNotificationsRead);
 
     return () => {
       socket.off("new_notification", handleNewNotification);
+      socket.off("notification_read", handleNotificationRead);
+      socket.off("all_notifications_read", handleAllNotificationsRead);
     };
   }, [socket]);
 

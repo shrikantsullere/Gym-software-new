@@ -5,6 +5,7 @@ import {
   getUserNotifications, 
   getAllUserNotifications,
   markAsRead,
+  markAllAsRead,
   broadcastAnnouncement,
   getBroadcastHistory,
   adminBroadcastAnnouncement,
@@ -36,6 +37,11 @@ router.get(
 router.put(
   "/read/:id",
   markAsRead
+);
+
+router.put(
+  "/read-all/:userId",
+  markAllAsRead
 );
 
 // --- Broadcast Routes for Super Admin ---

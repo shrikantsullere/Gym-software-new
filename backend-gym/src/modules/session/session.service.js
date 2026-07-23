@@ -235,7 +235,14 @@ export const deleteSessionService = async (sessionId) => {
     
     // Notify Trainer
     const cancelMsg = `Assigned session cancelled: ${exists.sessionName}`;
-    await sendAppNotification(exists.trainerId, cancelMsg);
+    await sendAppNotification(exists.trainerId, cancelMsg, {
+      title: "Session Cancelled",
+      receiver_role: "Trainer",
+      sender_id: exists.adminId,
+      sender_role: "Admin",
+      reference_type: "SESSION",
+      reference_id: sessionId
+    });
     
     // Notify Booked Members
     const [bookings] = await pool.query(
@@ -244,9 +251,21 @@ export const deleteSessionService = async (sessionId) => {
     );
     for (const b of bookings) {
       if (b.userId) {
-        await sendAppNotification(b.userId, `Booked session cancelled: ${exists.sessionName}`);
+        await sendAppNotification(b.userId, `Booked session cancelled: ${exists.sessionName}`, {
+          title: "Session Cancelled",
+          receiver_role: "Member",
+          sender_id: exists.adminId,
+          sender_role: "System",
+          reference_type: "SESSION",
+          reference_id: sessionId
+        });
       }
     }
+
+    // Log Admin Activity
+    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+      logAdminActivity(exists.adminId, "DELETE_SESSION", `Deleted session: ${exists.sessionName}`, sessionId);
+    });
 
     if (io) {
       io.emit("sessionCancelled", { sessionId });

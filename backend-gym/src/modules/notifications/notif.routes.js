@@ -89,4 +89,28 @@ router.delete(
   deleteAnnouncement
 );
 
+// --- Test Notification (Email / WhatsApp) ---
+router.post(
+  "/test",
+  verifyToken(["Admin", "Superadmin"]),
+  async (req, res, next) => {
+    try {
+      const { type, to } = req.body;
+      if (!type || !to) {
+        return res.status(400).json({ success: false, message: "type and to are required" });
+      }
+      const { sendNotificationService } = await import("./notif.service.js");
+      const result = await sendNotificationService({
+        type,
+        to,
+        message: `✅ Test notification from Speed Fitness Gym Software!\n\nThis is a test ${type} message sent at ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}.`,
+        subject: "Speed Fitness — Test Notification",
+      });
+      res.json({ success: true, message: `Test ${type} dispatched successfully`, result });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  }
+);
+
 export default router;

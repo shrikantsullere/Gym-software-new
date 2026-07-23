@@ -212,7 +212,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       { name: "Workout Builder", icon: faDumbbell, path: "/personaltrainer/workout-builder" },
       { name: "Health & BMI Log", icon: faHeartbeat, path: "/personaltrainer/health-log" },
       { name: "Classes Schedule", icon: faCalendar, path: "/personaltrainer/classesschedule" },
-      { name: "Bookings", icon: faCalendar, path: "/personaltrainer/bookings" },
       { name: "Shift Management", icon: faClock, path: "/personaltrainer/shift-managment" },
       { name: "Session Bookings", icon: faCalendarCheck, path: "/personaltrainer/bookings" },
       { name: "Attendance", icon: faClipboardCheck, path: "/personaltrainer/personalattendance" },

@@ -952,31 +952,56 @@ export const updateMemberService = async (id, data) => {
  * DELETE (SOFT DELETE)
  **************************************/
 export const deleteMemberService = async (id) => {
-  const [rows] = await pool.query("SELECT userId FROM member WHERE id = ?", [
-    id,
-  ]);
+  const [rows] = await pool.query("SELECT userId FROM member WHERE id = ?", [id]);
 
   if (rows.length === 0) {
     throw { status: 404, message: "Member not found" };
   }
 
   const userId = rows[0].userId;
+  const conn = await pool.getConnection();
 
-  // Delete all related data first to avoid FK constraint errors
-  await pool.query("DELETE FROM booking WHERE memberId = ?", [id]);
-  await pool.query("DELETE FROM memberattendance WHERE memberId = ?", [id]);
-  await pool.query("DELETE FROM payment WHERE memberId = ?", [id]);
-  await pool.query("DELETE FROM booking_requests WHERE memberId = ?", [id]);
-  // ✅ Also delete plan assignments
-  await pool.query("DELETE FROM member_plan_assignment WHERE memberId = ?", [id]);
+  try {
+    await conn.beginTransaction();
 
-  // Delete member record
-  await pool.query("DELETE FROM member WHERE id = ?", [id]);
+    // Delete all related data (order matters for FK constraints)
+    const relatedTables = [
+      ["DELETE FROM booking WHERE memberId = ?", [id]],
+      ["DELETE FROM memberattendance WHERE memberId = ?", [id]],
+      ["DELETE FROM payment WHERE memberId = ?", [id]],
+      ["DELETE FROM booking_requests WHERE memberId = ?", [id]],
+      ["DELETE FROM member_plan_assignment WHERE memberId = ?", [id]],
+      ["DELETE FROM notificationLog WHERE memberId = ?", [id]],
+      ["DELETE FROM personal_notification WHERE memberId = ?", [id]],
+      ["DELETE FROM assessment WHERE memberId = ?", [id]],
+      ["DELETE FROM health_metrics WHERE memberId = ?", [id]],
+      ["DELETE FROM workout_log WHERE memberId = ?", [id]],
+      ["DELETE FROM diet_plan WHERE memberId = ?", [id]],
+      ["DELETE FROM attendance WHERE memberId = ?", [id]],
+      ["DELETE FROM leaderboard WHERE memberId = ?", [id]],
+    ];
 
-  // Delete user account
-  await pool.query("DELETE FROM user WHERE id = ?", [userId]);
+    for (const [sql, params] of relatedTables) {
+      await conn.query(sql, params).catch(() => {}); // silently skip if table doesn't exist
+    }
 
-  return { message: "Member deleted permanently" };
+    // Delete member record
+    await conn.query("DELETE FROM member WHERE id = ?", [id]);
+
+    // Delete linked user account (if exists)
+    if (userId) {
+      await conn.query("DELETE FROM user WHERE id = ?", [userId]).catch(() => {});
+    }
+
+    await conn.commit();
+    return { message: "Member deleted permanently" };
+  } catch (err) {
+    await conn.rollback();
+    console.error("❌ deleteMemberService error:", err.message);
+    throw { status: 500, message: "Failed to delete member: " + err.message };
+  } finally {
+    conn.release();
+  }
 };
 
 // member.service.js

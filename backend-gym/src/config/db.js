@@ -2,6 +2,7 @@ import mysql from "mysql2";
 import dotenv from "dotenv";
 dotenv.config();
 
+// db.js: Updated to trigger nodemon restart
 // Create a **Promise Pool directly**
 export const pool = mysql
   .createPool({

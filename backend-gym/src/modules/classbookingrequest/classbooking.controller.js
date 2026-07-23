@@ -2473,19 +2473,19 @@ export const getBookingDetails = async (req, res) => {
       JOIN member m ON ub.memberId = m.id
       LEFT JOIN classschedule c ON ub.classId = c.id
       LEFT JOIN session s ON ub.sessionId = s.id
-      WHERE m.adminId = ?
+      WHERE (m.adminId = ? OR c.adminId = ? OR s.adminId = ?)
     `;
     
-    const params = [adminId];
+    const params = [adminId, adminId, adminId];
 
     if (trainerId) {
-      query += ' AND ub.trainerId = ?';
-      params.push(trainerId);
+      query += ' AND (ub.trainerId = ? OR c.trainerId = ? OR s.trainerId = ?)';
+      params.push(trainerId, trainerId, trainerId);
     }
 
-    if (type === 'class') {
+    if (type === 'class' || type === 'classes') {
       query += ' AND ub.classId IS NOT NULL';
-    } else if (type === 'session') {
+    } else if (type === 'session' || type === 'sessions') {
       query += ' AND ub.sessionId IS NOT NULL';
     }
 

@@ -90,10 +90,23 @@ const sendWhatsAppViaApi = async (phone, message, token, phoneNumberId) => {
  * @param {string} [params.subject]
  */
 export const sendNotificationService = async ({ type, to, message, memberId, subject }) => {
+  // Validate memberId exists in member table to prevent FK constraint failures
+  let validMemberId = null;
+  if (memberId) {
+    try {
+      const [mCheck] = await pool.query(`SELECT id FROM member WHERE id = ? LIMIT 1`, [memberId]);
+      if (mCheck.length > 0) {
+        validMemberId = memberId;
+      }
+    } catch (e) {
+      validMemberId = null;
+    }
+  }
+
   // Log with PENDING status first
   const [logResult] = await pool.query(
     `INSERT INTO notificationLog (type, \`to\`, message, memberId, status) VALUES (?, ?, ?, ?, ?)`,
-    [type, to, message, memberId || null, "PENDING"]
+    [type, to, message, validMemberId, "PENDING"]
   );
   const logId = logResult.insertId;
 
@@ -103,7 +116,8 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
     // ────────────────────────────────────────────
     if (type === "EMAIL") {
       if (!to || !to.includes("@")) {
-        throw new Error("Invalid email address: " + to);
+        await pool.query(`UPDATE notificationLog SET status = 'FAILED' WHERE id = ?`, [logId]);
+        return { success: false, reason: "Invalid email address: " + to };
       }
 
       const transporter = nodemailer.createTransport({
@@ -114,6 +128,7 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        tls: { rejectUnauthorized: false }
       });
 
       await transporter.sendMail({
@@ -126,6 +141,7 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
 
       await pool.query(`UPDATE notificationLog SET status = 'SENT' WHERE id = ?`, [logId]);
       console.log(`✉️ Email sent to ${to}`);
+      return { success: true };
     }
 
     // ────────────────────────────────────────────
@@ -135,7 +151,7 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
       const isSent = await sendWhatsAppViaApi(to, message, null, null);
       const status = isSent ? "SENT" : "FAILED";
       await pool.query(`UPDATE notificationLog SET status = ? WHERE id = ?`, [status, logId]);
-      if (!isSent) throw new Error("WhatsApp Meta API send failed for: " + to);
+      return { success: isSent, status };
     }
 
     // ────────────────────────────────────────────

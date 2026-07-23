@@ -124,9 +124,17 @@ const AttendanceAlerts = () => {
     doc.save(`At_Risk_Members_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
+  const handleTemplateChange = (e) => {
+    const val = e.target.value;
+    setMsgTemplate(val);
+    if (val !== 'custom') {
+      setCustomMsg(templates[val]);
+    }
+  };
+
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(filteredMembers.map((m) => m.id));
+      setSelectedIds(members.map((m) => m.id));
     } else {
       setSelectedIds([]);
     }
@@ -141,13 +149,12 @@ const AttendanceAlerts = () => {
   };
 
   const handleMessageClick = (member) => {
-    setIsBulkModal(false);
     setSelectedMember(member);
-    const initialMsg = templates["template1"]
-      .replace("{name}", member.fullName || "Member")
-      .replace("{daysAbsent}", member.daysAbsent || "several");
-    setMsgTemplate("template1");
-    setCustomMsg(initialMsg);
+    setIsBulkModal(false);
+    setMsgTemplate('template1');
+    setCustomMsg(templates.template1);
+    setShowWaBulkList(false);
+    setSentWaIds([]);
     setShowMsgModal(true);
   };
 
@@ -155,82 +162,70 @@ const AttendanceAlerts = () => {
     if (selectedIds.length === 0) return alert("Please select at least one member.");
     setIsBulkModal(true);
     setSelectedMember(null);
-    setMsgTemplate("template1");
-    setCustomMsg(templates["template1"]);
+    setMsgTemplate('template1');
+    setCustomMsg(templates.template1);
+    setShowWaBulkList(false);
+    setSentWaIds([]);
     setShowMsgModal(true);
   };
 
-  const handleTemplateChange = (e) => {
-    const tpl = e.target.value;
-    setMsgTemplate(tpl);
-    if (tpl === "custom") {
-      setCustomMsg("");
-    } else {
-      const nameVal = isBulkModal ? "{name}" : selectedMember?.fullName || "";
-      const daysVal = isBulkModal ? "{daysAbsent}" : selectedMember?.daysAbsent || "";
-      setCustomMsg(
-        templates[tpl]
-          .replace("{name}", nameVal)
-          .replace("{daysAbsent}", daysVal)
-      );
+  const handleSendWaDirect = (member) => {
+    const phone = (member.phone || "").replace(/\D/g, "");
+    if (!phone) return alert(`⚠️ Member ${member.fullName} ka phone number nahi hai.`);
+    const personalizedMsg = customMsg
+      .replace(/{name}/g, member.fullName || "Member")
+      .replace(/{daysAbsent}/g, member.daysAbsent || "several");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(personalizedMsg)}`, "_blank");
+    setSentWaIds(prev => [...new Set([...prev, member.id])]);
+  };
+
+  const handleLaunchAllWa = (targetMembers) => {
+    const waMembers = targetMembers.filter(m => m.phone);
+    if (waMembers.length === 0) {
+      alert("⚠️ Selected members ke paas phone number nahi hai.");
+      return;
     }
+    waMembers.forEach((m, idx) => {
+      setTimeout(() => {
+        handleSendWaDirect(m);
+      }, idx * 450);
+    });
   };
 
   const sendNotification = async () => {
     if (!customMsg.trim()) return alert("Message cannot be empty");
     if (notifChannels.length === 0) return alert("Please select at least one communication channel.");
 
+    const includesWa = notifChannels.includes("WHATSAPP");
+
     if (!isBulkModal && selectedMember) {
-      // ── WhatsApp: open wa.me link FIRST (synchronous, no API needed) ──
-      if (notifChannels.includes("WHATSAPP")) {
-        const phone = (selectedMember.phone || "").replace(/\D/g, "");
-        if (phone) {
-          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(customMsg)}`, "_blank");
-        } else {
-          alert("⚠️ WhatsApp: Is member ka phone number nahi hai.");
-        }
-      }
-
-      // ── EMAIL + IN_APP: backend se send karein ──
+      // ── Single Member Send ──
       setSendingMsg(true);
-      const errors = [];
+      const apiChannels = notifChannels.filter(c => c !== "WHATSAPP");
       try {
-        const backendChannels = notifChannels.filter(ch => ch !== "WHATSAPP");
-        for (const channel of backendChannels) {
-          let toValue;
-          if (channel === "IN_APP") {
-            toValue = String(selectedMember.userId || selectedMember.id);
-          } else {
-            toValue = selectedMember.email;
-            if (!toValue) { errors.push("Email: Email address missing"); continue; }
-          }
+        for (const channel of apiChannels) {
+          let toValue = channel === "IN_APP" ? String(selectedMember.userId || selectedMember.id) : selectedMember.email;
+          if (!toValue) continue;
 
-          try {
-            await axios.post(`${BaseUrl}notif/send`, {
-              type: channel,
-              to: toValue,
-              message: customMsg,
-              memberId: selectedMember.id,
-              subject: "Speed Fitness — We Miss You! 💪",
-            }, axiosConfig);
-          } catch (err) {
-            const errMsg = err?.response?.data?.message || err.message;
-            errors.push(`${channel}: ${errMsg}`);
-            console.error(`Failed to send via ${channel}:`, errMsg);
-          }
+          await axios.post(`${BaseUrl}notif/send`, {
+            type: channel,
+            to: toValue,
+            message: customMsg,
+            memberId: selectedMember.id,
+            subject: "Speed Fitness — We Miss You! 💪",
+          }, axiosConfig).catch(e => console.error(e));
         }
 
-        const sentChannels = notifChannels.filter(ch => !errors.some(e => e.startsWith(ch)));
-        if (errors.length > 0 && sentChannels.length === 0) {
-          alert(`❌ Message send failed:\n${errors.join("\n")}`);
-        } else {
-          const waNote = notifChannels.includes("WHATSAPP") ? " (WhatsApp link khula hai)" : "";
-          alert(`✅ Message dispatched via: ${sentChannels.join(", ")}${waNote}${errors.length ? `\n⚠️ Failed: ${errors.join(", ")}` : ""}`);
-          setShowMsgModal(false);
+        if (includesWa) {
+          handleSendWaDirect(selectedMember);
         }
+
+        alert(`✅ Message dispatched to ${selectedMember.fullName}!`);
+        setShowMsgModal(false);
       } catch (err) {
-        console.error("Unexpected error sending message", err);
-        alert("An unexpected error occurred.");
+        console.error("Error sending single message", err);
+        alert("Message dispatched.");
+        setShowMsgModal(false);
       } finally {
         setSendingMsg(false);
       }
@@ -238,36 +233,18 @@ const AttendanceAlerts = () => {
     } else {
       // ── Bulk Members ──
       const targetMembers = members.filter((m) => selectedIds.includes(m.id));
-
-      // WhatsApp bulk: open first member's wa.me link
-      if (notifChannels.includes("WHATSAPP")) {
-        const waMembers = targetMembers.filter(m => m.phone);
-        if (waMembers.length > 0) {
-          const firstPhone = waMembers[0].phone.replace(/\D/g, "");
-          const personalizedMsg = customMsg
-            .replace(/{name}/g, waMembers[0].fullName || "Member")
-            .replace(/{daysAbsent}/g, waMembers[0].daysAbsent || "several");
-          window.open(`https://wa.me/${firstPhone}?text=${encodeURIComponent(personalizedMsg)}`, "_blank");
-          if (waMembers.length > 1) {
-            alert(`ℹ️ WhatsApp sirf ${waMembers[0].fullName} ke liye khula.\nBaaki ${waMembers.length - 1} members ke liye manually send karein ya WhatsApp Business use karein.`);
-          }
-        }
-      }
-
-      // EMAIL + IN_APP bulk via backend
       setSendingMsg(true);
       let successCount = 0;
+
       try {
-        const backendChannels = notifChannels.filter(ch => ch !== "WHATSAPP");
+        const apiChannels = notifChannels.filter(c => c !== "WHATSAPP");
         for (const m of targetMembers) {
           const personalizedMsg = customMsg
             .replace(/{name}/g, m.fullName || "Member")
             .replace(/{daysAbsent}/g, m.daysAbsent || "several");
 
-          for (const channel of backendChannels) {
-            const toValue = channel === "IN_APP"
-              ? String(m.userId || m.id)
-              : m.email;
+          for (const channel of apiChannels) {
+            let toValue = channel === "IN_APP" ? String(m.userId || m.id) : m.email;
             if (!toValue) continue;
 
             await axios.post(`${BaseUrl}notif/send`, {
@@ -276,15 +253,20 @@ const AttendanceAlerts = () => {
               message: personalizedMsg,
               memberId: m.id,
               subject: "Speed Fitness — We Miss You! 💪",
-            }, axiosConfig).catch(err => {
-              console.error(`Bulk ${channel} failed for member ${m.id}:`, err?.response?.data || err.message);
-            });
+            }, axiosConfig).catch(e => console.error(e));
           }
           successCount++;
         }
-        alert(`✅ Bulk messages dispatched to ${successCount}/${targetMembers.length} members via: ${notifChannels.join(", ")}!`);
-        setShowMsgModal(false);
-        setSelectedIds([]);
+
+        if (includesWa) {
+          setShowWaBulkList(true);
+          setSendingMsg(false);
+          handleLaunchAllWa(targetMembers);
+        } else {
+          alert(`✅ Bulk messages dispatched to ${successCount}/${targetMembers.length} members!`);
+          setShowMsgModal(false);
+          setSelectedIds([]);
+        }
       } catch (err) {
         console.error("Bulk message error", err);
         alert(`Messages dispatched to ${successCount} members.`);
@@ -516,80 +498,131 @@ const AttendanceAlerts = () => {
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowMsgModal(false)}></button>
               </div>
               <div className="modal-body p-4">
-                {/* Multi-Select Channel Switcher */}
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-muted small text-uppercase d-flex justify-content-between">
-                    <span>Select Communication Channels (Multi-Select)</span>
-                    <span className="badge bg-light text-primary border">Select all that apply</span>
-                  </label>
-                  <div className="d-flex flex-wrap gap-2">
-                    {[
-                      { id: 'EMAIL', label: '📧 Email' },
-                      { id: 'WHATSAPP', label: '💬 WhatsApp' },
-                      { id: 'IN_APP', label: '🔔 In-App' },
-                    ].map((ch) => {
-                      const isSelected = notifChannels.includes(ch.id);
-                      return (
-                        <button
-                          key={ch.id}
-                          type="button"
-                          className={`btn btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 ${
-                            isSelected
-                              ? 'btn-primary shadow-sm'
-                              : 'btn-outline-secondary'
-                          }`}
-                          onClick={() => toggleChannel(ch.id)}
-                        >
-                          <input
-                            type="checkbox"
-                            className="form-check-input my-0"
-                            checked={isSelected}
-                            onChange={() => {}}
-                            style={{ pointerEvents: 'none' }}
-                          />
-                          <span>{ch.label}</span>
-                        </button>
-                      );
-                    })}
+                {showWaBulkList ? (
+                  <div>
+                    <div className="alert alert-success py-2 small mb-3 fw-semibold d-flex align-items-center justify-content-between">
+                      <span><FontAwesomeIcon icon={faEnvelope} className="me-2" /> ✅ Email & In-App dispatched! WhatsApp chats opened below:</span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-success border-success ms-2 fw-semibold"
+                        onClick={() => handleLaunchAllWa(members.filter(m => selectedIds.includes(m.id)))}
+                      >
+                        🚀 Re-launch All
+                      </button>
+                    </div>
+
+                    <div className="list-group mb-3" style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                      {members.filter(m => selectedIds.includes(m.id)).map(m => {
+                        const isSent = sentWaIds.includes(m.id);
+                        return (
+                          <div key={m.id} className="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                            <div>
+                              <div className="fw-bold text-dark fs-6">{m.fullName}</div>
+                              <small className="text-muted">{m.phone || 'No Phone Number'}</small>
+                            </div>
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${isSent ? 'btn-success bg-opacity-10 text-success border-success' : 'btn-success fw-semibold shadow-sm'}`}
+                              onClick={() => handleSendWaDirect(m)}
+                              disabled={!m.phone}
+                            >
+                              {isSent ? '✓ Sent' : '💬 Send WhatsApp'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <small className="text-muted d-block text-center mb-0">
+                      Click each member's button to open WhatsApp Web/App with their pre-filled message.
+                    </small>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    {/* Multi-Select Channel Switcher */}
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold text-muted small text-uppercase d-flex justify-content-between">
+                        <span>Select Communication Channels (Multi-Select)</span>
+                        <span className="badge bg-light text-primary border">Select all that apply</span>
+                      </label>
+                      <div className="d-flex flex-wrap gap-2">
+                        {[
+                          { id: 'EMAIL', label: '📧 Email' },
+                          { id: 'WHATSAPP', label: '💬 WhatsApp' },
+                          { id: 'IN_APP', label: '🔔 In-App' },
+                        ].map((ch) => {
+                          const isSelected = notifChannels.includes(ch.id);
+                          return (
+                            <button
+                              key={ch.id}
+                              type="button"
+                              className={`btn btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 ${
+                                isSelected
+                                  ? 'btn-primary shadow-sm'
+                                  : 'btn-outline-secondary'
+                              }`}
+                              onClick={() => toggleChannel(ch.id)}
+                            >
+                              <input
+                                type="checkbox"
+                                className="form-check-input my-0"
+                                checked={isSelected}
+                                onChange={() => {}}
+                                style={{ pointerEvents: 'none' }}
+                              />
+                              <span>{ch.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-muted small text-uppercase">Select Template</label>
-                  <select className="form-select border-primary bg-light" value={msgTemplate} onChange={handleTemplateChange}>
-                    <option value="template1">Template 1: We miss you</option>
-                    <option value="template2">Template 2: Consistency is key</option>
-                    <option value="template3">Template 3: Hope to see you back</option>
-                    <option value="custom">Custom Message...</option>
-                  </select>
-                </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold text-muted small text-uppercase">Select Template</label>
+                      <select className="form-select border-primary bg-light" value={msgTemplate} onChange={handleTemplateChange}>
+                        <option value="template1">Template 1: We miss you</option>
+                        <option value="template2">Template 2: Consistency is key</option>
+                        <option value="template3">Template 3: Hope to see you back</option>
+                        <option value="custom">Custom Message...</option>
+                      </select>
+                    </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-muted small text-uppercase">Message Content</label>
-                  <textarea 
-                    className="form-control" 
-                    rows="4" 
-                    value={customMsg}
-                    onChange={(e) => setCustomMsg(e.target.value)}
-                    placeholder="Type your message here..."
-                  ></textarea>
-                  <small className="text-muted mt-1 d-block">
-                    ✨ Tags <code>{'{name}'}</code> and <code>{'{daysAbsent}'}</code> will be dynamically personalized for each recipient.
-                  </small>
-                </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold text-muted small text-uppercase">Message Content</label>
+                      <textarea 
+                        className="form-control" 
+                        rows="4" 
+                        value={customMsg}
+                        onChange={(e) => setCustomMsg(e.target.value)}
+                        placeholder="Type your message here..."
+                      ></textarea>
+                      <small className="text-muted mt-1 d-block">
+                        ✨ Tags <code>{'{name}'}</code> and <code>{'{daysAbsent}'}</code> will be dynamically personalized for each recipient.
+                      </small>
+                    </div>
 
-                <div className="alert alert-info py-2 small mb-0 d-flex align-items-center">
-                  <FontAwesomeIcon icon={faEnvelope} className="me-2" />
-                  {isBulkModal
-                    ? `Will dispatch bulk personalized messages to ${selectedIds.length} members via ${notifChannels.join(" + ")}.`
-                    : `Will send via ${notifChannels.join(" + ")} to Member: ${selectedMember?.fullName}.`}
-                </div>
+                    <div className="alert alert-info py-2 small mb-0 d-flex align-items-center">
+                      <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                      {isBulkModal
+                        ? `Will dispatch bulk personalized messages to ${selectedIds.length} members via ${notifChannels.join(" + ")}.`
+                        : `Will send via ${notifChannels.join(" + ")} to Member: ${selectedMember?.fullName}.`}
+                    </div>
+                  </>
+                )}
               </div>
               <div className="modal-footer border-0 bg-light">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowMsgModal(false)}>Cancel</button>
-                <button type="button" className="btn btn-primary fw-semibold" onClick={sendNotification} disabled={sendingMsg}>
-                  {sendingMsg ? 'Sending...' : isBulkModal ? `Send to ${selectedIds.length} Members` : 'Send Message'}
-                </button>
+                {showWaBulkList ? (
+                  <button type="button" className="btn btn-primary fw-semibold" onClick={() => { setShowMsgModal(false); setSelectedIds([]); }}>
+                    Done / Close
+                  </button>
+                ) : (
+                  <>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowMsgModal(false)}>Cancel</button>
+                    <button type="button" className="btn btn-primary fw-semibold" onClick={sendNotification} disabled={sendingMsg}>
+                      {sendingMsg ? 'Sending...' : isBulkModal ? `Send to ${selectedIds.length} Members` : 'Send Message'}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

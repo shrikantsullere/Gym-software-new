@@ -94,6 +94,15 @@ const PersonalTrainerClassesSchedule = () => {
 
       const displayClasses = trainerClasses;
 
+      const getDayFromDate = (dStr, givenDay) => {
+        if (givenDay && givenDay.trim() && givenDay !== "Auto") return givenDay;
+        if (!dStr) return "—";
+        const dateObj = new Date(dStr);
+        if (isNaN(dateObj.getTime())) return "—";
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        return days[dateObj.getDay()] || "—";
+      };
+
       // Transform data to match the new API response structure
       const transformedClasses = displayClasses.map(classItem => ({
         id: classItem.id,
@@ -101,6 +110,7 @@ const PersonalTrainerClassesSchedule = () => {
         trainer: classItem.trainer || classItem.trainerName || name || "—",
         date: classItem.date,
         time: classItem.time,
+        day: getDayFromDate(classItem.date, classItem.day),
         status: classItem.status,
         membersCount: classItem.membersCount || 0,
         members: classItem.members || []
@@ -741,12 +751,22 @@ const PersonalTrainerClassesSchedule = () => {
                               ? selectedClass.date.split("T")[0]
                               : ""
                           }
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const dateVal = e.target.value;
+                            let calcDay = selectedClass.day;
+                            if (dateVal) {
+                              const dObj = new Date(dateVal);
+                              if (!isNaN(dObj.getTime())) {
+                                const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                                calcDay = days[dObj.getDay()];
+                              }
+                            }
                             setSelectedClass({
                               ...selectedClass,
-                              date: e.target.value,
-                            })
-                          }
+                              date: dateVal,
+                              day: calcDay,
+                            });
+                          }}
                         />
                       </div>
                       <div className="col-md-6 mb-3">

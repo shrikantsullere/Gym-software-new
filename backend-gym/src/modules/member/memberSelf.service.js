@@ -108,15 +108,15 @@ export const getMemberProfileService = async (userId) => {
     email: m.email,
     phone: m.phone,
     gstNumber: m.gstNumber,
-    tax: m.tax, 
-    gymName: m.gymName,          
+    tax: m.tax,
+    gymName: m.gymName,
     gymAddress: m.gymAddress,
     address_street: m.address_street,
     address_city: m.address_city,
     address_state: m.address_state,
     address_zip: m.address_zip,
     gender: m.gender,
-    profileImage: m.profileImage || null, 
+    profileImage: m.profileImage || null,
     date_of_birth: m.date_of_birth,
     plan_start_date: m.plan_start_date,
     plan_end_date: m.plan_end_date,
@@ -289,7 +289,7 @@ export const updateMemberPersonalService = async (userId, data) => {
     gstNumber,
     tax,
     gymAddress,
-    gymName        
+    gymName
   } = data;
 
   const [[userRow]] = await pool.query(
@@ -376,7 +376,7 @@ export const updateMemberPersonalService = async (userId, data) => {
       updatedGymAddress,
       updatedGymName,
       userId,
-      
+
     ]
   );
 

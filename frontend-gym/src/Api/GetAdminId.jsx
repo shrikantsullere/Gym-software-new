@@ -8,7 +8,7 @@ const GetAdminId = () => {
   } catch (e) {
     console.error("Error in GetAdminId:", e);
   }
-  return localStorage.getItem("userId"); 
+  return localStorage.getItem("userId");
 };
 export default GetAdminId;
 

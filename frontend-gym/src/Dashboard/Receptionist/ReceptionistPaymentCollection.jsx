@@ -330,7 +330,7 @@ const ReceptionistPaymentCollection = () => {
       {/* Header */}
       <div className="row mb-4">
         <div className="col-12">
-          <h2 className="fw-bold">Payments & Invoicing</h2>
+          <h2 className="fw-bold">Payments & Member Attendence</h2>
           <p className="text-muted mb-0">Manage payments, plans, and view attendance reports</p>
         </div>
       </div>

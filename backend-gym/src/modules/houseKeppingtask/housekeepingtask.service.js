@@ -1,5 +1,7 @@
 import { pool } from "../../config/db.js";
 
+import { sendAppNotification } from "../../utils/notificationHelper.js";
+
 export const createTaskService = async (data) => {
   const { assignedTo, roleId, adminId, branchId, taskTitle, dueDate, priority, description } =
     data;
@@ -27,7 +29,30 @@ export const createTaskService = async (data) => {
       result.insertId,
     ]);
 
-    return rows[0];
+    const newTask = rows[0];
+
+    // Notification Logic
+    if (assignedTo) {
+      // Find userId for assigned staff
+      const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id = ? OR userId = ?`, [assignedTo, assignedTo]);
+      if (staffRows.length > 0) {
+        const staffUserId = staffRows[0].userId;
+        const msg = `A new task has been assigned to you by Admin.
+Task Name: ${taskTitle}
+Priority: ${priority}
+Due Date: ${dueDate}
+Status: Assigned`;
+
+        await sendAppNotification(staffUserId, msg, {
+          title: "New Task Assigned",
+          sender_id: adminId,
+          reference_type: "TASK",
+          reference_id: result.insertId
+        });
+      }
+    }
+
+    return newTask;
   } catch (error) {
     throw new Error("Error creating task: " + error.message);
   }
@@ -187,17 +212,93 @@ export const updateTaskService = async (id, data) => {
 
   // 4️⃣ Updated data return karo
   const [rows] = await pool.query(`SELECT * FROM tasks WHERE id = ?`, [id]);
-  return rows[0];
+  const updatedTask = rows[0];
+
+  // Notification Logic
+  if (updatedData.assignedTo) {
+    const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id = ? OR userId = ?`, [updatedData.assignedTo, updatedData.assignedTo]);
+    if (staffRows.length > 0) {
+      const staffUserId = staffRows[0].userId;
+      const msg = `Task Updated: ${updatedData.taskTitle}
+Status: ${updatedData.status}
+Priority: ${updatedData.priority}`;
+      
+      await sendAppNotification(staffUserId, msg, {
+        title: "Task Updated",
+        sender_id: old.createdById,
+        reference_type: "TASK",
+        reference_id: id
+      });
+    }
+  }
+
+  return updatedTask;
 };
 
 export const updateTaskStatusService = async (id, status) => {
+  const [existingRows] = await pool.query(`SELECT * FROM tasks WHERE id = ?`, [id]);
+  if (!existingRows.length) throw { status: 404, message: "Task not found" };
+  const existing = existingRows[0];
+
   await pool.query(`UPDATE tasks SET status = ? WHERE id = ?`, [status, id]);
 
   const [rows] = await pool.query(`SELECT * FROM tasks WHERE id = ?`, [id]);
-  return rows[0];
+  const updatedTask = rows[0];
+
+  // Notification Logic
+  if (["In Progress", "Completed"].includes(status)) {
+    // Notify Admin
+    let staffName = "Staff";
+    if (existing.assignedTo) {
+      const [sRows] = await pool.query(`SELECT user.fullName FROM staff JOIN user ON staff.userId = user.id WHERE staff.id = ? OR staff.userId = ?`, [existing.assignedTo, existing.assignedTo]);
+      if (sRows.length > 0) staffName = sRows[0].fullName;
+    }
+    const msg = status === "Completed" ? `${staffName} completed task: ${existing.taskTitle}` : `${staffName} started task: ${existing.taskTitle}`;
+    
+    await sendAppNotification(existing.createdById, msg, {
+      title: `Task ${status}`,
+      reference_type: "TASK",
+      reference_id: id
+    });
+  } else if (["Approved", "Rejected"].includes(status) && existing.assignedTo) {
+    // Notify Staff
+    const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id = ? OR userId = ?`, [existing.assignedTo, existing.assignedTo]);
+    if (staffRows.length > 0) {
+      const staffUserId = staffRows[0].userId;
+      const msg = status === "Approved" ? `Your completed task has been approved: ${existing.taskTitle}` : `Your completed task has been rejected: ${existing.taskTitle}`;
+      
+      await sendAppNotification(staffUserId, msg, {
+        title: `Task ${status}`,
+        sender_id: existing.createdById,
+        reference_type: "TASK",
+        reference_id: id
+      });
+    }
+  }
+
+  return updatedTask;
 };
 
 export const deleteTaskService = async (id) => {
+  const [existingRows] = await pool.query(`SELECT * FROM tasks WHERE id = ?`, [id]);
+  if (existingRows.length > 0) {
+    const existing = existingRows[0];
+    if (existing.assignedTo) {
+      const [staffRows] = await pool.query(`SELECT userId FROM staff WHERE id = ? OR userId = ?`, [existing.assignedTo, existing.assignedTo]);
+      if (staffRows.length > 0) {
+        const staffUserId = staffRows[0].userId;
+        const msg = `Assigned Task Cancelled: ${existing.taskTitle}`;
+        
+        await sendAppNotification(staffUserId, msg, {
+          title: "Task Cancelled",
+          sender_id: existing.createdById,
+          reference_type: "TASK",
+          reference_id: id
+        });
+      }
+    }
+  }
+
   await pool.query(`DELETE FROM tasks WHERE id = ?`, [id]);
   return { message: "Task deleted successfully" };
 };

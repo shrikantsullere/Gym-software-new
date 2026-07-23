@@ -135,6 +135,8 @@ export const deleteShift = async (req, res) => {
   return res.json({ success: true, message: "Shift deleted" });
 };
 
+import { sendAppNotification } from "../../utils/notificationHelper.js";
+
 // approve / reject only
 export const updateShiftStatus = async (req, res) => {
   try {
@@ -145,7 +147,23 @@ export const updateShiftStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Status required" });
     }
 
+    const shiftBefore = await getShiftByIdService(id);
     const updated = await updateShiftService(id, { status });
+
+    if (shiftBefore && shiftBefore.createdById) {
+      let staffName = "Staff";
+      if (req.user && req.user.fullName) {
+        staffName = req.user.fullName;
+      }
+      
+      const msg = `${staffName} has ${status.toLowerCase()} the shift: ${shiftBefore.shiftType}`;
+      await sendAppNotification(shiftBefore.createdById, msg, {
+        title: `Shift ${status}`,
+        reference_type: "SHIFT",
+        reference_id: id
+      });
+    }
+
     return res.json({
       success: true,
       message: `Shift ${status} successfully`,

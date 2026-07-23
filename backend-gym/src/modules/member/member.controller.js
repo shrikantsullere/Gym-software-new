@@ -20,6 +20,8 @@ import {
   importMembersService
 } from "./member.service.js";
 
+import { getIO } from "../../config/socket.js";
+
 export const createMember = async (req, res, next) => {
   try {
     let payload = { ...req.body };
@@ -62,6 +64,17 @@ export const createMember = async (req, res, next) => {
     }
 
     const m = await createMemberService(payload);
+
+    // ⚡ Realtime Socket Emission for Instant Dashboard Sync
+    try {
+      const io = getIO();
+      if (io) {
+        io.emit("dashboardStatsUpdated", { type: "MEMBER_CREATED", adminId: payload.adminId, memberId: m.id });
+        io.emit("membershipCreated", { adminId: payload.adminId, memberId: m.id });
+      }
+    } catch (socErr) {
+      console.warn("Socket emission notice:", socErr.message);
+    }
 
     res.json({
       success: true,

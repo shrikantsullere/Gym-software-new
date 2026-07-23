@@ -74,16 +74,28 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleCheckinUpdate = (payload) => {
-      console.log("⚡ Real-time check-in/out update received:", payload);
+    const handleUpdate = (payload) => {
+      console.log("⚡ Real-time update received:", payload);
       // Silent refresh (refresh dashboard counts without full screen loading spinner)
       fetchDashboardData(false);
     };
 
-    socket.on("checkin_update", handleCheckinUpdate);
+    socket.on("checkin_update", handleUpdate);
+    socket.on("dashboardStatsUpdated", handleUpdate);
+    socket.on("paymentCompleted", handleUpdate);
+    socket.on("membershipCreated", handleUpdate);
+    socket.on("membershipUpdated", handleUpdate);
+    socket.on("membershipRenewed", handleUpdate);
+    socket.on("revenueUpdated", handleUpdate);
 
     return () => {
-      socket.off("checkin_update", handleCheckinUpdate);
+      socket.off("checkin_update", handleUpdate);
+      socket.off("dashboardStatsUpdated", handleUpdate);
+      socket.off("paymentCompleted", handleUpdate);
+      socket.off("membershipCreated", handleUpdate);
+      socket.off("membershipUpdated", handleUpdate);
+      socket.off("membershipRenewed", handleUpdate);
+      socket.off("revenueUpdated", handleUpdate);
     };
   }, [socket, adminId, selectedMonth, chartPeriod]);
 

@@ -22,14 +22,38 @@ const Profile = () => {
     alert('Profile updated!');
   };
 
-  const handlePasswordUpdate = (e) => {
+  const handlePasswordUpdate = async (e) => {
     e.preventDefault();
+    if (!formData.currentPassword || !formData.newPassword) {
+      alert("Please fill in current and new password.");
+      return;
+    }
     if (formData.newPassword !== formData.confirmPassword) {
       alert("New passwords do not match!");
       return;
     }
-    // Handle password update logic
-    alert("Password updated!");
+
+    try {
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : {};
+      const userId = user.id || user.userId;
+
+      const res = await axiosInstance.put("auth/changepassword", {
+        id: userId,
+        oldPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      });
+
+      if (res.data?.success) {
+        alert("Password updated successfully!");
+        setFormData(prev => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
+      } else {
+        alert("Failed to update password: " + (res.data?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Password update error:", err);
+      alert("Error: " + (err.response?.data?.message || err.message));
+    }
   };
 
   return (

@@ -276,8 +276,11 @@ export const getSalesDashboard = async (req, res, next) => {
       bIdParams
     );
 
+    const periodMonths = Number(req.query.period) === 6 ? 6 : 1;
+    const periodParams = branchId ? [adminId, branchId, periodMonths] : [adminId, periodMonths];
+
     /* =========================
-       5️⃣ REVENUE VS EXPENSES (Last 6 Months)
+       5️⃣ REVENUE VS EXPENSES
     ========================= */
     // Income
     const [incomeData] = await pool.query(
@@ -289,11 +292,11 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM member m
       WHERE m.adminId = ?
         ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-        AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       GROUP BY year, month
       ORDER BY year, MONTH(m.joinDate)
       `,
-      bIdParams
+      periodParams
     );
 
     // Expenses (Expense + Salary)
@@ -307,10 +310,10 @@ export const getSalesDashboard = async (req, res, next) => {
       JOIN branch b ON e.branchId = b.id
       WHERE b.adminId = ?
         ${branchId ? "AND (e.branchId = ? OR e.branchId IS NULL)" : ""}
-        AND e.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        AND e.date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       GROUP BY year, month
       `,
-      bIdParams
+      periodParams
     );
 
     /* =========================

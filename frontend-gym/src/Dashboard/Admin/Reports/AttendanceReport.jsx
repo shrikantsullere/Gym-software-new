@@ -19,7 +19,7 @@ export default function AttendanceReport() {
     { value: "", label: "Select Role..." },
     {
       value: "staff",
-      label: "Staff (Receptionist, PT, Housekeeping)",
+      label: "Staff (Receptionist, PT)",
     },
     { value: "member", label: "Member" },
   ];
@@ -113,13 +113,7 @@ export default function AttendanceReport() {
         scheduled: 40,
         present: 40,
       },
-      {
-        name: "I. Desai",
-        role: "Housekeeping",
-        shift: "Weekend",
-        scheduled: 16,
-        present: 14,
-      },
+
       {
         name: "S. Gupta",
         role: "Manager",
@@ -721,7 +715,7 @@ export default function AttendanceReport() {
             <h5>Select Role to View Attendance</h5>
             <p className="lead">
               Choose <strong>Staff</strong> to see
-              trainer/reception/housekeeping attendance
+              trainer/receptionist attendance
               <br />
               or <strong>Member</strong> to see check-in patterns and no-shows
             </p>

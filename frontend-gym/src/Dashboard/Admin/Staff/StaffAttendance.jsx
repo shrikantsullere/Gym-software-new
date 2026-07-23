@@ -131,28 +131,30 @@ const StaffAttendance = () => {
       );
 
       if (response.data?.success && Array.isArray(response.data.attendance)) {
-        const transformedRecords = response.data.attendance.map((record) => {
-          const formattedRole = record.role
-            ? record.role.charAt(0).toUpperCase() + record.role.slice(1)
-            : "Unknown";
+        const transformedRecords = response.data.attendance
+          .filter((record) => !record.role || !record.role.toLowerCase().includes("housekeeping"))
+          .map((record) => {
+            const formattedRole = record.role
+              ? record.role.charAt(0).toUpperCase() + record.role.slice(1)
+              : "Unknown";
 
-          return {
-            attendance_id: record.id || Date.now(),
-            staff_id: record.staffId || record.memberId || null,
-            staff_name: record.name || "Unknown",
-            role: formattedRole,
-            branch: record.branch || "Main Branch",
-            date: record.date ? record.date.split("T")[0] : "",
-            checkin_time: record.checkIn,
-            checkout_time: record.checkOut,
-            mode: record.mode || "-",
-            shift_id: null,
-            shift_name: record.shift || calculateShiftType(record.checkIn),
-            status: record.status || "Unknown",
-            notes: record.notes || "",
-            member_id: record.memberId || null,
-          };
-        });
+            return {
+              attendance_id: record.id || Date.now(),
+              staff_id: record.staffId || record.memberId || null,
+              staff_name: record.name || "Unknown",
+              role: formattedRole,
+              branch: record.branch || "Main Branch",
+              date: record.date ? record.date.split("T")[0] : "",
+              checkin_time: record.checkIn,
+              checkout_time: record.checkOut,
+              mode: record.mode || "-",
+              shift_id: null,
+              shift_name: record.shift || calculateShiftType(record.checkIn),
+              status: record.status || "Unknown",
+              notes: record.notes || "",
+              member_id: record.memberId || null,
+            };
+          });
 
         setRecords(transformedRecords);
       } else {

@@ -42,13 +42,11 @@ export default function SalesReport() {
   const reportRef = useRef(null);
   const [staffList, setStaffList] = useState([]);
 
-  // All roles with new report types
   const roles = [
     { value: "member", label: "Total Sales" },
     { value: "receptionist", label: "Receptionist" },
     { value: "personal_trainer", label: "Personal Trainer" },
     { value: "general_trainer", label: "General Trainer" },
-    { value: "housekeeping", label: "Housekeeping" },
   ];
 
   const [dateFrom, setDateFrom] = useState(getTodayDate());

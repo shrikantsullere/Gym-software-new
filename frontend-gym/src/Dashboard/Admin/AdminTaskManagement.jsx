@@ -30,9 +30,10 @@ const AdminTaskManagement = () => {
   });
 
   const departments = [
-    { id: 3, name: 'General Trainer' },
+    { id: 6, name: 'General Trainer' },
     { id: 5, name: 'Personal Trainer' },
-    { id: 7, name: 'Sales' },
+    { id: 10, name: 'Sales Agent' },
+    { id: 7, name: 'Receptionist' },
     { id: 2, name: 'Admin' },
   ];
 

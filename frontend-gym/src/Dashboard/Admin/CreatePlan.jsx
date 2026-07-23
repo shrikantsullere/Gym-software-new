@@ -875,6 +875,25 @@ const CreatePlan = () => {
     </Col>
   );
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "N/A";
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const renderRequestRow = (req, index, type) => (
     <tr key={req.id}>
       <td>{index + 1}</td>
@@ -898,7 +917,7 @@ const CreatePlan = () => {
           {type === "renewal" ? req.requestedPlanType : "Membership"}
         </span>
       </td>
-      <td>{req.requestedAt}</td>
+      <td>{formatDateTime(req.requestedAt)}</td>
       <td>
         {req.status === "pending" && (
           <span
@@ -1020,7 +1039,7 @@ const CreatePlan = () => {
         </div>
         <div className="mb-3">
           <span className="text-muted small">Requested: </span>
-          {req.requestedAt}
+          {formatDateTime(req.requestedAt)}
         </div>
         <div className="d-flex justify-content-between align-items-center">
           <div>

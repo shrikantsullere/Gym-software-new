@@ -1034,8 +1034,8 @@ export const getAdminDashboardData = async (adminId, branchId = null, monthStr =
  WHERE adminId = ?
    ${bId ? "AND branchId = ?" : ""}
    AND membershipTo IS NOT NULL
-   AND DATE(membershipFrom) <= CURDATE()
-   AND DATEDIFF(membershipTo, CURDATE()) > 0
+   AND DATE(membershipFrom) <= ?
+   AND DATEDIFF(membershipTo, ?) > 0
 ) AS totalMembers,
 
 
@@ -1047,10 +1047,10 @@ export const getAdminDashboardData = async (adminId, branchId = null, monthStr =
 
       -- Today's Member Check-ins (JOIN member → user → adminId)
       (SELECT COUNT(*) FROM memberattendance ma
-        JOIN member m ON ma.memberId = m.userId
+        JOIN member m ON ma.memberId = m.id
         WHERE m.adminId = ?
         ${bId ? "AND m.branchId = ?" : ""}
-        AND DATE(ma.checkIn) = CURDATE()
+        AND DATE(CONVERT_TZ(ma.checkIn, '+00:00', '+05:30')) = ?
       ) AS todaysMemberCheckins,
 
       -- Today's Staff Check-ins (JOIN staff → adminId)
@@ -1059,7 +1059,7 @@ export const getAdminDashboardData = async (adminId, branchId = null, monthStr =
         JOIN staff s ON ma.memberId = s.userId
         WHERE s.adminId = ?
         ${bId ? "AND s.branchId = ?" : ""}
-        AND DATE(ma.checkIn) = CURDATE()
+        AND DATE(CONVERT_TZ(ma.checkIn, '+00:00', '+05:30')) = ?
       ) AS todaysStaffCheckins
   `;
 
@@ -1179,11 +1179,22 @@ const recentActivitiesQuery = `
     LIMIT 10;
   `;
 
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // 'YYYY-MM-DD'
+
   const statsParams = [];
+  // 1. totalMembers
   statsParams.push(adminId); if (bId) statsParams.push(bId);
+  statsParams.push(todayStr);
+  statsParams.push(todayStr);
+  // 2. totalStaff
   statsParams.push(adminId); if (bId) statsParams.push(bId);
+  // 3. todaysMemberCheckins
   statsParams.push(adminId); if (bId) statsParams.push(bId);
+  statsParams.push(todayStr);
+  // 4. todaysStaffCheckins
   statsParams.push(adminId); if (bId) statsParams.push(bId);
+  statsParams.push(todayStr);
 
   const [stats] = await pool.query(statsQuery, statsParams);
 

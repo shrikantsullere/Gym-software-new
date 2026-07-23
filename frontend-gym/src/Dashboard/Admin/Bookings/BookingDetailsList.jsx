@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../Api/axiosInstance';
 import { FaDownload, FaCalendarAlt, FaClock, FaUser, FaPhone } from 'react-icons/fa';
+import { useSocket } from '../../../Context/SocketContext';
 
 const BookingDetailsList = ({ type }) => {
   const [activeTab, setActiveTab] = useState(type || 'classes');
@@ -17,8 +18,11 @@ const BookingDetailsList = ({ type }) => {
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user) throw new Error("User not found");
       
-      const adminId = user.role === 'Admin' || user.role === 'Superadmin' ? user.id : user.adminId;
-      const isTrainer = user.role !== 'Admin' && user.role !== 'Superadmin';
+      const role = user.roleName || user.role || '';
+      const isAdminOrSuper = role === 'Admin' || role === 'Superadmin' || role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'SUPERADMIN';
+      
+      const adminId = isAdminOrSuper ? user.id : user.adminId;
+      const isTrainer = !isAdminOrSuper;
       
       let endpoint = `booking/admin-details/${adminId}`;
       if (isTrainer) {
@@ -26,22 +30,44 @@ const BookingDetailsList = ({ type }) => {
       }
       
       const response = await axiosInstance.get(`${endpoint}?type=${type}`);
+      console.log("FETCH BOOKINGS RESPONSE:", response.data);
       if (response.data.success) {
         setBookings(response.data.data);
       } else {
         throw new Error(response.data.message || 'Failed to fetch bookings');
       }
     } catch (err) {
-      console.error(err);
+      console.error("FETCH BOOKINGS ERROR:", err);
       setError('Error loading booking details.');
     } finally {
       setLoading(false);
     }
   };
 
+  const socket = useSocket();
+
   useEffect(() => {
     fetchBookings(activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleRefresh = () => {
+      console.log("Socket event received in BookingDetailsList, refreshing bookings...");
+      fetchBookings(activeTab);
+    };
+
+    socket.on("bookingCreated", handleRefresh);
+    socket.on("bookingUpdated", handleRefresh);
+    socket.on("bookingCancelled", handleRefresh);
+
+    return () => {
+      socket.off("bookingCreated", handleRefresh);
+      socket.off("bookingUpdated", handleRefresh);
+      socket.off("bookingCancelled", handleRefresh);
+    };
+  }, [socket, activeTab]);
 
   const exportToCSV = () => {
     if (bookings.length === 0) return;

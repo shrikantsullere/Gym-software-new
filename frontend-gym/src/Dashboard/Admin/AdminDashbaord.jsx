@@ -12,6 +12,7 @@ import * as echarts from "echarts";
 import axiosInstance from "../../Api/axiosInstance";
 import GetAdminId from "../../Api/GetAdminId";
 import AnnouncementBanner from "../../Components/AnnouncementBanner";
+import { useSocket } from "../../Context/SocketContext";
 
 // Note: RiMoneyDollarCircleLine is not in your imports — using RiStoreLine as fallback or remove if unused.
 // Since you're not using payment icon in visible cards, and to avoid error, we'll avoid referencing it.
@@ -19,6 +20,7 @@ import AnnouncementBanner from "../../Components/AnnouncementBanner";
 
 const AdminDashboard = () => {
   const adminId = GetAdminId();
+  const socket = useSocket();
   const memberGrowthChartRef = useRef(null);
   const revenueChartRef = useRef(null);
   const profitChartRef = useRef(null);
@@ -36,37 +38,54 @@ const AdminDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const branchDisplayName = user.branchName || "Main Branch";
 
-  // Fetch dashboard data
+  const fetchDashboardData = async (showLoadingState = true) => {
+    if (!adminId) {
+      setError("Admin ID not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (showLoadingState) setLoading(true);
+      const response = await axiosInstance.get(
+        `auth/admindashboard/${adminId}?branchId=${user.branchId || ""}&month=${selectedMonth}&chartPeriod=${chartPeriod}`
+      );
+
+      if (response.data.success && response.data.data) {
+        setDashboardData(response.data.data);
+        setError(null);
+      } else {
+        setError("Failed to load dashboard data");
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load dashboard data. Please try again.");
+    } finally {
+      if (showLoadingState) setLoading(false);
+    }
+  };
+
+  // Fetch dashboard data on mount/parameters change
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!adminId) {
-        setError("Admin ID not found. Please log in again.");
-        setLoading(false);
-        return;
-      }
+    fetchDashboardData(true);
+  }, [adminId, selectedMonth, chartPeriod]);
 
-      try {
-        setLoading(true);
-        const response = await axiosInstance.get(
-          `auth/admindashboard/${adminId}?branchId=${user.branchId || ""}&month=${selectedMonth}&chartPeriod=${chartPeriod}`
-        );
+  // Set up socket listener for real-time updates
+  useEffect(() => {
+    if (!socket) return;
 
-        if (response.data.success && response.data.data) {
-          setDashboardData(response.data.data);
-          setError(null);
-        } else {
-          setError("Failed to load dashboard data");
-        }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+    const handleCheckinUpdate = (payload) => {
+      console.log("⚡ Real-time check-in/out update received:", payload);
+      // Silent refresh (refresh dashboard counts without full screen loading spinner)
+      fetchDashboardData(false);
     };
 
-    fetchDashboardData();
-  }, [adminId, selectedMonth, chartPeriod]);
+    socket.on("checkin_update", handleCheckinUpdate);
+
+    return () => {
+      socket.off("checkin_update", handleCheckinUpdate);
+    };
+  }, [socket, adminId, selectedMonth, chartPeriod]);
 
   // Initialize charts
   useEffect(() => {

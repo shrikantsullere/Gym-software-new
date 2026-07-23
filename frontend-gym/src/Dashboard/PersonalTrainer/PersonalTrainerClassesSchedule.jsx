@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../Api/axiosInstance";
 import CustomTimePicker from "../../Components/CustomTimePicker";
 import BookingDetailsList from "../Admin/Bookings/BookingDetailsList";
+import { useSocket } from "../../Context/SocketContext";
 
 const PersonalTrainerClassesSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +45,35 @@ const PersonalTrainerClassesSchedule = () => {
     fetchAllData();
   }, [adminId]);
 
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleRefresh = () => {
+      console.log("Socket event received, refreshing PT classes...");
+      fetchAllData();
+    };
+
+    socket.on("bookingCreated", handleRefresh);
+    socket.on("classCreated", handleRefresh);
+    socket.on("classCancelled", handleRefresh);
+    socket.on("trainerAssigned", handleRefresh);
+    socket.on("capacityUpdated", handleRefresh);
+    socket.on("bookingUpdated", handleRefresh);
+    socket.on("bookingCancelled", handleRefresh);
+
+    return () => {
+      socket.off("bookingCreated", handleRefresh);
+      socket.off("classCreated", handleRefresh);
+      socket.off("classCancelled", handleRefresh);
+      socket.off("trainerAssigned", handleRefresh);
+      socket.off("capacityUpdated", handleRefresh);
+      socket.off("bookingUpdated", handleRefresh);
+      socket.off("bookingCancelled", handleRefresh);
+    };
+  }, [socket, adminId]);
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -62,7 +92,7 @@ const PersonalTrainerClassesSchedule = () => {
         return matchesId || matchesName;
       });
 
-      const displayClasses = trainerClasses.length > 0 ? trainerClasses : allClasses;
+      const displayClasses = trainerClasses;
 
       // Transform data to match the new API response structure
       const transformedClasses = displayClasses.map(classItem => ({
@@ -71,9 +101,9 @@ const PersonalTrainerClassesSchedule = () => {
         trainer: classItem.trainer || classItem.trainerName || name || "—",
         date: classItem.date,
         time: classItem.time,
-        day: classItem.day || '', // Handle empty day field
         status: classItem.status,
-        membersCount: classItem.membersCount || 0
+        membersCount: classItem.membersCount || 0,
+        members: classItem.members || []
       }));
 
       setClasses(transformedClasses);

@@ -515,6 +515,9 @@ export const deleteStaffService = async (staffId) => {
   // 🔥 sessions (NEW FIX)
   await pool.query("DELETE FROM session WHERE trainerId = ?", [userId]);
 
+  // 🔥 member (Reset trainerId to NULL if the trainer is deleted)
+  await pool.query("UPDATE member SET trainerId = NULL WHERE trainerId = ?", [userId]);
+
   /* ----------------------------------------------------
      3️⃣ DELETE STAFF RELATED DATA
   ---------------------------------------------------- */

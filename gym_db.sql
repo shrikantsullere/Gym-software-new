@@ -1735,6 +1735,7 @@ CREATE TABLE `session` (
   `duration` int(11) NOT NULL,
   `description` varchar(191) DEFAULT NULL,
   `status` varchar(191) NOT NULL DEFAULT 'Upcoming',
+  `capacity` int(11) NOT NULL DEFAULT 20,
   `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

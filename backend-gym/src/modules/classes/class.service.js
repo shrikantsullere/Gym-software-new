@@ -478,9 +478,10 @@ export const getScheduledClassesWithBookingStatusService = async (
       ON cs.trainerId = u.id
 
     -- booking ONLY if member is valid
-    LEFT JOIN booking bk
-      ON bk.scheduleId = cs.id
+    LEFT JOIN unified_bookings bk
+      ON bk.classId = cs.id
      AND bk.memberId = ?
+     AND bk.bookingStatus != 'Cancelled'
 
     LEFT JOIN member m
       ON m.id = bk.memberId
@@ -489,8 +490,9 @@ export const getScheduledClassesWithBookingStatusService = async (
       ON mu.id = m.userId
 
     -- total bookings
-    LEFT JOIN booking bk2
-      ON bk2.scheduleId = cs.id
+    LEFT JOIN unified_bookings bk2
+      ON bk2.classId = cs.id
+     AND bk2.bookingStatus != 'Cancelled'
 
     WHERE (u.adminId = ? OR cs.adminId = ?)
 

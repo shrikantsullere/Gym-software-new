@@ -4,56 +4,170 @@ import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 import { emitToUser } from "../../config/socket.js";
 
 /**
+ * Build a styled HTML email body
+ */
+const buildEmailHtml = (message) => {
+  const lines = message.split("\n").map(l => `<p style="margin:4px 0;color:#374151;">${l}</p>`).join("");
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head><meta charset="UTF-8"/></head>
+  <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:30px 0;">
+      <tr><td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">💪 Speed Fitness</h1>
+              <p style="margin:4px 0 0;color:#e0e7ff;font-size:13px;">Your Fitness Partner</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              ${lines}
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f9fafb;padding:20px 32px;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">This is an automated message from Speed Fitness Gym Management System.</p>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+  </html>`;
+};
+
+/**
+ * Send WhatsApp via Meta Cloud API
+ */
+const sendWhatsAppViaApi = async (phone, message, token, phoneNumberId) => {
+  const activeToken = token || process.env.WHATSAPP_ACCESS_TOKEN;
+  const activePhoneId = phoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (!activeToken || !activePhoneId) {
+    console.warn("⚠️ WhatsApp API credentials not set. Skipping WhatsApp send.");
+    return false;
+  }
+
+  const cleanPhone = phone.toString().replace(/\D/g, "");
+  if (!cleanPhone) return false;
+
+  const apiUrl = `https://graph.facebook.com/v19.0/${activePhoneId}/messages`;
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${activeToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: cleanPhone,
+      type: "text",
+      text: { preview_url: false, body: message },
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    console.error("❌ WhatsApp Meta API Error:", JSON.stringify(data));
+    return false;
+  }
+  console.log(`✅ WhatsApp sent to ${cleanPhone} via Meta Cloud API`);
+  return true;
+};
+
+/**
  * Send notification using MySQL pool
  * @param {Object} params
- * @param {"EMAIL"|"WHATSAPP"|"SMS"} params.type
- * @param {string} params.to
+ * @param {"EMAIL"|"WHATSAPP"|"IN_APP"|"IN-APP"|"APP_PUSH"} params.type
+ * @param {string} params.to  - email address / phone / userId string
  * @param {string} params.message
  * @param {number} [params.memberId]
+ * @param {string} [params.subject]
  */
-export const sendNotificationService = async ({ type, to, message, memberId }) => {
-  // Log notification with PENDING status
+export const sendNotificationService = async ({ type, to, message, memberId, subject }) => {
+  // Log with PENDING status first
   const [logResult] = await pool.query(
-    `INSERT INTO notificationLog (type, \`to\`, message, memberId, status)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO notificationLog (type, \`to\`, message, memberId, status) VALUES (?, ?, ?, ?, ?)`,
     [type, to, message, memberId || null, "PENDING"]
   );
   const logId = logResult.insertId;
 
   try {
+    // ────────────────────────────────────────────
+    // 1. EMAIL  →  SendGrid SMTP
+    // ────────────────────────────────────────────
     if (type === "EMAIL") {
+      if (!to || !to.includes("@")) {
+        throw new Error("Invalid email address: " + to);
+      }
+
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: false,
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
       });
 
       await transporter.sendMail({
-        from: process.env.MAIL_FROM,
+        from: process.env.MAIL_FROM || "Speed Fitness <noreply@gymsoftware.space>",
         to,
-        subject: "Gym Notification",
+        subject: subject || "Speed Fitness — Gym Notification",
         text: message,
+        html: buildEmailHtml(message),
       });
 
-      // Update log as SENT
-      await pool.query(
-        `UPDATE notificationLog SET status = ? WHERE id = ?`,
-        ["SENT", logId]
-      );
+      await pool.query(`UPDATE notificationLog SET status = 'SENT' WHERE id = ?`, [logId]);
+      console.log(`✉️ Email sent to ${to}`);
     }
 
-    // WHATSAPP / SMS placeholders
-    // if (type === "WHATSAPP") { ... }
-    // if (type === "SMS") { ... }
+    // ────────────────────────────────────────────
+    // 2. WHATSAPP  →  Meta Cloud API (backend)
+    // ────────────────────────────────────────────
+    else if (type === "WHATSAPP") {
+      const isSent = await sendWhatsAppViaApi(to, message, null, null);
+      const status = isSent ? "SENT" : "FAILED";
+      await pool.query(`UPDATE notificationLog SET status = ? WHERE id = ?`, [status, logId]);
+      if (!isSent) throw new Error("WhatsApp Meta API send failed for: " + to);
+    }
+
+    // ────────────────────────────────────────────
+    // 3. IN_APP  →  Bell Icon (notificationlog UNREAD)
+    // ────────────────────────────────────────────
+    else if (type === "IN_APP" || type === "IN-APP" || type === "APP_PUSH") {
+      await pool.query(
+        `UPDATE notificationLog SET type = 'IN_APP', status = 'UNREAD' WHERE id = ?`,
+        [logId]
+      );
+      // Real-time socket push if userId is numeric
+      const numericId = parseInt(to);
+      if (!isNaN(numericId)) {
+        emitToUser(numericId, "new_notification", {
+          id: logId,
+          type: "IN_APP",
+          to,
+          message,
+          status: "UNREAD",
+          createdAt: new Date().toISOString(),
+        });
+      }
+      console.log(`🔔 IN_APP notification logged for user: ${to}`);
+    }
 
     return { id: logId, type, to, message, memberId, status: "SENT" };
   } catch (err) {
-    // Update log as FAILED
     await pool.query(
-      `UPDATE notificationLog SET status = ?, error = ? WHERE id = ?`,
-      ["FAILED", err.message, logId]
+      `UPDATE notificationLog SET status = 'FAILED', error = ? WHERE id = ?`,
+      [err.message, logId]
     );
+    console.error(`❌ Notification FAILED [${type}] to ${to}:`, err.message);
     throw new Error("Notification sending failed: " + err.message);
   }
 };

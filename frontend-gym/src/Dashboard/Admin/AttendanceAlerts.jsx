@@ -181,74 +181,120 @@ const AttendanceAlerts = () => {
     if (notifChannels.length === 0) return alert("Please select at least one communication channel.");
 
     if (!isBulkModal && selectedMember) {
-      // Single member sending across all selected channels
+      // ── WhatsApp: open wa.me link FIRST (synchronous, no API needed) ──
+      if (notifChannels.includes("WHATSAPP")) {
+        const phone = (selectedMember.phone || "").replace(/\D/g, "");
+        if (phone) {
+          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(customMsg)}`, "_blank");
+        } else {
+          alert("⚠️ WhatsApp: Is member ka phone number nahi hai.");
+        }
+      }
+
+      // ── EMAIL + IN_APP: backend se send karein ──
       setSendingMsg(true);
+      const errors = [];
       try {
-        for (const channel of notifChannels) {
-          if (channel === "WHATSAPP") {
-            const phone = (selectedMember.phone || "").replace(/[^0-9]/g, "");
-            if (phone) {
-              const text = encodeURIComponent(customMsg);
-              window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
-            }
+        const backendChannels = notifChannels.filter(ch => ch !== "WHATSAPP");
+        for (const channel of backendChannels) {
+          let toValue;
+          if (channel === "IN_APP") {
+            toValue = String(selectedMember.userId || selectedMember.id);
           } else {
-            const payload = {
+            toValue = selectedMember.email;
+            if (!toValue) { errors.push("Email: Email address missing"); continue; }
+          }
+
+          try {
+            await axios.post(`${BaseUrl}notif/send`, {
               type: channel,
-              to: selectedMember.email || selectedMember.phone,
+              to: toValue,
               message: customMsg,
               memberId: selectedMember.id,
-            };
-            await axios.post(`${BaseUrl}notif/send`, payload, axiosConfig).catch(() => {});
+              subject: "Speed Fitness — We Miss You! 💪",
+            }, axiosConfig);
+          } catch (err) {
+            const errMsg = err?.response?.data?.message || err.message;
+            errors.push(`${channel}: ${errMsg}`);
+            console.error(`Failed to send via ${channel}:`, errMsg);
           }
         }
-        alert(`Message dispatched successfully via: ${notifChannels.join(", ")}`);
-        setShowMsgModal(false);
+
+        const sentChannels = notifChannels.filter(ch => !errors.some(e => e.startsWith(ch)));
+        if (errors.length > 0 && sentChannels.length === 0) {
+          alert(`❌ Message send failed:\n${errors.join("\n")}`);
+        } else {
+          const waNote = notifChannels.includes("WHATSAPP") ? " (WhatsApp link khula hai)" : "";
+          alert(`✅ Message dispatched via: ${sentChannels.join(", ")}${waNote}${errors.length ? `\n⚠️ Failed: ${errors.join(", ")}` : ""}`);
+          setShowMsgModal(false);
+        }
       } catch (err) {
-        console.error("Error sending message", err);
-        alert("Message dispatched via selected channels!");
-        setShowMsgModal(false);
+        console.error("Unexpected error sending message", err);
+        alert("An unexpected error occurred.");
       } finally {
         setSendingMsg(false);
       }
+
     } else {
-      // Bulk sending across all selected channels
+      // ── Bulk Members ──
       const targetMembers = members.filter((m) => selectedIds.includes(m.id));
+
+      // WhatsApp bulk: open first member's wa.me link
+      if (notifChannels.includes("WHATSAPP")) {
+        const waMembers = targetMembers.filter(m => m.phone);
+        if (waMembers.length > 0) {
+          const firstPhone = waMembers[0].phone.replace(/\D/g, "");
+          const personalizedMsg = customMsg
+            .replace(/{name}/g, waMembers[0].fullName || "Member")
+            .replace(/{daysAbsent}/g, waMembers[0].daysAbsent || "several");
+          window.open(`https://wa.me/${firstPhone}?text=${encodeURIComponent(personalizedMsg)}`, "_blank");
+          if (waMembers.length > 1) {
+            alert(`ℹ️ WhatsApp sirf ${waMembers[0].fullName} ke liye khula.\nBaaki ${waMembers.length - 1} members ke liye manually send karein ya WhatsApp Business use karein.`);
+          }
+        }
+      }
+
+      // EMAIL + IN_APP bulk via backend
       setSendingMsg(true);
+      let successCount = 0;
       try {
+        const backendChannels = notifChannels.filter(ch => ch !== "WHATSAPP");
         for (const m of targetMembers) {
           const personalizedMsg = customMsg
             .replace(/{name}/g, m.fullName || "Member")
             .replace(/{daysAbsent}/g, m.daysAbsent || "several");
 
-          for (const channel of notifChannels) {
-            if (channel !== "WHATSAPP" && m.email) {
-              await axios
-                .post(
-                  `${BaseUrl}notif/send`,
-                  {
-                    type: channel,
-                    to: m.email,
-                    message: personalizedMsg,
-                    memberId: m.id,
-                  },
-                  axiosConfig
-                )
-                .catch(() => {});
-            }
+          for (const channel of backendChannels) {
+            const toValue = channel === "IN_APP"
+              ? String(m.userId || m.id)
+              : m.email;
+            if (!toValue) continue;
+
+            await axios.post(`${BaseUrl}notif/send`, {
+              type: channel,
+              to: toValue,
+              message: personalizedMsg,
+              memberId: m.id,
+              subject: "Speed Fitness — We Miss You! 💪",
+            }, axiosConfig).catch(err => {
+              console.error(`Bulk ${channel} failed for member ${m.id}:`, err?.response?.data || err.message);
+            });
           }
+          successCount++;
         }
-        alert(`Bulk messages dispatched to ${targetMembers.length} members via: ${notifChannels.join(", ")}!`);
+        alert(`✅ Bulk messages dispatched to ${successCount}/${targetMembers.length} members via: ${notifChannels.join(", ")}!`);
         setShowMsgModal(false);
         setSelectedIds([]);
       } catch (err) {
         console.error("Bulk message error", err);
-        alert(`Bulk messages dispatched to ${targetMembers.length} members!`);
+        alert(`Messages dispatched to ${successCount} members.`);
         setShowMsgModal(false);
       } finally {
         setSendingMsg(false);
       }
     }
   };
+
 
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>

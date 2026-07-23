@@ -1,11 +1,92 @@
 import { pool } from "../config/db.js";
 import nodemailer from "nodemailer";
-import { sendWhatsAppMessage } from "./whatsappHelper.js";
 
 /**
- * Get active channels for a notification category
- * @param {string} category - "welcome_note" | "invoice" | "templates"
- * @returns {Promise<string[]>} Array of enabled channels, e.g. ["EMAIL", "WHATSAPP"]
+ * Build styled HTML email
+ */
+const buildEmailHtml = (subject, message) => {
+  const lines = message.split("\n").map(l => `<p style="margin:6px 0;color:#374151;font-size:15px;">${l}</p>`).join("");
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:28px 32px;">
+            <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">💪 Speed Fitness</h1>
+            <p style="margin:4px 0 0;color:#e0e7ff;font-size:13px;">Your Fitness Partner</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <h2 style="margin:0 0 16px;color:#1e1b4b;font-size:18px;">${subject}</h2>
+            ${lines}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:20px 32px;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;color:#9ca3af;font-size:12px;">This is an automated message from Speed Fitness Gym Management. Please do not reply.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+};
+
+/**
+ * Send WhatsApp via Meta Cloud API
+ * Uses admin's custom token if available, falls back to global .env credentials
+ */
+const sendWhatsAppViaMetaApi = async (phone, message, customToken = null, customPhoneId = null) => {
+  const token = customToken || process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneId = customPhoneId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (!token || !phoneId) {
+    console.warn("⚠️ WhatsApp: No API credentials configured. Skipping.");
+    return false;
+  }
+
+  const cleanPhone = phone.toString().replace(/\D/g, "");
+  if (!cleanPhone || cleanPhone.length < 10) {
+    console.warn("⚠️ WhatsApp: Invalid phone number:", phone);
+    return false;
+  }
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: cleanPhone,
+        type: "text",
+        text: { preview_url: false, body: message },
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error(`❌ WhatsApp Meta API Error for ${cleanPhone}:`, JSON.stringify(data));
+      return false;
+    }
+    console.log(`✅ WhatsApp sent to ${cleanPhone} via Meta Cloud API`);
+    return true;
+  } catch (err) {
+    console.error("❌ WhatsApp API fetch error:", err.message);
+    return false;
+  }
+};
+
+/**
+ * Get active channels for a notification category from global_settings table
  */
 export const getGlobalNotificationChannels = async (category) => {
   try {
@@ -14,21 +95,17 @@ export const getGlobalNotificationChannels = async (category) => {
       "SELECT value_data FROM global_settings WHERE key_name = ?",
       [keyName]
     );
-
-    if (rows.length === 0) {
-      return ["EMAIL"]; // fallback default
-    }
-
+    if (rows.length === 0) return ["EMAIL"];
     return JSON.parse(rows[0].value_data);
   } catch (err) {
     console.error("Error reading global notification settings for " + category + ":", err.message);
-    return ["EMAIL"]; // fallback default on error
+    return ["EMAIL"];
   }
 };
 
 /**
  * Smart Notification Dispatcher
- * Dispatches notifications to active channels set by the Super Admin
+ * Handles EMAIL (SendGrid), WHATSAPP (Meta Cloud API), IN_APP/APP_PUSH (Bell Icon)
  */
 export const dispatchNotification = async ({
   category,
@@ -36,28 +113,22 @@ export const dispatchNotification = async ({
   toPhone,
   toUserId,
   memberId,
-  subject = "Gym Alert",
+  subject = "Speed Fitness — Gym Notification",
   message,
-  customChannels, // Support manual channels selection (e.g. for broadcasts)
-  adminIdForCredits = null, // Optional: specifically pass the adminId to deduct credits from
+  customChannels,
+  adminIdForCredits = null,
 }) => {
   if (!message) {
-    console.warn("⚠️ Notification Dispatcher: Message is empty. Skipping dispatch.");
+    console.warn("⚠️ Notification Dispatcher: Message is empty. Skipping.");
     return { success: false, reason: "Message is empty" };
   }
 
   const activeChannels = customChannels || await getGlobalNotificationChannels(category);
-  console.log("📣 Dispatching '" + category + "' notification. Active channels:", activeChannels);
+  console.log(`📣 Dispatching '${category}' via channels:`, activeChannels);
 
-  const results = {
-    category,
-    channels: activeChannels,
-    email: null,
-    whatsapp: null,
-    inApp: null,
-  };
+  const results = { category, channels: activeChannels, email: null, whatsapp: null, inApp: null };
 
-  // Determine Admin ID to fetch custom credentials & check credits
+  // ── Resolve Admin ID for custom credentials ──
   let adminId = adminIdForCredits;
   if (!adminId && memberId) {
     const [memRows] = await pool.query("SELECT adminId FROM member WHERE id = ?", [memberId]);
@@ -70,131 +141,138 @@ export const dispatchNotification = async ({
     }
   }
 
-  let adminCustomSettings = null;
+  // ── Load admin's custom SMTP + WhatsApp credentials (if set) ──
+  let adminCreds = null;
   if (adminId) {
-    const [settingsRows] = await pool.query("SELECT smtpHost, smtpPort, smtpUser, smtpPass, whatsappAccessToken, whatsappPhoneNumberId FROM user WHERE id = ?", [adminId]);
-    if (settingsRows.length > 0) {
-      adminCustomSettings = settingsRows[0];
-    }
+    const [rows] = await pool.query(
+      "SELECT smtpHost, smtpPort, smtpUser, smtpPass, whatsappAccessToken, whatsappPhoneNumberId, whatsappCredits FROM user WHERE id = ?",
+      [adminId]
+    );
+    if (rows.length > 0) adminCreds = rows[0];
   }
 
-  // 1. Send Email Notification
+  // ════════════════════════════════════════════
+  // 1.  EMAIL  →  SendGrid (or admin custom SMTP)
+  // ════════════════════════════════════════════
   if (activeChannels.includes("EMAIL") && toEmail) {
     try {
-      const host = adminCustomSettings?.smtpHost || process.env.SMTP_HOST;
-      const port = adminCustomSettings?.smtpPort || Number(process.env.SMTP_PORT) || 587;
-      const user = adminCustomSettings?.smtpUser || process.env.SMTP_USER;
-      const pass = adminCustomSettings?.smtpPass || process.env.SMTP_PASS;
+      const smtpHost = adminCreds?.smtpHost || process.env.SMTP_HOST;
+      const smtpPort = adminCreds?.smtpPort || Number(process.env.SMTP_PORT) || 587;
+      const smtpUser = adminCreds?.smtpUser || process.env.SMTP_USER;
+      const smtpPass = adminCreds?.smtpPass || process.env.SMTP_PASS;
 
       const transporter = nodemailer.createTransport({
-        host: host,
-        port: port,
-        secure: false,
-        auth: { user: user, pass: pass },
+        host: smtpHost,
+        port: smtpPort,
+        secure: false, // STARTTLS on port 587
+        auth: { user: smtpUser, pass: smtpPass },
+        tls: { rejectUnauthorized: false },
+        logger: false,
+        debug: false,
       });
 
       await transporter.sendMail({
-        from: process.env.MAIL_FROM || "no-reply@gym.com",
+        from: process.env.MAIL_FROM || "Speed Fitness <noreply@gymsoftware.space>",
         to: toEmail,
         subject,
         text: message,
+        html: buildEmailHtml(subject, message),
       });
 
       await pool.query(
         "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
         ["EMAIL", toEmail, message, memberId || null, "SENT"]
       );
-
       results.email = { success: true };
-      console.log("✉️ Email notification sent to " + toEmail);
+      console.log(`✉️ Email sent to ${toEmail}`);
     } catch (err) {
-      console.error("❌ Email notification failed for " + toEmail + ":", err.message);
+      console.error(`❌ Email failed for ${toEmail}:`, err.message);
       results.email = { success: false, error: err.message };
-      try {
-        await pool.query(
-          "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
-          ["EMAIL", toEmail, message, memberId || null, "FAILED"]
-        );
-      } catch (e) {
-        console.error("Failed to log email failure to DB:", e.message);
-      }
+      await pool.query(
+        "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
+        ["EMAIL", toEmail, message, memberId || null, "FAILED"]
+      ).catch(() => {});
     }
   }
 
-  // 2. Send WhatsApp Notification
+  // ════════════════════════════════════════════
+  // 2.  WHATSAPP  →  Meta Cloud API
+  // ════════════════════════════════════════════
   let fallbackToAppPush = false;
 
   if (activeChannels.includes("WHATSAPP") && toPhone) {
     try {
+      const customToken = adminCreds?.whatsappAccessToken || null;
+      const customPhoneId = adminCreds?.whatsappPhoneNumberId || null;
+      let credits = adminCreds?.whatsappCredits ?? 999; // treat missing as unlimited
+
       if (adminId) {
-        // 2b. Check credits
-        const [uRows] = await pool.query("SELECT whatsappCredits FROM user WHERE id = ?", [adminId]);
-        let credits = uRows[0]?.whatsappCredits || 0;
+        // Credit-based flow (if admin has credits configured)
+        const [creditRows] = await pool.query("SELECT whatsappCredits FROM user WHERE id = ?", [adminId]);
+        credits = creditRows[0]?.whatsappCredits ?? 999;
+      }
 
-        if (credits > 0) {
-          const cleanPhone = toPhone.trim().replace("+", "");
-          const activeToken = adminCustomSettings?.whatsappAccessToken || null;
-          const activePhoneId = adminCustomSettings?.whatsappPhoneNumberId || null;
+      if (credits > 0 || credits === 999) {
+        const cleanPhone = toPhone.trim().replace(/\D/g, "");
+        const isSent = await sendWhatsAppViaMetaApi(cleanPhone, message, customToken, customPhoneId);
 
-          const isSent = await sendWhatsAppMessage(cleanPhone, message, activeToken, activePhoneId);
+        if (isSent && adminId && credits !== 999) {
+          // Deduct credit
+          await pool.query("UPDATE user SET whatsappCredits = whatsappCredits - 1 WHERE id = ?", [adminId]);
+          credits -= 1;
 
-          if (isSent) {
-            // Deduct credit
-            await pool.query("UPDATE user SET whatsappCredits = whatsappCredits - 1 WHERE id = ?", [adminId]);
-            credits -= 1;
-
-            // Log to transactions
-            await pool.query(
-              "INSERT INTO whatsapp_credit_transactions (userId, creditsUsed, transactionType, description) VALUES (?, 1, 'USAGE', ?)",
-              [adminId, "Sent WhatsApp to " + cleanPhone]
-            );
-
-            // Check Low Credit Threshold
-            const [autoRows] = await pool.query("SELECT lowCreditThreshold FROM automation_settings LIMIT 1");
-            const threshold = autoRows[0]?.lowCreditThreshold || 50;
-
-            if (credits <= threshold) {
-              await pool.query(
-                "INSERT INTO notificationLog (type, `to`, message, status) VALUES (?, ?, ?, ?)",
-                ["IN-APP", adminId.toString(), "⚠️ Low Credit Alert: You have only " + credits + " WhatsApp credits remaining. Please recharge soon.", "UNREAD"]
-              );
-            }
-          }
-
-          // Log in notificationlog table
+          // Log credit usage
           await pool.query(
-            "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
-            ["WHATSAPP", cleanPhone, message, memberId || null, isSent ? "SENT" : "FAILED"]
-          );
+            "INSERT INTO whatsapp_credit_transactions (userId, creditsUsed, transactionType, description) VALUES (?, 1, 'USAGE', ?)",
+            [adminId, "Sent WhatsApp to " + cleanPhone]
+          ).catch(() => {});
 
-          results.whatsapp = { success: isSent };
-          console.log("💬 WhatsApp notification triggered to " + cleanPhone + " (Status: " + (isSent ? "Sent" : "Failed") + ")");
-        } else {
-          console.warn("⚠️ WhatsApp credits exhausted for Admin " + adminId + ". Falling back to App Push.");
-          fallbackToAppPush = true;
-          results.whatsapp = { success: false, reason: "Insufficient Credits" };
+          // Low credit alert
+          const [autoRows] = await pool.query("SELECT lowCreditThreshold FROM automation_settings LIMIT 1").catch(() => [[{}]]);
+          const threshold = autoRows[0]?.lowCreditThreshold || 50;
+          if (credits <= threshold) {
+            await pool.query(
+              "INSERT INTO notificationLog (type, `to`, message, status) VALUES (?, ?, ?, ?)",
+              ["IN-APP", adminId.toString(), `⚠️ Low WhatsApp Credits: Only ${credits} remaining. Please recharge.`, "UNREAD"]
+            ).catch(() => {});
+          }
         }
+
+        await pool.query(
+          "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
+          ["WHATSAPP", toPhone, message, memberId || null, isSent ? "SENT" : "FAILED"]
+        );
+        results.whatsapp = { success: isSent };
       } else {
-        console.warn("⚠️ Could not determine Admin ID for WhatsApp credit deduction. Skipping WhatsApp.");
+        console.warn(`⚠️ WhatsApp credits exhausted for Admin ${adminId}. Falling back to App Push.`);
+        fallbackToAppPush = true;
+        results.whatsapp = { success: false, reason: "Insufficient Credits" };
       }
     } catch (err) {
-      console.error("❌ WhatsApp notification failed for " + toPhone + ":", err.message);
+      console.error(`❌ WhatsApp dispatch failed for ${toPhone}:`, err.message);
       results.whatsapp = { success: false, error: err.message };
     }
   }
 
-  // 3. Send In-App / App Push Notification
-  if ((activeChannels.includes("APP_PUSH") || fallbackToAppPush) && toUserId) {
+  // ════════════════════════════════════════════
+  // 3.  IN_APP / APP_PUSH  →  Bell Icon
+  // ════════════════════════════════════════════
+  const needsInApp =
+    activeChannels.includes("APP_PUSH") ||
+    activeChannels.includes("IN_APP") ||
+    activeChannels.includes("IN-APP") ||
+    fallbackToAppPush;
+
+  if (needsInApp && toUserId) {
     try {
       await pool.query(
         "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
-        ["IN-APP", toUserId.toString(), message, memberId || null, "UNREAD"]
+        ["IN_APP", toUserId.toString(), message, memberId || null, "UNREAD"]
       );
-
       results.inApp = { success: true };
-      console.log("📱 App Push/In-App notification logged for User ID " + toUserId);
+      console.log(`🔔 IN_APP notification saved for User ID ${toUserId}`);
     } catch (err) {
-      console.error("❌ App Push notification failed for User ID " + toUserId + ":", err.message);
+      console.error(`❌ IN_APP notification failed for User ID ${toUserId}:`, err.message);
       results.inApp = { success: false, error: err.message };
     }
   }

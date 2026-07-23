@@ -2377,7 +2377,7 @@ export const getPTBookingsByAdminId = async (req, res) => {
         ub.createdAt,
         ub.updatedAt,
         m.fullName AS memberName,
-        t.fullName AS trainerName,
+        IFNULL(t.fullName, 'Deleted Trainer') AS trainerName,
         s.sessionName
       FROM unified_bookings ub
       LEFT JOIN member m ON m.id = ub.memberId
@@ -2413,10 +2413,10 @@ export const getPTBookingsByAdminId = async (req, res) => {
         m.joinDate AS createdAt,
         m.joinDate AS updatedAt,
         m.fullName AS memberName,
-        t.fullName AS trainerName,
+        IFNULL(t.fullName, 'Deleted Trainer') AS trainerName,
         'Assigned PT' AS sessionName
       FROM member m
-      JOIN user t ON t.id = m.trainerId
+      LEFT JOIN user t ON t.id = m.trainerId
       LEFT JOIN plan p ON p.id = m.planId
       WHERE m.adminId = ?
         AND m.trainerId IS NOT NULL
@@ -2473,19 +2473,19 @@ export const getBookingDetails = async (req, res) => {
       JOIN member m ON ub.memberId = m.id
       LEFT JOIN classschedule c ON ub.classId = c.id
       LEFT JOIN session s ON ub.sessionId = s.id
-      WHERE m.adminId = ?
+      WHERE (m.adminId = ? OR c.adminId = ? OR s.adminId = ?)
     `;
     
-    const params = [adminId];
+    const params = [adminId, adminId, adminId];
 
     if (trainerId) {
-      query += ' AND ub.trainerId = ?';
-      params.push(trainerId);
+      query += ' AND (ub.trainerId = ? OR c.trainerId = ? OR s.trainerId = ?)';
+      params.push(trainerId, trainerId, trainerId);
     }
 
-    if (type === 'class') {
+    if (type === 'class' || type === 'classes') {
       query += ' AND ub.classId IS NOT NULL';
-    } else if (type === 'session') {
+    } else if (type === 'session' || type === 'sessions') {
       query += ' AND ub.sessionId IS NOT NULL';
     }
 

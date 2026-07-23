@@ -342,7 +342,7 @@ const AttendanceAlerts = () => {
       </div>
 
       {/* Duration Filter & Bulk Action Banner */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white d-flex flex-wrap flex-md-row justify-content-between align-items-center gap-3">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div className="d-flex align-items-center gap-2 flex-wrap">
           <span className="fw-semibold text-muted small me-1">ABSENCE DURATION:</span>
           {[
@@ -364,7 +364,7 @@ const AttendanceAlerts = () => {
           ))}
         </div>
 
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 ms-auto ms-md-0">
           {/* Export Data Dropdown */}
           <div className="dropdown">
             <button

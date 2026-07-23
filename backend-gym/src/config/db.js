@@ -20,8 +20,13 @@ export const pool = mysql
 // Test MySQL connection
 pool
   .getConnection()
-  .then((connection) => {
+  .then(async (connection) => {
     console.log("✅ MySQL connected successfully!");
+    try {
+      await connection.query("ALTER TABLE session ADD COLUMN capacity INT NOT NULL DEFAULT 20");
+    } catch (e) {
+      // Column already exists or error can be safely ignored
+    }
     connection.release();
   })
   .catch((err) => {

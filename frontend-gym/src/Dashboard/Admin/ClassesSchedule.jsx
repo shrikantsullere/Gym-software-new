@@ -10,6 +10,7 @@ import GetAdminId from '../../Api/GetAdminId';
 import axiosInstance from '../../Api/axiosInstance';
 import CustomTimePicker from '../../Components/CustomTimePicker';
 import BookingDetailsList from './Bookings/BookingDetailsList';
+import { useSocket } from '../../Context/SocketContext';
 
 const ClassesSchedule = () => {
   const adminId = GetAdminId();
@@ -25,6 +26,8 @@ const ClassesSchedule = () => {
   const [branches, setBranches] = useState([]);
   const [members, setMembers] = useState([]); // For member dropdown
   const [trainers, setTrainers] = useState([]); // For trainers from API
+  
+  const socket = useSocket();
 
   useEffect(() => {
     if (!adminId) {
@@ -33,6 +36,29 @@ const ClassesSchedule = () => {
     }
     fetchAllData();
   }, [adminId]);
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleRefresh = () => {
+      console.log("Socket event received, refreshing admin dashboard...");
+      fetchAllData();
+    };
+
+    socket.on("bookingCreated", handleRefresh);
+    socket.on("classCreated", handleRefresh);
+    socket.on("classCancelled", handleRefresh);
+    socket.on("trainerAssigned", handleRefresh);
+    socket.on("capacityUpdated", handleRefresh);
+
+    return () => {
+      socket.off("bookingCreated", handleRefresh);
+      socket.off("classCreated", handleRefresh);
+      socket.off("classCancelled", handleRefresh);
+      socket.off("trainerAssigned", handleRefresh);
+      socket.off("capacityUpdated", handleRefresh);
+    };
+  }, [socket]);
 
   const fetchAllData = async () => {
     setLoading(true);

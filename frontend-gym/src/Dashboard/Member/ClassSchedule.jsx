@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaClock, FaUser, FaCalendarAlt, FaRupeeSign } from 'react-icons/fa';
 import axiosInstance from '../../Api/axiosInstance';
+import { useSocket } from '../../Context/SocketContext';
 
 const ClassSchedule = () => {
   const [groupClasses, setGroupClasses] = useState([]);
@@ -34,6 +35,8 @@ const ClassSchedule = () => {
   const memberId = user?.memberId || user?.id || null;
   const adminId = user?.adminId || null;
   const id = user?.id || null;
+
+  const socket = useSocket();
 
   // Fetch classes (includes isBooked)
   useEffect(() => {
@@ -103,7 +106,31 @@ const ClassSchedule = () => {
 
     fetchClasses();
     fetchSessions();
-  }, [memberId]);
+
+    if (socket) {
+      const handleRefresh = () => {
+        console.log("Socket event received, refreshing member classes/sessions...");
+        fetchClasses();
+        fetchSessions();
+      };
+      
+      socket.on("classCreated", handleRefresh);
+      socket.on("sessionCreated", handleRefresh);
+      socket.on("bookingCreated", handleRefresh);
+      socket.on("classCancelled", handleRefresh);
+      socket.on("sessionCancelled", handleRefresh);
+      socket.on("capacityUpdated", handleRefresh);
+
+      return () => {
+        socket.off("classCreated", handleRefresh);
+        socket.off("sessionCreated", handleRefresh);
+        socket.off("bookingCreated", handleRefresh);
+        socket.off("classCancelled", handleRefresh);
+        socket.off("sessionCancelled", handleRefresh);
+        socket.off("capacityUpdated", handleRefresh);
+      };
+    }
+  }, [memberId, adminId, socket]);
 
   const formatTime = (timeString) => {
     if (!timeString) return '';

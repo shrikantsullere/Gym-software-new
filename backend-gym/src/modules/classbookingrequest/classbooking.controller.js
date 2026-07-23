@@ -2492,6 +2492,10 @@ export const getBookingDetails = async (req, res) => {
     query += ' ORDER BY ub.createdAt DESC';
 
     const [rows] = await pool.query(query, params);
+    
+    import('fs').then(fs => {
+      fs.writeFileSync('scratch_debug_booking.txt', `QUERY: ${query}\nPARAMS: ${JSON.stringify(params)}\nRESULT LENGTH: ${rows.length}\n`, {flag: 'a'});
+    });
 
     res.json({ success: true, data: rows });
   } catch (error) {

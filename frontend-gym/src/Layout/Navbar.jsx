@@ -4,7 +4,7 @@ const Logo = "/logo.png"; // Default fallback logo
 import Account from "../Dashboard/Member/Account";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../Api/axiosInstance";
-import { io } from "socket.io-client";
+import { useSocket } from "../Context/SocketContext";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -131,24 +131,22 @@ const Navbar = ({ toggleSidebar }) => {
     }
   };
 
+  const socket = useSocket();
+
   useEffect(() => {
-    const u = getUserFromLocalStorage();
-    if (!u || !u.id) return;
-
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-    const socket = io(backendUrl, { withCredentials: true });
-
-    socket.on("connect", () => {
-      socket.emit("join_room", u.id);
-    });
-
+    if (!socket) return;
+    
     // Real-time: new notification arrives → add to unread list → red dot appears
-    socket.on("new_notification", (data) => {
+    const handleNewNotification = (data) => {
       setNotifications(prev => [data, ...prev]);
-    });
+    };
 
-    return () => socket.disconnect();
-  }, []);
+    socket.on("new_notification", handleNewNotification);
+
+    return () => {
+      socket.off("new_notification", handleNewNotification);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const intervalId = setInterval(fetchAppSettings, 60000); // Fetch every 60 seconds

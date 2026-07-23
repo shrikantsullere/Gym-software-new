@@ -1,5 +1,7 @@
 import { pool } from "../../config/db.js";
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
+import { getIO, emitToUser } from "../../config/socket.js";
+import { sendAppNotification } from "../../utils/notificationHelper.js";
 
 // ➤ Create Session
 // export const createSessionService = async (data) => {
@@ -60,6 +62,27 @@ export const createSessionService = async (data) => {
     [sessionId]
   );
 
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    // 1. Alert for Trainer
+    const trainerMsg = `You have been assigned to a new session: ${sessionName} | Date: ${date} | Time: ${time} | Capacity: ${capacity}`;
+    await sendAppNotification(trainerId, trainerMsg);
+
+    // 2. Alert for Members (Broadcast to branch/all)
+    const [trainerRow] = await pool.query("SELECT fullName FROM user WHERE id = ?", [trainerId]);
+    const trainerName = trainerRow.length > 0 ? trainerRow[0].fullName : "a trainer";
+    const broadcastMsg = `New Session Available: ${sessionName} | Trainer: ${trainerName} | Date: ${date} | Time: ${time}`;
+    await sendAppNotification("all", broadcastMsg);
+
+    // 3. Emit Socket Event
+    const io = getIO();
+    if (io) {
+      io.emit("sessionCreated", { sessionName, trainerId, date, time });
+    }
+  } catch (err) {
+    console.error("Failed to insert session assignment alert/sockets:", err);
+  }
+
   return session[0];
 };
 export const listSessionsService = async ({ adminId, trainerId, search }) => {
@@ -115,6 +138,10 @@ export const listSessionsService = async ({ adminId, trainerId, search }) => {
 export const updateSessionService = async (sessionId, data) => {
   const { sessionName, trainerId, branchId, date, time, duration, description, status, capacity } = data;
 
+  const [existingRows] = await pool.query("SELECT * FROM session WHERE id = ?", [sessionId]);
+  const exists = existingRows[0];
+  if (!exists) throw { status: 404, message: "Session not found" };
+
   await pool.query(
     `UPDATE session 
      SET sessionName = ?, trainerId = ?, branchId = ?, date = ?, time = ?, duration = ?, description = ?, status = ?, capacity = ?
@@ -123,6 +150,47 @@ export const updateSessionService = async (sessionId, data) => {
   );
 
   const [updated] = await pool.query(`SELECT * FROM session WHERE id = ?`, [sessionId]);
+
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const io = getIO();
+    const bid = exists.branchId || null;
+
+    if (Number(trainerId) && Number(trainerId) !== exists.trainerId) {
+      // Trainer Changed
+      const oldTrainerMsg = `You have been removed from session: ${exists.sessionName}`;
+      await sendAppNotification(exists.trainerId, oldTrainerMsg);
+      
+      const newTrainerMsg = `You have been assigned to session: ${sessionName}`;
+      await sendAppNotification(trainerId, newTrainerMsg);
+      
+      if (io) {
+        io.emit("trainerAssigned", { sessionId, oldTrainerId: exists.trainerId, newTrainerId: trainerId });
+      }
+    } else {
+      // Updated
+      const trainerMsg = `Session Updated: ${sessionName}`;
+      await sendAppNotification(exists.trainerId, trainerMsg);
+    }
+    
+    // Notify Booked Members
+    const [bookings] = await pool.query(
+      `SELECT m.userId FROM unified_bookings ub JOIN member m ON ub.memberId = m.id WHERE ub.sessionId = ? AND ub.bookingStatus = 'Booked'`,
+      [sessionId]
+    );
+    for (const b of bookings) {
+      if (b.userId) {
+        await sendAppNotification(b.userId, `Your booked session ${sessionName} has been updated.`);
+      }
+    }
+
+    if (capacity !== undefined && capacity !== exists.capacity) {
+      if (io) io.emit("capacityUpdated", { sessionId, newCapacity: capacity });
+    }
+  } catch (err) {
+    console.error("Failed to process session update notifications/sockets:", err);
+  }
+
   return updated[0];
 };
 
@@ -135,8 +203,39 @@ export const updateSessionStatusService = async (sessionId, status) => {
 
 // ➤ Delete session
 export const deleteSessionService = async (sessionId) => {
+  const [existingRows] = await pool.query("SELECT * FROM session WHERE id = ?", [sessionId]);
+  const exists = existingRows[0];
+  if (!exists) throw { status: 404, message: "Session not found" };
+
   await pool.query(`DELETE FROM pt_bookings WHERE sessionId = ?`, [sessionId]);
   await pool.query(`DELETE FROM unified_bookings WHERE sessionId = ?`, [sessionId]);
+
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const io = getIO();
+    
+    // Notify Trainer
+    const cancelMsg = `Assigned session cancelled: ${exists.sessionName}`;
+    await sendAppNotification(exists.trainerId, cancelMsg);
+    
+    // Notify Booked Members
+    const [bookings] = await pool.query(
+      `SELECT m.userId FROM unified_bookings ub JOIN member m ON ub.memberId = m.id WHERE ub.sessionId = ? AND ub.bookingStatus = 'Booked'`,
+      [sessionId]
+    );
+    for (const b of bookings) {
+      if (b.userId) {
+        await sendAppNotification(b.userId, `Booked session cancelled: ${exists.sessionName}`);
+      }
+    }
+
+    if (io) {
+      io.emit("sessionCancelled", { sessionId });
+    }
+  } catch (err) {
+    console.error("Failed to process delete notifications/sockets:", err);
+  }
+
   await pool.query(`DELETE FROM session WHERE id = ?`, [sessionId]);
   return true;
 };
@@ -167,66 +266,107 @@ export const getMemberSessionsService = async (memberId) => {
 
 // ➤ Join Session (Member)
 export const joinSessionService = async (memberId, sessionId) => {
-  // Check session exists and get capacity
-  const [sessionRows] = await pool.query(`SELECT * FROM session WHERE id = ?`, [sessionId]);
-  if (!sessionRows.length) throw { status: 404, message: "Session not found" };
-  const session = sessionRows[0];
-
-  // Check if already joined
-  const [existing] = await pool.query(
-    `SELECT id FROM unified_bookings WHERE sessionId = ? AND memberId = ? AND bookingStatus != 'Cancelled'`,
-    [sessionId, memberId]
-  );
-  if (existing.length > 0) throw { status: 400, message: "You have already joined this session" };
-
-  // Check capacity
-  const [countRows] = await pool.query(
-    `SELECT COUNT(*) AS count FROM unified_bookings WHERE sessionId = ? AND bookingStatus != 'Cancelled'`,
-    [sessionId]
-  );
-  const currentCount = countRows[0].count;
-  if (currentCount >= (session.capacity || 20)) {
-    throw { status: 400, message: "Session is full" };
-  }
-
-  // Calculate endTime
-  let endTime = session.time;
-  if (session.time && session.duration) {
-    const [hours, minutes] = session.time.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + session.duration;
-    const endHours = String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0');
-    const endMins = String(totalMinutes % 60).padStart(2, '0');
-    endTime = `${endHours}:${endMins}`;
-  }
-
-  // Join the session
-  await pool.query(
-    `INSERT INTO unified_bookings 
-     (memberId, trainerId, sessionId, date, startTime, endTime, bookingType, bookingStatus, paymentStatus, branchId)
-     VALUES (?, ?, ?, ?, ?, ?, 'GROUP', 'Booked', 'Pending', ?)`,
-    [memberId, session.trainerId, sessionId, session.date, session.time, endTime, session.branchId || null]
-  );
+  const connection = await pool.getConnection();
+  await connection.beginTransaction();
 
   try {
-    const [mRows] = await pool.query("SELECT id, fullName, email, phone FROM member WHERE id = ?", [memberId]);
-    if (mRows.length > 0) {
-      const member = mRows[0];
-      const sessDate = session.date ? new Date(session.date).toLocaleDateString() : '';
-      const msg = `Hi ${member.fullName},\n\nYour booking for session "${session.sessionName}" on ${sessDate} at ${session.time} has been confirmed. See you there!`;
-      dispatchNotification({
-        category: "templates",
-        toEmail: member.email,
-        toPhone: member.phone,
-        memberId: member.id,
-        subject: "Session Booking Confirmed",
-        message: msg
-      }).catch(err => console.error("Session notification err:", err));
-    }
-  } catch (err) {
-    console.error("Failed to fetch member for session notification:", err);
-  }
+    // Check session exists and lock row
+    const [sessionRows] = await connection.query(`SELECT * FROM session WHERE id = ? FOR UPDATE`, [sessionId]);
+    if (!sessionRows.length) throw { status: 404, message: "Session not found" };
+    const session = sessionRows[0];
 
-  return { message: "Successfully joined session" };
+    // Check if already joined
+    const [existing] = await connection.query(
+      `SELECT id FROM unified_bookings WHERE sessionId = ? AND memberId = ? AND bookingStatus != 'Cancelled'`,
+      [sessionId, memberId]
+    );
+    if (existing.length > 0) throw { status: 400, message: "You have already joined this session" };
+
+    // Check capacity
+    const [countRows] = await connection.query(
+      `SELECT COUNT(*) AS count FROM unified_bookings WHERE sessionId = ? AND bookingStatus != 'Cancelled'`,
+      [sessionId]
+    );
+    const currentCount = countRows[0].count;
+    if (currentCount >= (session.capacity || 20)) {
+      throw { status: 400, message: "Session is full" };
+    }
+
+    // Calculate endTime
+    let endTime = session.time;
+    if (session.time && session.duration) {
+      const [hours, minutes] = session.time.split(':').map(Number);
+      const totalMinutes = hours * 60 + minutes + session.duration;
+      const endHours = String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0');
+      const endMins = String(totalMinutes % 60).padStart(2, '0');
+      endTime = `${endHours}:${endMins}`;
+    }
+
+    // Join the session
+    await connection.query(
+      `INSERT INTO unified_bookings 
+       (memberId, trainerId, sessionId, date, startTime, endTime, bookingType, bookingStatus, paymentStatus, branchId)
+       VALUES (?, ?, ?, ?, ?, ?, 'GROUP', 'Booked', 'Pending', ?)`,
+      [memberId, session.trainerId, sessionId, session.date, session.time, endTime, session.branchId || null]
+    );
+
+    await connection.commit();
+    connection.release();
+
+    try {
+      const [mRows] = await pool.query("SELECT id, userId, fullName, email, phone, branchId FROM member WHERE id = ?", [memberId]);
+      if (mRows.length > 0) {
+        const member = mRows[0];
+        const sessDate = session.date ? new Date(session.date).toLocaleDateString() : '';
+        const msg = `Hi ${member.fullName},\n\nYour booking for session "${session.sessionName}" on ${sessDate} at ${session.time} has been confirmed. See you there!`;
+        dispatchNotification({
+          category: "templates",
+          toEmail: member.email,
+          toPhone: member.phone,
+          memberId: member.id,
+          subject: "Session Booking Confirmed",
+          message: msg
+        }).catch(err => console.error("Session notification err:", err));
+
+        /* 6️⃣ INSERT IN-APP NOTIFICATION ALERT & SOCKETS */
+        try {
+          const io = getIO();
+          const memberUserId = member.userId;
+          const sessionName = session.sessionName;
+
+          // Member
+          const memMsg = `Your booking has been confirmed for ${sessionName}`;
+          if (memberUserId) {
+            await sendAppNotification(memberUserId, memMsg);
+          }
+
+          // Trainer
+          const trainerMsg = `New booking received for ${sessionName} by ${member.fullName || 'A member'}`;
+          await sendAppNotification(session.trainerId, trainerMsg);
+
+          // Admin
+          const adminMsg = `New booking received for ${sessionName} by ${member.fullName || 'A member'}`;
+          if (session.adminId) {
+            await sendAppNotification(session.adminId, adminMsg);
+          }
+
+          if (io) {
+            io.emit("bookingCreated", { sessionId, classId: sessionId });
+          }
+        } catch (err) {
+          console.error("Failed to process session booking notifications/sockets:", err);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch member for session notification:", err);
+    }
+
+    return { message: "Successfully joined session" };
+  } catch (error) {
+    await connection.rollback();
+    connection.release();
+    throw error;
+  }
 };
 
 // ➤ Get members joined in a session

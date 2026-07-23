@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../../Api/axiosInstance";
 import CustomTimePicker from "../../Components/CustomTimePicker";
 import BookingDetailsList from "../Admin/Bookings/BookingDetailsList";
+import { useSocket } from "../../Context/SocketContext";
 
 const PersonalTrainerClassesSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +45,31 @@ const PersonalTrainerClassesSchedule = () => {
     fetchAllData();
   }, [adminId]);
 
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleRefresh = () => {
+      console.log("Socket event received, refreshing PT classes...");
+      fetchAllData();
+    };
+
+    socket.on("bookingCreated", handleRefresh);
+    socket.on("classCreated", handleRefresh);
+    socket.on("classCancelled", handleRefresh);
+    socket.on("trainerAssigned", handleRefresh);
+    socket.on("capacityUpdated", handleRefresh);
+
+    return () => {
+      socket.off("bookingCreated", handleRefresh);
+      socket.off("classCreated", handleRefresh);
+      socket.off("classCancelled", handleRefresh);
+      socket.off("trainerAssigned", handleRefresh);
+      socket.off("capacityUpdated", handleRefresh);
+    };
+  }, [socket]);
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -62,7 +88,7 @@ const PersonalTrainerClassesSchedule = () => {
         return matchesId || matchesName;
       });
 
-      const displayClasses = trainerClasses.length > 0 ? trainerClasses : allClasses;
+      const displayClasses = trainerClasses;
 
       // Transform data to match the new API response structure
       const transformedClasses = displayClasses.map(classItem => ({

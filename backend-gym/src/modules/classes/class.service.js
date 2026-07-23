@@ -537,7 +537,20 @@ export const getAllScheduledClassesService = async (adminId) => {
     SELECT 
       cs.*,
       u.fullName AS trainerName,
-      COALESCE(JSON_LENGTH(cs.members), 0) AS membersCount
+      (SELECT COUNT(*) FROM unified_bookings ub WHERE ub.classId = cs.id AND ub.bookingStatus = 'Booked') AS membersCount,
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id', m.id,
+            'name', m.fullName,
+            'email', m.email,
+            'phone', m.phone
+          )
+        )
+        FROM unified_bookings ub
+        JOIN member m ON ub.memberId = m.id
+        WHERE ub.classId = cs.id AND ub.bookingStatus = 'Booked'
+      ) AS bookedMembers
     FROM classschedule cs
     LEFT JOIN user u ON cs.trainerId = u.id
     WHERE u.adminId = ? OR cs.adminId = ? OR cs.trainerId = ?
@@ -557,7 +570,7 @@ export const getAllScheduledClassesService = async (adminId) => {
     day: item.day,
     status: item.status,
     membersCount: item.membersCount,
-    members: typeof item.members === "string" ? JSON.parse(item.members || "[]") : (item.members || []),
+    members: typeof item.bookedMembers === "string" ? JSON.parse(item.bookedMembers || "[]") : (item.bookedMembers || []),
   }));
 };
 

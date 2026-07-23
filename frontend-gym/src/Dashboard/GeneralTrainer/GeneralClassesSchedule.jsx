@@ -70,7 +70,8 @@ const GeneralClassesSchedule = () => {
         time: classItem.time,
         day: classItem.day || '', // Handle empty day field
         status: classItem.status,
-        membersCount: classItem.membersCount || 0
+        membersCount: classItem.membersCount || 0,
+        members: classItem.members || []
       }));
 
       setClasses(transformedClasses);

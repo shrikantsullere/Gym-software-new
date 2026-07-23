@@ -599,19 +599,67 @@ export const getAllScheduledClassesService = async (adminId) => {
     [adminId, adminId, adminId]
   );
 
-  return rows.map((item) => ({
-    id: item.id,
-    className: item.className,
-    trainerId: item.trainerId,   
-    trainerName: item.trainerName,      
-    trainer: item.trainerName,
-    date: item.date,
-    time: `${item.startTime} - ${item.endTime}`,
-    day: item.day,
-    status: item.status,
-    membersCount: item.membersCount,
-    members: typeof item.bookedMembers === "string" ? JSON.parse(item.bookedMembers || "[]") : (item.bookedMembers || []),
-  }));
+  return rows.map((item) => {
+    let jsonMembers = [];
+    try {
+      if (typeof item.members === "string") {
+        jsonMembers = JSON.parse(item.members || "[]");
+      } else if (Array.isArray(item.members)) {
+        jsonMembers = item.members;
+      }
+    } catch (e) {
+      jsonMembers = [];
+    }
+
+    let bookedMembersList = [];
+    try {
+      if (typeof item.bookedMembers === "string") {
+        bookedMembersList = JSON.parse(item.bookedMembers || "[]");
+      } else if (Array.isArray(item.bookedMembers)) {
+        bookedMembersList = item.bookedMembers;
+      }
+    } catch (e) {
+      bookedMembersList = [];
+    }
+
+    const combinedMembers = [...jsonMembers, ...bookedMembersList];
+    const uniqueMembers = [];
+    const seenMap = new Map();
+    for (const m of combinedMembers) {
+      if (!m) continue;
+      const key = m.id ? String(m.id) : m.name ? String(m.name) : null;
+      if (key && !seenMap.has(key)) {
+        seenMap.set(key, true);
+        uniqueMembers.push(m);
+      }
+    }
+
+    const finalCount = uniqueMembers.length;
+
+    let computedDay = item.day;
+    if ((!computedDay || !computedDay.trim()) && item.date) {
+      const dObj = new Date(item.date);
+      if (!isNaN(dObj.getTime())) {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        computedDay = days[dObj.getDay()];
+      }
+    }
+
+    return {
+      id: item.id,
+      className: item.className,
+      trainerId: item.trainerId,   
+      trainerName: item.trainerName,      
+      trainer: item.trainerName,
+      date: item.date,
+      time: `${item.startTime} - ${item.endTime}`,
+      day: computedDay || "—",
+      status: item.status,
+      capacity: item.capacity,
+      membersCount: finalCount,
+      members: uniqueMembers,
+    };
+  });
 };
 
 export const getScheduleByIdService = async (id) => {

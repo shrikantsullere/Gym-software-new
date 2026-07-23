@@ -190,13 +190,14 @@ const AdminExpenses = () => {
           </p>
         </div>
 
-        <div className="d-flex align-items-center gap-2">
-          <input
-            type="month"
-            className="form-control fw-semibold shadow-sm"
-            style={{ width: "180px" }}
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+        <div className="d-flex align-items-center gap-2" style={{ minWidth: "180px" }}>
+          <CustomDatePicker
+            value={`${selectedMonth}-01`}
+            onChange={(val) => {
+              if (val) {
+                setSelectedMonth(val.slice(0, 7));
+              }
+            }}
           />
           <button
             className="btn btn-outline-secondary shadow-sm"

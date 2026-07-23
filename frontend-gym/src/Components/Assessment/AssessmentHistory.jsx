@@ -50,16 +50,6 @@ const AssessmentHistory = ({ memberId }) => {
         let weights = history.map(item => item.inputs?.weight_kg ?? item.weight_kg ?? 0);
         let bodyFats = history.map(item => item.metrics?.body_fat_percentage ?? item.body_fat_percentage ?? 0);
 
-        if (history.length === 1) {
-          const firstDate = new Date(history[0].assessment_date);
-          const prevDate = new Date(firstDate);
-          prevDate.setDate(prevDate.getDate() - 7);
-
-          dates = [prevDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), ...dates];
-          weights = [weights[0], ...weights];
-          bodyFats = [bodyFats[0], ...bodyFats];
-        }
-
         option = {
           tooltip: { trigger: 'axis' },
           legend: { data: ['Weight (kg)', 'Body Fat %'], bottom: 0 },

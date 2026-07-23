@@ -14,6 +14,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import * as XLSX from 'xlsx';
 import './MemberLeaderboard.css';
+import CustomDatePicker from '../../Components/CustomDatePicker';
 
 const MemberLeaderboard = () => {
   const [activeTab, setActiveTab] = useState('fat_loss');
@@ -542,14 +543,15 @@ const MemberLeaderboard = () => {
           <FontAwesomeIcon icon={faCalendarAlt} className="text-primary fs-5 me-1" />
           <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Leaderboard Month:</span>
           
-          <div className="d-flex align-items-center gap-2">
-            <input
-              type="month"
-              className="form-control form-control-sm border shadow-none rounded-pill fw-bold text-dark px-3 py-2 bg-light"
-              style={{ minWidth: '165px', cursor: 'pointer' }}
-              value={selectedMonth || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              title="Click to select month from calendar"
+          <div style={{ minWidth: '180px' }}>
+            <CustomDatePicker
+              value={selectedMonth ? `${selectedMonth}-01` : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`}
+              onChange={(val) => {
+                if (val) {
+                  const mVal = val.slice(0, 7);
+                  setSelectedMonth(mVal);
+                }
+              }}
             />
           </div>
         </div>

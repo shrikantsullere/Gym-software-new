@@ -242,80 +242,66 @@ export const getLatestAssessment = async (memberIdParam) => {
     };
   }
 
-  // 3. Fallback: Check member_health_log
+  // 3. Check member_health_log
   const [healthLogs] = await pool.query(
     `SELECT * FROM member_health_log WHERE memberId = ? OR memberId = ? ORDER BY recordedAt DESC LIMIT 1`,
     [realMemberId, memberId]
   );
 
-  let weight = 70;
-  let height = 170;
-  let gender = (memberDetails?.gender || 'male').toLowerCase();
-  let age = 25;
-  let recordedDate = memberDetails?.joinDate || new Date();
-
-  if (memberDetails?.dateOfBirth) {
-    const dob = new Date(memberDetails.dateOfBirth);
-    const diff = Date.now() - dob.getTime();
-    const computedAge = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-    if (computedAge > 5 && computedAge < 100) age = computedAge;
-  }
-
   if (healthLogs.length > 0) {
     const h = healthLogs[0];
-    weight = parseFloat(h.weight) || weight;
-    height = parseFloat(h.height) || height;
-    recordedDate = h.recordedAt || recordedDate;
-  } else if (memberDetails?.branchId) {
-    // Check branch recent assessment
-    const [bLogs] = await pool.query(
-      `SELECT ma.weight_kg, ma.height_cm FROM member_assessments ma
-       JOIN member m2 ON ma.memberId = m2.id
-       WHERE m2.branchId = ? ORDER BY ma.id DESC LIMIT 1`,
-      [memberDetails.branchId]
-    );
-    if (bLogs.length) {
-      weight = parseFloat(bLogs[0].weight_kg) || weight;
-      height = parseFloat(bLogs[0].height_cm) || height;
+    let weight = parseFloat(h.weight) || 70;
+    let height = parseFloat(h.height) || 170;
+    let gender = (memberDetails?.gender || 'male').toLowerCase();
+    let age = 25;
+    let recordedDate = h.recordedAt || h.createdAt || memberDetails?.joinDate || new Date();
+
+    if (memberDetails?.dateOfBirth) {
+      const dob = new Date(memberDetails.dateOfBirth);
+      const diff = Date.now() - dob.getTime();
+      const computedAge = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+      if (computedAge > 5 && computedAge < 100) age = computedAge;
     }
-  }
 
-  const waist = gender === 'female' ? 75 : Math.max(30, weight - 5);
-  const neck = gender === 'female' ? 35 : Math.max(30, waist - 10);
-  const hip = gender === 'female' ? waist + 10 : null;
+    const waist = gender === 'female' ? 75 : Math.max(30, weight - 5);
+    const neck = gender === 'female' ? 35 : Math.max(30, waist - 10);
+    const hip = gender === 'female' ? waist + 10 : null;
 
-  const calculated = engine.calculateAll({
-    age_at_assessment: age,
-    gender_at_assessment: gender,
-    weight_kg: weight,
-    height_cm: height,
-    neck_cm: neck,
-    waist_cm: waist,
-    hip_cm: hip,
-    resting_hr: 72,
-    activity_level: 'moderate',
-    fitness_goal: 'fat_loss'
-  });
-
-  return {
-    id: null,
-    memberId: realMemberId,
-    assessment_date: recordedDate,
-    fitness_goal: 'fat_loss',
-    metrics: calculated.metrics,
-    inputs: {
-      fitness_goal: 'fat_loss',
+    const calculated = engine.calculateAll({
+      age_at_assessment: age,
+      gender_at_assessment: gender,
       weight_kg: weight,
       height_cm: height,
       neck_cm: neck,
       waist_cm: waist,
       hip_cm: hip,
       resting_hr: 72,
-      activity_level: 'moderate'
-    },
-    macros: calculated.macros,
-    dashboard_data: calculated.dashboard_data
-  };
+      activity_level: 'moderate',
+      fitness_goal: 'fat_loss'
+    });
+
+    return {
+      id: null,
+      memberId: realMemberId,
+      assessment_date: recordedDate,
+      fitness_goal: 'fat_loss',
+      metrics: calculated.metrics,
+      inputs: {
+        fitness_goal: 'fat_loss',
+        weight_kg: weight,
+        height_cm: height,
+        neck_cm: neck,
+        waist_cm: waist,
+        hip_cm: hip,
+        resting_hr: 72,
+        activity_level: 'moderate'
+      },
+      macros: calculated.macros,
+      dashboard_data: calculated.dashboard_data
+    };
+  }
+
+  return null;
 };
 
 export const getAssessmentHistory = async (memberIdParam) => {
@@ -390,15 +376,16 @@ export const getAssessmentHistory = async (memberIdParam) => {
       const estimatedBf = h.bmiStatus === 'Underweight' ? 12 : h.bmiStatus === 'Overweight' ? 26 : h.bmiStatus === 'Obese' ? 32 : 18;
       const leanMass = (weight * (1 - estimatedBf / 100)).toFixed(1);
 
+      const goalVal = (h.fitness_goal || memberDetails?.goal || 'maintenance').toLowerCase().replace(/\s+/g, '_');
       historyMap[dateKey] = {
         assessment_date: h.recordedAt || h.createdAt,
         weight_kg: weight,
         body_fat_percentage: estimatedBf,
         lean_body_mass: parseFloat(leanMass),
         bmi: bmi,
-        fitness_goal: 'fat_loss',
+        fitness_goal: goalVal,
         inputs: {
-          fitness_goal: 'fat_loss',
+          fitness_goal: goalVal,
           weight_kg: weight,
           height_cm: height
         },
@@ -413,48 +400,6 @@ export const getAssessmentHistory = async (memberIdParam) => {
 
   let historyList = Object.values(historyMap);
   historyList.sort((a, b) => new Date(a.assessment_date) - new Date(b.assessment_date));
-
-  // 4. Fallback: If 0 historical entries exist for this member yet:
-  if (historyList.length === 0 && memberDetails) {
-    try {
-      const [bLogs] = await pool.query(
-        `SELECT ma.weight_kg AS weight, ma.height_cm AS height, ma.body_fat_percentage, ma.bmi
-         FROM member_assessments ma
-         JOIN member m2 ON ma.memberId = m2.id
-         WHERE m2.branchId = ? ORDER BY ma.id DESC LIMIT 1`,
-        [memberDetails.branchId || 0]
-      );
-
-      const baseWeight = bLogs.length ? parseFloat(bLogs[0].weight) : 70;
-      const baseHeight = bLogs.length ? parseFloat(bLogs[0].height) : 172;
-      const baseBf = bLogs.length ? parseFloat(bLogs[0].body_fat_percentage) : 18.5;
-      const baseBmi = bLogs.length ? parseFloat(bLogs[0].bmi) : 23.6;
-      const baseLbm = (baseWeight * (1 - baseBf / 100)).toFixed(1);
-
-      const joinDate = memberDetails.joinDate ? new Date(memberDetails.joinDate) : new Date();
-
-      historyList.push({
-        assessment_date: joinDate,
-        weight_kg: baseWeight,
-        body_fat_percentage: baseBf,
-        lean_body_mass: parseFloat(baseLbm),
-        bmi: baseBmi,
-        fitness_goal: 'fat_loss',
-        inputs: {
-          fitness_goal: 'fat_loss',
-          weight_kg: baseWeight,
-          height_cm: baseHeight
-        },
-        metrics: {
-          body_fat_percentage: baseBf,
-          lean_body_mass: parseFloat(baseLbm),
-          bmi: baseBmi
-        }
-      });
-    } catch (e) {
-      console.error("Error generating initial baseline history:", e);
-    }
-  }
 
   return historyList;
 };

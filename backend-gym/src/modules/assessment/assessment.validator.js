@@ -80,12 +80,16 @@ export const validateAssessmentInputs = (data) => {
   }
 
   let goal = (data.fitness_goal || '').toLowerCase();
-  if (goal.includes('loss') || goal.includes('fat') || goal.includes('weight_loss')) {
-    data.fitness_goal = 'fat_loss';
-  } else if (goal.includes('gain') || goal.includes('muscle') || goal.includes('competition') || goal.includes('prep') || goal.includes('body')) {
-    data.fitness_goal = 'muscle_gain';
-  } else if (goal.includes('maintain') || goal.includes('fitness')) {
+  if (goal.includes('maintain') || goal.includes('general')) {
     data.fitness_goal = 'maintenance';
+  } else if (goal.includes('body') || goal.includes('builder')) {
+    data.fitness_goal = 'body_builder';
+  } else if (goal.includes('gain') || goal.includes('muscle') || goal.includes('prep')) {
+    data.fitness_goal = 'muscle_gain';
+  } else if (goal.includes('loss') || goal.includes('fat') || goal.includes('weight_loss')) {
+    data.fitness_goal = 'fat_loss';
+  } else if (goal.trim()) {
+    data.fitness_goal = goal.trim().replace(/\s+/g, '_');
   } else {
     data.fitness_goal = 'fat_loss';
   }

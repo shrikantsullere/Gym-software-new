@@ -3,6 +3,7 @@ import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert } from "reac
 import { FaEye, FaTrash, FaTimesCircle } from "react-icons/fa";
 import axiosInstance from '../../Api/axiosInstance';
 import { House } from "react-bootstrap-icons";
+import CustomDatePicker from "../../Components/CustomDatePicker";
 
 const MemberAttendance = () => {
   const [search, setSearch] = useState("");
@@ -229,11 +230,10 @@ const MemberAttendance = () => {
           {/* Date Filter Row */}
           <Row className="mb-4 g-2 g-md-3">
             <Col xs={12} sm={6} md={4}>
-              <Form.Control
-                type="date"
+              <CustomDatePicker
                 placeholder="Filter by date"
                 value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                onChange={(val) => setDateFilter(val)}
               />
             </Col>
           </Row>

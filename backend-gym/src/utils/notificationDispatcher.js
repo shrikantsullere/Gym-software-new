@@ -272,10 +272,10 @@ export const dispatchNotification = async ({
       results.inApp = { success: true };
       console.log(`🔔 IN_APP notification saved for User ID ${toUserId}`);
 
-      import("./notificationHelper.js").then(({ getIO, emitToUser }) => {
-        const io = require("../config/socket.js").getIO();
+      import("../config/socket.js").then(({ getIO, emitToUser }) => {
+        const io = getIO();
         if (io) {
-          require("../config/socket.js").emitToUser(toUserId.toString(), "new_notification", {
+          emitToUser(toUserId.toString(), "new_notification", {
             id: result.insertId,
             type: "IN-APP",
             to: toUserId.toString(),

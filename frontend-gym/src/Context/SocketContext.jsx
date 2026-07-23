@@ -21,6 +21,11 @@ export const SocketProvider = ({ children }) => {
 
     newSocket.on("connect", () => {
       newSocket.emit("join_room", u.id);
+      
+      const adminId = u.adminId || u.id;
+      if (adminId) {
+        newSocket.emit("join_room", `admin_${adminId}`);
+      }
     });
 
     setSocket(newSocket);

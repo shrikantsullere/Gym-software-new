@@ -8,9 +8,11 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import axiosInstance from "../../Api/axiosInstance";
+import { useSocket } from "../../Context/SocketContext";
 import AnnouncementBanner from "../../Components/AnnouncementBanner";
 
 const NewReceptionistDashboard = () => {
+  const socket = useSocket();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
 
@@ -25,25 +27,43 @@ const NewReceptionistDashboard = () => {
   const branchId = user?.branchId || 1;
   const name = user?.fullName || "Receptionist";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await axiosInstance.get(
-          `receptionist-dashboard?adminId=${adminId}&branchId=${branchId}`
-        );
-        if (res.data?.success) {
-          setData(res.data.receptionistDashboard);
-        }
-      } catch (err) {
-        console.error("Error fetching receptionist dashboard:", err);
-      } finally {
-        setLoading(false);
+  const fetchData = async (showLoadingState = true) => {
+    try {
+      if (showLoadingState) setLoading(true);
+      const res = await axiosInstance.get(
+        `receptionist-dashboard?adminId=${adminId}&branchId=${branchId}`
+      );
+      if (res.data?.success) {
+        setData(res.data.receptionistDashboard);
       }
-    };
-    if (adminId) fetchData();
+    } catch (err) {
+      console.error("Error fetching receptionist dashboard:", err);
+    } finally {
+      if (showLoadingState) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (adminId) fetchData(true);
     else setLoading(false);
   }, [adminId, branchId]);
+
+  // Set up socket listener for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCheckinUpdate = (payload) => {
+      console.log("⚡ Real-time check-in/out update received on Receptionist Dashboard:", payload);
+      // Silent refresh
+      fetchData(false);
+    };
+
+    socket.on("checkin_update", handleCheckinUpdate);
+
+    return () => {
+      socket.off("checkin_update", handleCheckinUpdate);
+    };
+  }, [socket, adminId, branchId]);
 
   const s = data?.summary;
 

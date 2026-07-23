@@ -265,12 +265,26 @@ export const dispatchNotification = async ({
 
   if (needsInApp && toUserId) {
     try {
-      await pool.query(
-        "INSERT INTO notificationLog (type, `to`, message, memberId, status) VALUES (?, ?, ?, ?, ?)",
-        ["IN_APP", toUserId.toString(), message, memberId || null, "UNREAD"]
+      const [result] = await pool.query(
+        "INSERT INTO notificationLog (type, `to`, message, memberId, status, is_read) VALUES (?, ?, ?, ?, ?, ?)",
+        ["IN-APP", toUserId.toString(), message, memberId || null, "UNREAD", 0]
       );
       results.inApp = { success: true };
       console.log(`🔔 IN_APP notification saved for User ID ${toUserId}`);
+
+      import("./notificationHelper.js").then(({ getIO, emitToUser }) => {
+        const io = require("../config/socket.js").getIO();
+        if (io) {
+          require("../config/socket.js").emitToUser(toUserId.toString(), "new_notification", {
+            id: result.insertId,
+            type: "IN-APP",
+            to: toUserId.toString(),
+            message: message,
+            is_read: 0,
+            createdAt: new Date().toISOString()
+          });
+        }
+      });
     } catch (err) {
       console.error(`❌ IN_APP notification failed for User ID ${toUserId}:`, err.message);
       results.inApp = { success: false, error: err.message };

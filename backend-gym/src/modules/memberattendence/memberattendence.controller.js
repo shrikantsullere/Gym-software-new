@@ -253,7 +253,7 @@ export const memberCheckIn = async (req, res, next) => {
     // Emit socket event to admin
     const adminToNotify = isMember ? memberAdminId : (typeof staffAdminId !== 'undefined' ? staffAdminId : null);
     if (adminToNotify) {
-      emitToUser(adminToNotify, "checkin_update", {
+      emitToUser(`admin_${adminToNotify}`, "checkin_update", {
         type: isMember ? "member" : "staff",
         action: "checkin",
         memberId,
@@ -404,7 +404,7 @@ export const memberCheckOut = async (req, res, next) => {
       }
 
       if (adminId) {
-        emitToUser(adminId, "checkin_update", {
+        emitToUser(`admin_${adminId}`, "checkin_update", {
           action: "checkout",
           id: attendanceId
         });
@@ -614,7 +614,7 @@ export const deleteAttendance = async (req, res, next) => {
 
     if (adminId) {
       try {
-        emitToUser(adminId, "checkin_update", {
+        emitToUser(`admin_${adminId}`, "checkin_update", {
           action: "delete",
           id: attendanceId
         });

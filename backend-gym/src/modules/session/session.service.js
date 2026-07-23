@@ -66,13 +66,32 @@ export const createSessionService = async (data) => {
   try {
     // 1. Alert for Trainer
     const trainerMsg = `You have been assigned to a new session: ${sessionName} | Date: ${date} | Time: ${time} | Capacity: ${capacity}`;
-    await sendAppNotification(trainerId, trainerMsg);
+    await sendAppNotification(trainerId, trainerMsg, {
+      title: "New Session Assigned",
+      receiver_role: "Trainer",
+      sender_id: adminId,
+      sender_role: "Admin",
+      reference_type: "SESSION",
+      reference_id: sessionId
+    });
 
     // 2. Alert for Members (Broadcast to branch/all)
     const [trainerRow] = await pool.query("SELECT fullName FROM user WHERE id = ?", [trainerId]);
     const trainerName = trainerRow.length > 0 ? trainerRow[0].fullName : "a trainer";
     const broadcastMsg = `New Session Available: ${sessionName} | Trainer: ${trainerName} | Date: ${date} | Time: ${time}`;
-    await sendAppNotification("all", broadcastMsg);
+    await sendAppNotification("all", broadcastMsg, {
+      title: "New Session Available",
+      receiver_role: "Member",
+      sender_id: adminId,
+      sender_role: "Admin",
+      reference_type: "SESSION",
+      reference_id: sessionId
+    });
+
+    // 3. Log Admin Activity
+    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+      logAdminActivity(adminId, "CREATE_SESSION", `Created new session: ${sessionName}`, sessionId);
+    });
 
     // 3. Emit Socket Event
     const io = getIO();
@@ -216,7 +235,14 @@ export const deleteSessionService = async (sessionId) => {
     
     // Notify Trainer
     const cancelMsg = `Assigned session cancelled: ${exists.sessionName}`;
-    await sendAppNotification(exists.trainerId, cancelMsg);
+    await sendAppNotification(exists.trainerId, cancelMsg, {
+      title: "Session Cancelled",
+      receiver_role: "Trainer",
+      sender_id: exists.adminId,
+      sender_role: "Admin",
+      reference_type: "SESSION",
+      reference_id: sessionId
+    });
     
     // Notify Booked Members
     const [bookings] = await pool.query(
@@ -225,9 +251,21 @@ export const deleteSessionService = async (sessionId) => {
     );
     for (const b of bookings) {
       if (b.userId) {
-        await sendAppNotification(b.userId, `Booked session cancelled: ${exists.sessionName}`);
+        await sendAppNotification(b.userId, `Booked session cancelled: ${exists.sessionName}`, {
+          title: "Session Cancelled",
+          receiver_role: "Member",
+          sender_id: exists.adminId,
+          sender_role: "System",
+          reference_type: "SESSION",
+          reference_id: sessionId
+        });
       }
     }
+
+    // Log Admin Activity
+    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+      logAdminActivity(exists.adminId, "DELETE_SESSION", `Deleted session: ${exists.sessionName}`, sessionId);
+    });
 
     if (io) {
       io.emit("sessionCancelled", { sessionId });
@@ -337,17 +375,38 @@ export const joinSessionService = async (memberId, sessionId) => {
           // Member
           const memMsg = `Your booking has been confirmed for ${sessionName}`;
           if (memberUserId) {
-            await sendAppNotification(memberUserId, memMsg);
+            await sendAppNotification(memberUserId, memMsg, {
+              title: "Session Booking Confirmed",
+              receiver_role: "Member",
+              sender_id: session.adminId,
+              sender_role: "System",
+              reference_type: "SESSION",
+              reference_id: sessionId
+            });
           }
 
           // Trainer
           const trainerMsg = `New booking received for ${sessionName} by ${member.fullName || 'A member'}`;
-          await sendAppNotification(session.trainerId, trainerMsg);
+          await sendAppNotification(session.trainerId, trainerMsg, {
+            title: "New Session Booking",
+            receiver_role: "Trainer",
+            sender_id: memberUserId,
+            sender_role: "Member",
+            reference_type: "SESSION",
+            reference_id: sessionId
+          });
 
           // Admin
           const adminMsg = `New booking received for ${sessionName} by ${member.fullName || 'A member'}`;
           if (session.adminId) {
-            await sendAppNotification(session.adminId, adminMsg);
+            await sendAppNotification(session.adminId, adminMsg, {
+              title: "New Session Booking",
+              receiver_role: "Admin",
+              sender_id: memberUserId,
+              sender_role: "Member",
+              reference_type: "SESSION",
+              reference_id: sessionId
+            });
           }
 
           if (io) {

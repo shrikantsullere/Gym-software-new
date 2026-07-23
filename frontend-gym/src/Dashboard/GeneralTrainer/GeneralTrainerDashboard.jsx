@@ -14,8 +14,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as echarts from 'echarts';
 import axiosInstance from '../../Api/axiosInstance';
 import AnnouncementBanner from '../../Components/AnnouncementBanner';
+import { useSocket } from '../../Context/SocketContext';
 
 const GeneralTrainerDashboard = () => {
+  const socket = useSocket();
   const attendanceChartRef = useRef(null);
   const engagementChartRef = useRef(null);
   const [dashboardData, setDashboardData] = useState({
@@ -48,64 +50,66 @@ const GeneralTrainerDashboard = () => {
   const adminId = user?.adminId || 90;
   const fullName = user?.fullName || null;
 
-
-  // Fetch data from API using axios
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Get branchId from localStorage user object
-        let branchId = '2'; // Default fallback
-        
-        try {
-          const userStr = localStorage.getItem('user');
-          if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user && user.branchId) {
-              branchId = user.branchId;
-            }
-          }
-        } catch (err) {
-          console.error('Error parsing user from localStorage:', err);
+  const fetchDashboardData = async (showLoadingState = true) => {
+    try {
+      if (showLoadingState) setLoading(true);
+      // Using axios instead of fetch
+      const response = await axiosInstance.get(`generaltrainer/dashboard?adminId=${adminId}`);
+      
+      // Process the response data to convert statistics to English
+      const data = response.data;
+      
+      // Convert statistics to English
+      const processedData = {
+        ...data,
+        classesToday: {
+          ...data.classesToday,
+          next: data.classesToday.next === "आज कोई क्लास नहीं" ? "No more classes today" : data.classesToday.next
+        },
+        membersToTrain: {
+          ...data.membersToTrain,
+          label: data.membersToTrain.label === "सक्रिय सदस्य" ? "Active members" : data.membersToTrain.label
+        },
+        pendingFeedback: {
+          ...data.pendingFeedback,
+          label: data.pendingFeedback.label === "ध्यान आवश्यक" ? "Requires attention" : data.pendingFeedback.label
         }
-        
-        // Using axios instead of fetch
-        const response = await axiosInstance.get(`generaltrainer/dashboard?adminId=${adminId}`);
-        
-        // Process the response data to convert statistics to English
-        const data = response.data;
-        
-        // Convert statistics to English
-        const processedData = {
-          ...data,
-          classesToday: {
-            ...data.classesToday,
-            next: data.classesToday.next === "आज कोई क्लास नहीं" ? "No more classes today" : data.classesToday.next
-          },
-          membersToTrain: {
-            ...data.membersToTrain,
-            label: data.membersToTrain.label === "सक्रिय सदस्य" ? "Active members" : data.membersToTrain.label
-          },
-          pendingFeedback: {
-            ...data.pendingFeedback,
-            label: data.pendingFeedback.label === "ध्यान आवश्यक" ? "Requires attention" : data.pendingFeedback.label
-          }
-        };
-        
-        setDashboardData(processedData);
-      } catch (err) {
-        // Axios provides more detailed error information
-        const errorMessage = err.response ? 
-          `Server responded with ${err.response.status}: ${err.response.data.message || err.response.statusText}` :
-          err.message;
-        setError(errorMessage);
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
+      };
+      
+      setDashboardData(processedData);
+    } catch (err) {
+      // Axios provides more detailed error information
+      const errorMessage = err.response ? 
+        `Server responded with ${err.response.status}: ${err.response.data.message || err.response.statusText}` :
+        err.message;
+      setError(errorMessage);
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      if (showLoadingState) setLoading(false);
+    }
+  };
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchDashboardData(true);
+  }, [adminId]);
+
+  // Set up socket listener for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCheckinUpdate = (payload) => {
+      console.log("⚡ Real-time check-in/out update received on General Trainer Dashboard:", payload);
+      // Silent refresh
+      fetchDashboardData(false);
     };
 
-    fetchDashboardData();
-  }, []); // This effect runs only once on mount
+    socket.on("checkin_update", handleCheckinUpdate);
+
+    return () => {
+      socket.off("checkin_update", handleCheckinUpdate);
+    };
+  }, [socket, adminId]);
 
   // Initialize charts
   useEffect(() => {

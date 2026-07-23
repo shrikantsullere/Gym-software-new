@@ -188,48 +188,69 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
   }
 };
 
-export const getUserNotificationsService = async (userId) => {
-  const [userRows] = await pool.query(
-    "SELECT id, adminId FROM user WHERE id = ?",
-    [userId]
-  );
-  const user = userRows[0] || {};
-  const adminIdStr = user.adminId ? user.adminId.toString() : userId.toString();
+import { formatISTDate } from "../../utils/dateHelper.js";
 
+export const getUserNotificationsService = async (userId) => {
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
      WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
-       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH', 'IN_APP')
-       AND (status = 'UNREAD' OR status = 'PENDING')
+       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH')
+       AND (status = 'UNREAD' OR status = 'PENDING' OR is_read = FALSE)
      ORDER BY createdAt DESC LIMIT 20`,
     [userId.toString()]
   );
-  return rows;
+  return rows.map(r => ({
+    ...r,
+    ...formatISTDate(r.createdAt)
+  }));
 };
 
 export const getAllUserNotificationsService = async (userId) => {
-  const [userRows] = await pool.query(
-    "SELECT id, adminId FROM user WHERE id = ?",
-    [userId]
-  );
-  const user = userRows[0] || {};
-  const adminIdStr = user.adminId ? user.adminId.toString() : userId.toString();
-
   const [rows] = await pool.query(
     `SELECT * FROM notificationlog 
      WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
-       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH', 'IN_APP')
+       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH')
      ORDER BY createdAt DESC LIMIT 100`,
     [userId.toString()]
   );
-  return rows;
+  return rows.map(r => ({
+    ...r,
+    ...formatISTDate(r.createdAt)
+  }));
 };
 
 export const markAsReadService = async (id) => {
+  const [rows] = await pool.query(`SELECT \`to\` FROM notificationlog WHERE id = ?`, [id]);
+  
   await pool.query(
-    `UPDATE notificationlog SET status = 'READ' WHERE id = ?`,
+    `UPDATE notificationlog SET status = 'READ', is_read = TRUE WHERE id = ?`,
     [id]
   );
+  
+  if (rows.length > 0) {
+    const userId = rows[0].to;
+    import("../../config/socket.js").then(({ getIO, emitToUser }) => {
+      const io = getIO();
+      if (io) {
+        emitToUser(userId, "notification_read", { id });
+      }
+    });
+  }
+  return true;
+};
+
+export const markAllAsReadService = async (userId) => {
+  await pool.query(
+    `UPDATE notificationlog SET status = 'READ', is_read = TRUE WHERE \`to\` = ? AND (status != 'READ' OR is_read = FALSE)`,
+    [userId.toString()]
+  );
+  
+  import("../../config/socket.js").then(({ getIO, emitToUser }) => {
+    const io = getIO();
+    if (io) {
+      emitToUser(userId.toString(), "all_notifications_read", {});
+    }
+  });
   return true;
 };
 

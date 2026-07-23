@@ -271,9 +271,11 @@ export const loginUser = async ({ email, password }) => {
     throw { status: 400, message: "User not found" };
   }
 
-  if (user.status === 'Inactive' && user.trialStatus === 'Expired') {
-    throw { status: 403, message: "Your trial has expired. Please purchase a subscription to continue." };
-  } else if (user.status === 'Inactive') {
+  const normStatus = (user.status || '').toLowerCase().trim();
+  if (normStatus === 'inactive') {
+    if (user.trialStatus === 'Expired') {
+      throw { status: 403, message: "Your trial has expired. Please purchase a subscription to continue." };
+    }
     throw { status: 403, message: "Your account is inactive. Please contact support." };
   }
 
@@ -327,21 +329,28 @@ export const loginUser = async ({ email, password }) => {
       [memberId]
     );
 
-    // ❌ No active plans found - all memberships expired
+    // ❌ No active plan assignment found - check fallback in member table
     if (activePlans.length === 0) {
-      // Update member status to Inactive
-      await pool.query(
-        `UPDATE member SET status = 'Inactive' WHERE id = ?`,
-        [member.id]
+      const [memDirect] = await pool.query(
+        `SELECT id FROM member WHERE id = ? AND (status = 'Active' OR status = 'ACTIVE' OR membershipTo >= CURDATE() OR membershipTo IS NULL) LIMIT 1`,
+        [memberId]
       );
 
-      throw {
-        status: 403,
-        message: "Membership expired. Please renew your plan.",
-      };
+      if (memDirect.length === 0) {
+        // Update member status to Inactive
+        await pool.query(
+          `UPDATE member SET status = 'Inactive' WHERE id = ?`,
+          [member.id]
+        );
+
+        throw {
+          status: 403,
+          message: "Membership expired. Please renew your plan.",
+        };
+      }
     }
 
-    // ✅ At least one active plan exists - member can login
+    // ✅ At least one active plan or direct active membership exists - member can login
   }
 
   /* ===============================

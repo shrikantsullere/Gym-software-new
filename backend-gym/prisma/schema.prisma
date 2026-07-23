@@ -347,15 +347,22 @@ model membership_renewal_requests {
 }
 
 model notificationlog {
-  id        Int      @id @default(autoincrement())
-  type      String
-  to        String
-  message   String
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  memberId  Int?
-  error     String?  @db.Text
-  member    member?  @relation(fields: [memberId], references: [id], map: "NotificationLog_memberId_fkey")
+  id             Int      @id @default(autoincrement())
+  title          String?  @db.VarChar(255)
+  type           String
+  to             String
+  receiver_role  String?  @db.VarChar(50)
+  message        String   @db.Text
+  status         String   @default("PENDING")
+  sender_id      String?  @db.VarChar(50)
+  sender_role    String?  @db.VarChar(50)
+  reference_type String?  @db.VarChar(100)
+  reference_id   String?  @db.VarChar(100)
+  is_read        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  memberId       Int?
+  error          String?  @db.Text
+  member         member?  @relation(fields: [memberId], references: [id], map: "NotificationLog_memberId_fkey")
 
   @@index([memberId], map: "NotificationLog_memberId_idx")
 }
@@ -493,6 +500,7 @@ model session {
   date        DateTime
   time        String
   duration    Int
+  capacity    Int?
   description String?
   status      String        @default("Upcoming")
   createdAt   DateTime      @default(now())

@@ -436,7 +436,7 @@ const Navbar = ({ toggleSidebar }) => {
                             🔵 {n.title || n.type}
                           </small>
                           <small className="text-muted" style={{ fontSize: "0.7rem" }}>
-                            {new Date(n.createdAt).toLocaleString()}
+                            {n.formatted_date ? `${n.formatted_date} • ${n.formatted_time} ${n.timezone}` : new Date(n.createdAt).toLocaleString()}
                           </small>
                         </div>
                         <p className="mb-1 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "0.88rem", lineHeight: "1.4" }}>

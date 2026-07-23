@@ -1,5 +1,6 @@
 import { pool } from "../config/db.js";
 import { getIO, emitToUser } from "../config/socket.js";
+import { formatISTDate } from "./dateHelper.js";
 
 export const sendAppNotification = async (to, message, options = {}) => {
   try {
@@ -30,6 +31,7 @@ export const sendAppNotification = async (to, message, options = {}) => {
     
     const io = getIO();
     if (io) {
+      const createdAt = new Date().toISOString();
       const payload = {
         id: result.insertId,
         type: "IN-APP",
@@ -42,7 +44,8 @@ export const sendAppNotification = async (to, message, options = {}) => {
         reference_type,
         reference_id,
         is_read: 0,
-        createdAt: new Date().toISOString()
+        createdAt: createdAt,
+        ...formatISTDate(createdAt)
       };
       
       if (to === "all") {

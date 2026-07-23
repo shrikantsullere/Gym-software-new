@@ -74,14 +74,44 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     []
   );
 
-  // 7. Today's revenue from payments
-  const [todayRevenue] = await pool.query(
-    `SELECT COALESCE(SUM(p.amount), 0) as total 
-     FROM payment p
-     JOIN member m ON p.memberId = m.id
-     WHERE DATE(p.paymentDate) = CURDATE() AND m.adminId = ?`,
-    [adminId]
-  );
+  // 7. Revenue calculations (Today, Month, Total)
+  const [[revRow]] = await pool.query(
+    `SELECT 
+      COALESCE((
+        SELECT SUM(p.amount)
+        FROM payment p
+        JOIN member m ON p.memberId = m.id
+        WHERE (m.adminId = ? OR ? IS NULL) AND DATE(p.paymentDate) = CURDATE()
+      ), 0) +
+      COALESCE((
+        SELECT SUM(m.amountPaid)
+        FROM member m
+        WHERE (m.adminId = ? OR ? IS NULL) AND DATE(m.joinDate) = CURDATE()
+      ), 0) AS todayRev,
+      COALESCE((
+        SELECT SUM(p.amount)
+        FROM payment p
+        JOIN member m ON p.memberId = m.id
+        WHERE (m.adminId = ? OR ? IS NULL) AND DATE_FORMAT(p.paymentDate, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+      ), 0) +
+      COALESCE((
+        SELECT SUM(m.amountPaid)
+        FROM member m
+        WHERE (m.adminId = ? OR ? IS NULL) AND DATE_FORMAT(m.joinDate, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+      ), 0) AS monthRev,
+      COALESCE((
+        SELECT SUM(p.amount)
+        FROM payment p
+        JOIN member m ON p.memberId = m.id
+        WHERE (m.adminId = ? OR ? IS NULL)
+      ), 0) +
+      COALESCE((
+        SELECT SUM(m.amountPaid)
+        FROM member m
+        WHERE (m.adminId = ? OR ? IS NULL)
+      ), 0) AS totalRev`,
+    [adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId, adminId]
+  ).catch(() => [[{ todayRev: 0, monthRev: 0, totalRev: 0 }]]);
 
   // 8. Members with renewals due soon (for follow-up)
   const [renewalsList] = await pool.query(
@@ -98,6 +128,8 @@ export const receptionistDashboardService = async (adminId, branchId) => {
     [adminId, adminId]
   );
 
+  const realTotalRevenue = Number(revRow?.monthRev || 0) > 0 ? Number(revRow.monthRev) : Number(revRow?.totalRev || 0);
+
   return {
     summary: {
       todayCheckins: todayCheckins[0].count,
@@ -105,7 +137,9 @@ export const receptionistDashboardService = async (adminId, branchId) => {
       pendingPaymentsCount: pendingPayments[0].count,
       pendingPaymentsAmount: pendingPayments[0].totalAmount,
       expiringPlansCount: expiringPlans[0].count,
-      todayRevenue: todayRevenue[0].total,
+      todayRevenue: Number(revRow?.todayRev || 0),
+      monthRevenue: Number(revRow?.monthRev || 0),
+      totalRevenue: realTotalRevenue,
     },
     recentCheckins,
     lowStockItems,

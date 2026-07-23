@@ -16,7 +16,8 @@ export const SocketProvider = ({ children }) => {
     
     if (!u || !u.id) return;
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://gym-backend-production-062c.up.railway.app";
+    // const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
     const newSocket = io(backendUrl, { withCredentials: true });
 
     newSocket.on("connect", () => {

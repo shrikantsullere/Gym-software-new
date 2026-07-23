@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../../config/env.js";
 import { notifySuperAdmin } from "../notifications/notif.service.js";
 import { uploadToCloudinary } from "../../config/cloudinary.js";
+import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 
 /**************************************
  * REGISTER USER (CREATE)
@@ -128,18 +129,31 @@ export const registerUser = async (data,payload) => {
     isTrialSelected ? 1 : 0
   ]);
 
-  // Simulate Sending Welcome Email & WhatsApp if it's an Admin
+  // ✅ Send real Welcome Email + WhatsApp when Admin registers (Trial or otherwise)
   if (trialStatus === 'Active' && welcomeTemplate) {
     let msgBody = welcomeTemplate.messageBody
       .replace('{Name}', fullName)
       .replace('{Days}', Math.round((trialEndDate - trialStartDate) / (1000 * 60 * 60 * 24)));
-    
-    console.log("=====================================");
-    console.log(`[AUTOMATION] Simulated Welcome Message to ${email}`);
-    console.log(`Subject: ${welcomeTemplate.subject}`);
-    console.log(`Body: ${msgBody}`);
-    console.log("=====================================");
-    // TODO: Connect real SMTP and WhatsApp API here when credentials are provided
+
+    dispatchNotification({
+      category: "saas_renewal_channel",
+      toEmail: email,
+      toPhone: phone || null,
+      toUserId: result.insertId,
+      subject: welcomeTemplate.subject || "Welcome to Speed Fitness!",
+      message: msgBody,
+    }).catch(err => console.error("❌ Error sending admin trial welcome notification:", err.message));
+  } else if (roleId == 2 || roleId == '2') {
+    // Admin registered without trial – still send a welcome email with credentials
+    const credMsg = `Hi ${fullName},\n\nYour gym admin account has been created successfully.\n\nLogin Details:\nEmail: ${email}\nPassword: ${data.password}\n\nGym: ${gymName || 'N/A'}\n\nRegards,\nSpeed Fitness Team`;
+    dispatchNotification({
+      category: "saas_renewal_channel",
+      toEmail: email,
+      toPhone: phone || null,
+      toUserId: result.insertId,
+      subject: "Your Gym Admin Account — Speed Fitness",
+      message: credMsg,
+    }).catch(err => console.error("❌ Error sending admin welcome email:", err.message));
   }
 
   // Return full user object
@@ -627,14 +641,18 @@ if (data?.subscriptionPlan) {
   // We should also send "SUBSCRIPTION_ACTIVATED" mock message here
   const [[template]] = await pool.query("SELECT * FROM message_templates WHERE templateType = 'SUBSCRIPTION_ACTIVATED'");
   if (template) {
-    const [[user]] = await pool.query("SELECT fullName, email FROM user WHERE id = ?", [id]);
+    const [[user]] = await pool.query("SELECT fullName, email, phone FROM user WHERE id = ?", [id]);
     if (user) {
       let msgBody = template.messageBody.replace('{Name}', user.fullName);
-      console.log("=====================================");
-      console.log(`[AUTOMATION - CONVERSION] To: ${user.email}`);
-      console.log(`Subject: ${template.subject}`);
-      console.log(`Body: ${msgBody}`);
-      console.log("=====================================");
+      // ✅ Send real Subscription Activated email + WhatsApp
+      dispatchNotification({
+        category: "saas_renewal_channel",
+        toEmail: user.email,
+        toPhone: user.phone || null,
+        toUserId: id,
+        subject: template.subject || "Subscription Activated — Speed Fitness",
+        message: msgBody,
+      }).catch(err => console.error("❌ Error sending subscription activation notification:", err.message));
     }
   }
 }

@@ -5,6 +5,7 @@ import axiosInstance from "../../Api/axiosInstance";
 import GetAdminId from "../../Api/GetAdminId";
 import CustomTimePicker from "../../Components/CustomTimePicker";
 import BookingDetailsList from "../Admin/Bookings/BookingDetailsList";
+import { useSocket } from "../../Context/SocketContext";
 
 const GeneralClassesSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,6 +20,7 @@ const GeneralClassesSchedule = () => {
   const [members, setMembers] = useState([]); // For member dropdown
   const [trainers, setTrainers] = useState([]); // For trainers from API
 
+  const socket = useSocket();
 
    const getUserFromStorage = () => {
     try {
@@ -37,6 +39,34 @@ const GeneralClassesSchedule = () => {
   const staffId = user?.staffId || null;
   const adminId = user?.adminId || null;
 
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleRefresh = () => {
+      console.log("Socket event received in GeneralClassesSchedule, refreshing data...");
+      if (adminId) {
+        fetchAllData();
+      }
+    };
+
+    socket.on("bookingCreated", handleRefresh);
+    socket.on("bookingUpdated", handleRefresh);
+    socket.on("bookingCancelled", handleRefresh);
+    socket.on("classCreated", handleRefresh);
+    socket.on("classCancelled", handleRefresh);
+    socket.on("trainerAssigned", handleRefresh);
+    socket.on("capacityUpdated", handleRefresh);
+
+    return () => {
+      socket.off("bookingCreated", handleRefresh);
+      socket.off("bookingUpdated", handleRefresh);
+      socket.off("bookingCancelled", handleRefresh);
+      socket.off("classCreated", handleRefresh);
+      socket.off("classCancelled", handleRefresh);
+      socket.off("trainerAssigned", handleRefresh);
+      socket.off("capacityUpdated", handleRefresh);
+    };
+  }, [socket, adminId]);
 
   useEffect(() => {
     if (!adminId) {

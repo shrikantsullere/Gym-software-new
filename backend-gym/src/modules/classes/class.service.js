@@ -539,14 +539,14 @@ export const getAllScheduledClassesService = async (adminId) => {
       u.fullName AS trainerName,
       (SELECT COUNT(*) FROM unified_bookings ub WHERE ub.classId = cs.id AND ub.bookingStatus = 'Booked') AS membersCount,
       (
-        SELECT JSON_ARRAYAGG(
+        SELECT CONCAT('[', COALESCE(GROUP_CONCAT(
           JSON_OBJECT(
             'id', m.id,
             'name', m.fullName,
             'email', m.email,
             'phone', m.phone
           )
-        )
+        ), ''), ']')
         FROM unified_bookings ub
         JOIN member m ON ub.memberId = m.id
         WHERE ub.classId = cs.id AND ub.bookingStatus = 'Booked'

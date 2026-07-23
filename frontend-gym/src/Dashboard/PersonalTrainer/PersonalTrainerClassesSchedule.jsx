@@ -60,6 +60,8 @@ const PersonalTrainerClassesSchedule = () => {
     socket.on("classCancelled", handleRefresh);
     socket.on("trainerAssigned", handleRefresh);
     socket.on("capacityUpdated", handleRefresh);
+    socket.on("bookingUpdated", handleRefresh);
+    socket.on("bookingCancelled", handleRefresh);
 
     return () => {
       socket.off("bookingCreated", handleRefresh);
@@ -67,8 +69,10 @@ const PersonalTrainerClassesSchedule = () => {
       socket.off("classCancelled", handleRefresh);
       socket.off("trainerAssigned", handleRefresh);
       socket.off("capacityUpdated", handleRefresh);
+      socket.off("bookingUpdated", handleRefresh);
+      socket.off("bookingCancelled", handleRefresh);
     };
-  }, [socket]);
+  }, [socket, adminId]);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -97,9 +101,9 @@ const PersonalTrainerClassesSchedule = () => {
         trainer: classItem.trainer || classItem.trainerName || name || "—",
         date: classItem.date,
         time: classItem.time,
-        day: classItem.day || '', // Handle empty day field
         status: classItem.status,
-        membersCount: classItem.membersCount || 0
+        membersCount: classItem.membersCount || 0,
+        members: classItem.members || []
       }));
 
       setClasses(transformedClasses);

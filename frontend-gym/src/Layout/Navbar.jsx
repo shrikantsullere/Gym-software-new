@@ -124,8 +124,11 @@ const Navbar = ({ toggleSidebar }) => {
   // Mark ALL unread notifications as read
   const markAllRead = async () => {
     try {
-      await Promise.all(notifications.map(n => axiosInstance.put(`/notif/read/${n.id}`)));
-      setNotifications([]);
+      const u = getUserFromLocalStorage();
+      if (u && u.id) {
+        await axiosInstance.put(`/notif/read-all/${u.id}`);
+        setNotifications([]);
+      }
     } catch (err) {
       console.error("Failed to mark all as read:", err);
     }
@@ -141,10 +144,22 @@ const Navbar = ({ toggleSidebar }) => {
       setNotifications(prev => [data, ...prev]);
     };
 
+    const handleNotificationRead = (data) => {
+      setNotifications(prev => prev.filter(n => n.id !== data.id));
+    };
+
+    const handleAllNotificationsRead = () => {
+      setNotifications([]);
+    };
+
     socket.on("new_notification", handleNewNotification);
+    socket.on("notification_read", handleNotificationRead);
+    socket.on("all_notifications_read", handleAllNotificationsRead);
 
     return () => {
       socket.off("new_notification", handleNewNotification);
+      socket.off("notification_read", handleNotificationRead);
+      socket.off("all_notifications_read", handleAllNotificationsRead);
     };
   }, [socket]);
 
@@ -400,16 +415,28 @@ const Navbar = ({ toggleSidebar }) => {
                         key={n.id} 
                         className="list-group-item list-group-item-action p-3 border-bottom"
                         style={{ cursor: 'pointer', background: "#f8faff", transition: "background-color 0.15s" }}
-                        onClick={() => markNotificationRead(n.id)}
+                        onClick={() => {
+                          markNotificationRead(n.id);
+                          if (n.reference_type === 'CLASS') {
+                            if (profile.role === 'Member') navigate('/member/classschedule');
+                            else if (profile.role === 'Trainer' || profile.role === 'General Trainer' || profile.role === 'Personal Trainer') navigate('/trainer/classesschedule');
+                            else navigate('/admin/classesschedule');
+                          } else if (n.reference_type === 'SESSION') {
+                            if (profile.role === 'Member') navigate('/member/sessions');
+                            else if (profile.role === 'Trainer' || profile.role === 'General Trainer' || profile.role === 'Personal Trainer') navigate('/trainer/sessions');
+                            else navigate('/admin/personaltraining');
+                          }
+                          setShowNotifDropdown(false);
+                        }}
                         onMouseEnter={e => e.currentTarget.style.background = "#eef3ff"}
                         onMouseLeave={e => e.currentTarget.style.background = "#f8faff"}
                       >
                         <div className="d-flex w-100 justify-content-between align-items-center mb-1">
                           <small className="text-primary fw-bold" style={{ fontSize: "0.8rem" }}>
-                            🔵 {n.type}
+                            🔵 {n.title || n.type}
                           </small>
                           <small className="text-muted" style={{ fontSize: "0.7rem" }}>
-                            {new Date(n.createdAt).toLocaleString()}
+                            {n.formatted_date ? `${n.formatted_date} • ${n.formatted_time} ${n.timezone}` : new Date(n.createdAt).toLocaleString()}
                           </small>
                         </div>
                         <p className="mb-1 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "0.88rem", lineHeight: "1.4" }}>

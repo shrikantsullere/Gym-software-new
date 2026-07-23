@@ -50,6 +50,8 @@ const ClassesSchedule = () => {
     socket.on("classCancelled", handleRefresh);
     socket.on("trainerAssigned", handleRefresh);
     socket.on("capacityUpdated", handleRefresh);
+    socket.on("bookingUpdated", handleRefresh);
+    socket.on("bookingCancelled", handleRefresh);
 
     return () => {
       socket.off("bookingCreated", handleRefresh);
@@ -57,6 +59,8 @@ const ClassesSchedule = () => {
       socket.off("classCancelled", handleRefresh);
       socket.off("trainerAssigned", handleRefresh);
       socket.off("capacityUpdated", handleRefresh);
+      socket.off("bookingUpdated", handleRefresh);
+      socket.off("bookingCancelled", handleRefresh);
     };
   }, [socket]);
 

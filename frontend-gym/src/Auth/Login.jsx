@@ -30,13 +30,19 @@ const Login = () => {
 
   const roleRedirectMap = {
     SUPERADMIN: "/superadmin/dashboard",
+    SUBADMIN: "/superadmin/dashboard",
     ADMIN: "/admin/admin-dashboard",
+    MANAGER: "/manager/dashboard",
     GENERALTRAINER: "/generaltrainer/dashboard",
+    GENERAL_TRAINER: "/generaltrainer/dashboard",
+    TRAINER: "/generaltrainer/dashboard",
     PERSONALTRAINER: "/personaltrainer/dashboard",
+    PERSONAL_TRAINER: "/personaltrainer/dashboard",
     MEMBER: "/member/dashboard",
     RECEPTIONIST: "/receptionist/dashboard",
     SALES_AGENT: "/sales/dashboard",
-    SUBADMIN: "/superadmin/dashboard",
+    SALESAGENT: "/sales/dashboard",
+    HOUSEKEEPING: "/staff/announcements",
   };
 
   const handleSubmit = async (e) => {
@@ -52,8 +58,9 @@ const Login = () => {
 
       const { token, user } = response.data;
 
-      // ✅ Use roleName (not role) — as per your API response
-      const normalizedRole = (user.roleName || "").toUpperCase().trim();
+      // ✅ Normalize role string to handle all variations (e.g. "sales_agent", "Sales Agent", "personaltrainer", "Personal Trainer")
+      const rawRole = user.roleName || "";
+      const normalizedRole = rawRole.toUpperCase().replace(/\s+|-/g, "_").trim();
 
       // Save auth info in localStorage
       localStorage.setItem("authToken", token);
@@ -63,7 +70,7 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(user));
 
       // Redirect based on role
-      const redirectPath = roleRedirectMap[normalizedRole] || "/";
+      const redirectPath = roleRedirectMap[normalizedRole] || (roleRedirectMap[rawRole.toUpperCase()] || "/");
       navigate(redirectPath);
     } catch (err) {
       console.error("Login error:", err);

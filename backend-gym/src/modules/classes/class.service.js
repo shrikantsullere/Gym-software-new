@@ -82,13 +82,32 @@ export const createScheduleService = async (data) => {
   try {
     // 1. Alert for Trainer
     const trainerMsg = `You have been assigned to a new class: ${className} | Date: ${date} | Time: ${startTime} | Capacity: ${capacity}`;
-    await sendAppNotification(trainerId, trainerMsg);
+    await sendAppNotification(trainerId, trainerMsg, {
+      title: "New Class Assigned",
+      receiver_role: "Trainer",
+      sender_id: adminId,
+      sender_role: "Admin",
+      reference_type: "CLASS",
+      reference_id: result.insertId
+    });
 
     // 2. Alert for Members (Broadcast)
     const [trainerRow] = await pool.query("SELECT fullName FROM user WHERE id = ?", [trainerId]);
     const trainerName = trainerRow.length > 0 ? trainerRow[0].fullName : "a trainer";
     const broadcastMsg = `New Class Available: ${className} | Trainer: ${trainerName} | Date: ${date} | Time: ${startTime}`;
-    await sendAppNotification("all", broadcastMsg);
+    await sendAppNotification("all", broadcastMsg, {
+      title: "New Class Available",
+      receiver_role: "Member",
+      sender_id: adminId,
+      sender_role: "Admin",
+      reference_type: "CLASS",
+      reference_id: result.insertId
+    });
+
+    // 3. Log Admin Activity
+    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+      logAdminActivity(adminId, "CREATE_CLASS", `Created new class: ${className}`, result.insertId);
+    });
 
     // 3. Emit Socket Event
     const io = getIO();
@@ -255,17 +274,38 @@ export const bookClassService = async (memberId, scheduleId) => {
       // Member
       const memMsg = `Your booking has been confirmed for ${className}`;
       if (memberUserId) {
-        await sendAppNotification(memberUserId, memMsg);
+        await sendAppNotification(memberUserId, memMsg, {
+          title: "Booking Confirmed",
+          receiver_role: "Member",
+          sender_id: schedule.adminId, // System/Admin
+          sender_role: "System",
+          reference_type: "CLASS",
+          reference_id: scheduleId
+        });
       }
 
       // Trainer
       const trainerMsg = `New booking received for ${className} by ${member.fullName || 'A member'}`;
-      await sendAppNotification(schedule.trainerId, trainerMsg);
+      await sendAppNotification(schedule.trainerId, trainerMsg, {
+        title: "New Class Booking",
+        receiver_role: "Trainer",
+        sender_id: memberUserId,
+        sender_role: "Member",
+        reference_type: "CLASS",
+        reference_id: scheduleId
+      });
 
       // Admin
       const adminMsg = `New booking received for ${className} by ${member.fullName || 'A member'}`;
       if (schedule.adminId) {
-        await sendAppNotification(schedule.adminId, adminMsg);
+        await sendAppNotification(schedule.adminId, adminMsg, {
+          title: "New Class Booking",
+          receiver_role: "Admin",
+          sender_id: memberUserId,
+          sender_role: "Member",
+          reference_type: "CLASS",
+          reference_id: scheduleId
+        });
       }
 
       if (io) io.emit("bookingCreated", { scheduleId, classId: scheduleId });
@@ -537,7 +577,20 @@ export const getAllScheduledClassesService = async (adminId) => {
     SELECT 
       cs.*,
       u.fullName AS trainerName,
-      COALESCE(JSON_LENGTH(cs.members), 0) AS membersCount
+      (SELECT COUNT(*) FROM unified_bookings ub WHERE ub.classId = cs.id AND ub.bookingStatus = 'Booked') AS membersCount,
+      (
+        SELECT CONCAT('[', COALESCE(GROUP_CONCAT(
+          JSON_OBJECT(
+            'id', m.id,
+            'name', m.fullName,
+            'email', m.email,
+            'phone', m.phone
+          )
+        ), ''), ']')
+        FROM unified_bookings ub
+        JOIN member m ON ub.memberId = m.id
+        WHERE ub.classId = cs.id AND ub.bookingStatus = 'Booked'
+      ) AS bookedMembers
     FROM classschedule cs
     LEFT JOIN user u ON cs.trainerId = u.id
     WHERE u.adminId = ? OR cs.adminId = ? OR cs.trainerId = ?
@@ -557,7 +610,7 @@ export const getAllScheduledClassesService = async (adminId) => {
     day: item.day,
     status: item.status,
     membersCount: item.membersCount,
-    members: typeof item.members === "string" ? JSON.parse(item.members || "[]") : (item.members || []),
+    members: typeof item.bookedMembers === "string" ? JSON.parse(item.bookedMembers || "[]") : (item.bookedMembers || []),
   }));
 };
 
@@ -798,7 +851,14 @@ export const deleteScheduleService = async (id) => {
     
     // Notify Trainer
     const cancelMsg = `Assigned class cancelled: ${existing.className}`;
-    await sendAppNotification(existing.trainerId, cancelMsg);
+    await sendAppNotification(existing.trainerId, cancelMsg, {
+      title: "Class Cancelled",
+      receiver_role: "Trainer",
+      sender_id: existing.adminId, // or the admin deleting it
+      sender_role: "Admin",
+      reference_type: "CLASS",
+      reference_id: id
+    });
     
     // Notify Booked Members
     const [bookings] = await pool.query(
@@ -807,9 +867,21 @@ export const deleteScheduleService = async (id) => {
     );
     for (const b of bookings) {
       if (b.userId) {
-        await sendAppNotification(b.userId, `Booked class cancelled: ${existing.className}`);
+        await sendAppNotification(b.userId, `Booked class cancelled: ${existing.className}`, {
+          title: "Class Cancelled",
+          receiver_role: "Member",
+          sender_id: existing.adminId,
+          sender_role: "System",
+          reference_type: "CLASS",
+          reference_id: id
+        });
       }
     }
+
+    // Log Admin Activity
+    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+      logAdminActivity(existing.adminId, "DELETE_CLASS", `Deleted class: ${existing.className}`, id);
+    });
 
     if (io) {
       io.emit("classCancelled", { classId: id });

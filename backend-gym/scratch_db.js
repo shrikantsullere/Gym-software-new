@@ -11,8 +11,8 @@ const pool = mysql.createPool({
 });
 
 async function run() {
-  const [rows] = await pool.query(`SELECT id, fullName, roleId, adminId FROM user WHERE roleId IN (2,3,4,5,10) LIMIT 5`);
-  console.log("Users:", JSON.stringify(rows, null, 2));
+  const [rows] = await pool.query(`SHOW TABLES`);
+  console.log("Tables:", JSON.stringify(rows, null, 2));
   pool.end();
 }
 run();

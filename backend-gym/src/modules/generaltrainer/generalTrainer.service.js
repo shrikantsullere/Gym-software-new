@@ -918,15 +918,22 @@ export const deleteAttendanceRecordService = async (id) => {
 //   }
 // };
 
-export const getDashboardDataService = async (adminId) => {
+export const getDashboardDataService = async (adminId, attendancePeriod = "7days") => {
   if (!adminId) throw { status: 400, message: "adminId is required" };
 
   const today = new Date();
   const todayStr = today.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // 'YYYY-MM-DD'
 
+  let days = 7;
+  if (attendancePeriod === "30days" || attendancePeriod === "Last 30 Days" || attendancePeriod === "30") {
+    days = 30;
+  } else if (attendancePeriod === "3months" || attendancePeriod === "Last 3 Months" || attendancePeriod === "90") {
+    days = 90;
+  }
+
   try {
     /* =========================
-       WEEKLY ATTENDANCE (7 DAYS)
+       ATTENDANCE TREND (DYNAMIC 7/30/90 DAYS)
        memberattendance → member → adminId
     ========================= */
     const [attendanceData] = await pool.query(
@@ -937,24 +944,28 @@ export const getDashboardDataService = async (adminId) => {
       FROM memberattendance ma
       JOIN member m ON ma.memberId = m.id
       WHERE m.adminId = ?
-        AND ma.checkIn >= ? - INTERVAL 7 DAY
+        AND ma.checkIn >= DATE_SUB(?, INTERVAL ? DAY)
       GROUP BY DATE(CONVERT_TZ(ma.checkIn, '+00:00', '+05:30'))
       ORDER BY date ASC
       `,
-      [adminId, todayStr]
+      [adminId, todayStr, days]
     );
 
     const weeklyAttendanceTrend = [];
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split("T")[0];
 
       const dayData = attendanceData.find((x) => x.date === dateStr);
 
+      const dayLabel = days <= 7
+        ? d.toLocaleDateString("en-US", { weekday: "short" })
+        : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
       weeklyAttendanceTrend.push({
-        day: d.toLocaleDateString("en-US", { weekday: "short" }),
+        day: dayLabel,
         date: dateStr,
         count: dayData ? dayData.count : 0,
       });

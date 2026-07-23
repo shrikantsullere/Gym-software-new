@@ -15,13 +15,15 @@ router.post("/", addHealthLog);
 
 // Get health logs for a specific member
 router.get("/member/:memberId", getMemberHealthLogs);
-router.get("/:memberId", getMemberHealthLogs);
 
 // Get all health logs for an admin
 router.get("/all/:adminId", getAllHealthLogs);
 
 // Get health logs for all members assigned to a trainer
 router.get("/trainer/:trainerId", getHealthLogsByTrainer);
+
+// Fallback GET by memberId
+router.get("/:memberId", getMemberHealthLogs);
 
 // Update a health log
 router.put("/:id", updateHealthLog);

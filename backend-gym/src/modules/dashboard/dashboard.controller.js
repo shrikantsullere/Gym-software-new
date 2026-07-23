@@ -208,22 +208,15 @@ export const getSalesDashboard = async (req, res, next) => {
     const bIdFilter = branchId ? "AND (branchId = ? OR branchId IS NULL)" : "";
     const bIdParams = branchId ? [adminId, branchId] : [adminId];
 
-    // Month Selection: default to current month YYYY-MM
-    const selectedMonth = req.query.month || new Date().toISOString().slice(0, 7);
-    const [targetYearStr, targetMonthStr] = selectedMonth.split("-");
-    const targetYear = Number(targetYearStr) || new Date().getFullYear();
-    const targetMonth = Number(targetMonthStr) || (new Date().getMonth() + 1);
+    // Period selection: 1, 3, 6, or 12 months
+    const periodMonths = [1, 3, 6, 12].includes(Number(req.query.period))
+      ? Number(req.query.period)
+      : 1;
 
-    const monthQueryParams = branchId
-      ? [adminId, branchId, targetMonth, targetYear, adminId, branchId, targetMonth, targetYear]
-      : [adminId, targetMonth, targetYear, adminId, targetMonth, targetYear];
-
-    const simpleMonthParams = branchId
-      ? [adminId, branchId, targetMonth, targetYear]
-      : [adminId, targetMonth, targetYear];
+    const periodParams = branchId ? [adminId, branchId, periodMonths] : [adminId, periodMonths];
 
     /* =========================
-       1️⃣ TOTAL REVENUE (Selected Month)
+       1️⃣ TOTAL REVENUE
     ========================= */
     const [[revenueThisMonth]] = await pool.query(
       `
@@ -232,24 +225,24 @@ export const getSalesDashboard = async (req, res, next) => {
           SELECT SUM(p.amount)
           FROM payment p
           JOIN member m ON p.memberId = m.id
-          WHERE (m.adminId = ? OR ? IS NULL) ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-            AND MONTH(p.paymentDate) = ?
-            AND YEAR(p.paymentDate) = ?
+          WHERE m.adminId = ? ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
+            AND p.paymentDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
         ), 0) +
         COALESCE((
           SELECT SUM(m.amountPaid)
           FROM member m
-          WHERE (m.adminId = ? OR ? IS NULL) ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-            AND MONTH(m.joinDate) = ?
-            AND YEAR(m.joinDate) = ?
+          WHERE m.adminId = ? ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
+            AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
         ), 0)
       ) AS total
       `,
-      monthQueryParams
+      branchId
+        ? [adminId, branchId, periodMonths, adminId, branchId, periodMonths]
+        : [adminId, periodMonths, adminId, periodMonths]
     );
 
     /* =========================
-       2️⃣ NEW REGISTRATIONS (Selected Month)
+       2️⃣ NEW REGISTRATIONS
     ========================= */
     const [[newRegistrations]] = await pool.query(
       `
@@ -257,10 +250,9 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM member m
       WHERE m.adminId = ?
         ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-        AND MONTH(m.joinDate) = ?
-        AND YEAR(m.joinDate) = ?
+        AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       `,
-      simpleMonthParams
+      periodParams
     );
 
     /* =========================
@@ -286,18 +278,15 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM member m
       WHERE m.adminId = ?
         ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-        AND (
-          (MONTH(m.membershipTo) = ? AND YEAR(m.membershipTo) = ?)
-          OR (m.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 14 DAY))
-        )
+        AND m.membershipTo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
       `,
-      simpleMonthParams
+      bIdParams
     );
 
     /* =========================
-       5️⃣ REVENUE VS EXPENSES (Selected Month)
+       5️⃣ REVENUE VS EXPENSES
     ========================= */
-    // Income in Selected Month
+    // Income
     const [incomeData] = await pool.query(
       `
       SELECT 
@@ -307,14 +296,14 @@ export const getSalesDashboard = async (req, res, next) => {
       FROM member m
       WHERE m.adminId = ?
         ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-        AND MONTH(m.joinDate) = ? AND YEAR(m.joinDate) = ?
+        AND m.joinDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       GROUP BY year, month
       ORDER BY year, MONTH(m.joinDate)
       `,
-      simpleMonthParams
+      periodParams
     );
 
-    // Expenses in Selected Month
+    // Expenses
     const [expenseDataRaw] = await pool.query(
       `
       SELECT 
@@ -325,10 +314,11 @@ export const getSalesDashboard = async (req, res, next) => {
       JOIN branch b ON e.branchId = b.id
       WHERE b.adminId = ?
         ${branchId ? "AND (e.branchId = ? OR e.branchId IS NULL)" : ""}
-        AND MONTH(e.date) = ? AND YEAR(e.date) = ?
+        AND e.date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       GROUP BY year, month
+      ORDER BY year, MONTH(e.date)
       `,
-      simpleMonthParams
+      periodParams
     );
 
     /* =========================
@@ -361,11 +351,10 @@ export const getSalesDashboard = async (req, res, next) => {
       LEFT JOIN memberplan pl ON m.planId = pl.id
       WHERE m.adminId = ?
         ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
-        AND MONTH(m.joinDate) = ? AND YEAR(m.joinDate) = ?
       ORDER BY m.joinDate DESC
       LIMIT 10
       `,
-      simpleMonthParams
+      bIdParams
     ).catch(() => [[]]);
 
     /* =========================

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   RiMoneyDollarCircleLine,
   RiUserAddLine,
@@ -41,25 +41,21 @@ const SalesDashboard = () => {
   const [padLeft, setPadLeft] = useState(0); // px
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toISOString().slice(0, 7) // e.g. '2026-07'
-  );
+  const [selectedPeriod, setSelectedPeriod] = useState("1"); // "1", "3", "6", "12"
 
-  const availableMonths = useMemo(() => {
-    const list = [];
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-      list.push({ value, label });
+  const getPeriodLabel = (val) => {
+    switch (String(val)) {
+      case "1":
+        return "1 Month";
+      case "3":
+        return "3 Months";
+      case "6":
+        return "6 Months";
+      case "12":
+        return "1 Year";
+      default:
+        return "1 Month";
     }
-    return list;
-  }, []);
-
-  const getSelectedMonthLabel = (val) => {
-    const found = availableMonths.find((m) => m.value === val);
-    return found ? found.label : val;
   };
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -136,7 +132,7 @@ const SalesDashboard = () => {
         setError(null);
 
         const response = await axiosInstance.get(
-          `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&month=${selectedMonth}`
+          `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&period=${selectedPeriod}`
         );
 
         if (response.data && response.data.success) {
@@ -228,7 +224,7 @@ const SalesDashboard = () => {
     };
 
     fetchDashboardData();
-  }, [adminId, branchId, selectedMonth]);
+  }, [adminId, branchId, selectedPeriod]);
 
   // Real-time socket listener for instant dashboard sync
   useEffect(() => {
@@ -239,7 +235,7 @@ const SalesDashboard = () => {
       const refetch = async () => {
         try {
           const response = await axiosInstance.get(
-            `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&month=${selectedMonth}`
+            `dashboard/sales-dashboard?adminId=${adminId}&branchId=${branchId}&period=${selectedPeriod}`
           );
           if (response.data && response.data.success) {
             const data = response.data.dashboard;
@@ -275,13 +271,13 @@ const SalesDashboard = () => {
       socket.off("membershipRenewed", handleSocketUpdate);
       socket.off("revenueUpdated", handleSocketUpdate);
     };
-  }, [socket, adminId, branchId, selectedMonth]);
+  }, [socket, adminId, branchId, selectedPeriod]);
 
   // Export functions respecting selected filter
   const exportToExcel = () => {
-    const periodName = getSelectedMonthLabel(selectedMonth).replace(/\s+/g, "_");
+    const periodName = getPeriodLabel(selectedPeriod).replace(/\s+/g, "_");
     const exportData = [
-      { Metric: "Month", Value: getSelectedMonthLabel(selectedMonth) },
+      { Metric: "Period", Value: getPeriodLabel(selectedPeriod) },
       { Metric: "Total Revenue", Value: `₹${dashboardData.summary.totalRevenue}` },
       { Metric: "New Registrations", Value: dashboardData.summary.newRegistrations },
       { Metric: "Active Leads", Value: dashboardData.summary.activeLeads },
@@ -295,7 +291,7 @@ const SalesDashboard = () => {
   };
 
   const exportToPDF = () => {
-    const periodName = getSelectedMonthLabel(selectedMonth);
+    const periodName = getPeriodLabel(selectedPeriod);
     const doc = new jsPDF();
     doc.text(`Sales Dashboard Report (${periodName})`, 14, 15);
     const tableRows = [
@@ -360,21 +356,18 @@ const SalesDashboard = () => {
                   </p>
                 </div>
                 <div className="d-flex align-items-center gap-2 flex-wrap">
-                  {/* Month Selection Dropdown */}
+                  {/* Filter Dropdown */}
                   <div className="d-flex align-items-center bg-white rounded shadow-sm px-3 py-2 border">
-                    <FaFilter className="text-primary me-2" />
-                    <span className="me-2 fw-medium text-dark small">Month:</span>
                     <select
                       className="form-select form-select-sm border-0 bg-transparent fw-semibold text-primary focus-none"
                       style={{ cursor: "pointer", width: "auto" }}
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      value={selectedPeriod}
+                      onChange={(e) => setSelectedPeriod(e.target.value)}
                     >
-                      {availableMonths.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
+                      <option value="1">1 Month</option>
+                      <option value="3">3 Months</option>
+                      <option value="6">6 Months</option>
+                      <option value="12">1 Year</option>
                     </select>
                   </div>
 
@@ -417,7 +410,7 @@ const SalesDashboard = () => {
                   <div className="card border-0 shadow-sm h-100 w-100">
                     <div className="card-body d-flex justify-content-between align-items-center">
                       <div>
-                        <p className="text-muted small mb-1">Revenue ({getSelectedMonthLabel(selectedMonth)})</p>
+                        <p className="text-muted small mb-1">Revenue ({getPeriodLabel(selectedPeriod)})</p>
                         <p className="fw-bold mb-1 text-success" style={{ fontSize: "1.75rem" }}>
                           ₹{dashboardData.summary.totalRevenue.toLocaleString()}
                         </p>
@@ -437,7 +430,7 @@ const SalesDashboard = () => {
                         <p className="fw-bold mb-1 text-primary" style={{ fontSize: "1.75rem" }}>
                           {dashboardData.summary.newRegistrations}
                         </p>
-                        <p className="text-muted small mb-0">{getSelectedMonthLabel(selectedMonth)}</p>
+                        <p className="text-muted small mb-0">{getPeriodLabel(selectedPeriod)}</p>
                       </div>
                       <div className="d-flex align-items-center justify-content-center rounded-2" style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", width: "3rem", height: "3rem" }}>
                         <RiUserAddLine className="text-primary" style={{ fontSize: "1.5rem" }} />
@@ -487,7 +480,7 @@ const SalesDashboard = () => {
                   <div className="card border-0 shadow-sm w-100">
                     <div className="card-body">
                       <h5 className="fw-bold mb-3">
-                        Revenue vs Expenses ({getSelectedMonthLabel(selectedMonth)})
+                        Revenue vs Expenses ({getPeriodLabel(selectedPeriod)})
                       </h5>
                       <div className="w-100" style={{ position: "relative", height: "300px" }}>
                         <Bar data={dashboardData.revenueVsExpenseData} options={barOptions} />

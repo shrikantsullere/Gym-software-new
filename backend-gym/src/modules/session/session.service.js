@@ -1,6 +1,7 @@
 import { pool } from "../../config/db.js";
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
 import { getIO, emitToUser } from "../../config/socket.js";
+import { sendAppNotification } from "../../utils/notificationHelper.js";
 
 // ➤ Create Session
 // export const createSessionService = async (data) => {
@@ -63,28 +64,20 @@ export const createSessionService = async (data) => {
 
   /* INSERT NOTIFICATIONS & SOCKET EVENT */
   try {
-    const [adminRows] = await pool.query("SELECT branchId FROM user WHERE id = ?", [adminId]);
-    const branchId = adminRows.length > 0 ? adminRows[0].branchId : null;
-    
     // 1. Alert for Trainer
-    const trainerMsg = `You have been assigned a new session: ${sessionName}`;
-    await pool.query(
-      "INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)",
-      ["Session Assignment", trainerMsg, trainerId, branchId]
-    );
+    const trainerMsg = `You have been assigned to a new session: ${sessionName} | Date: ${date} | Time: ${time} | Capacity: ${capacity}`;
+    await sendAppNotification(trainerId, trainerMsg);
 
-    // 2. Alert for Members (Broadcast to branch)
-    const broadcastMsg = `New Session Available: ${sessionName}`;
-    await pool.query(
-      "INSERT INTO alert (type, message, branchId) VALUES (?, ?, ?)",
-      ["Announcement", broadcastMsg, branchId]
-    );
+    // 2. Alert for Members (Broadcast to branch/all)
+    const [trainerRow] = await pool.query("SELECT fullName FROM user WHERE id = ?", [trainerId]);
+    const trainerName = trainerRow.length > 0 ? trainerRow[0].fullName : "a trainer";
+    const broadcastMsg = `New Session Available: ${sessionName} | Trainer: ${trainerName} | Date: ${date} | Time: ${time}`;
+    await sendAppNotification("all", broadcastMsg);
 
     // 3. Emit Socket Event
     const io = getIO();
     if (io) {
-      io.emit("sessionCreated", { sessionName, trainerId, date, time, branchId });
-      emitToUser(trainerId, "new_notification", { message: trainerMsg });
+      io.emit("sessionCreated", { sessionName, trainerId, date, time });
     }
   } catch (err) {
     console.error("Failed to insert session assignment alert/sockets:", err);
@@ -166,15 +159,28 @@ export const updateSessionService = async (sessionId, data) => {
     if (Number(trainerId) && Number(trainerId) !== exists.trainerId) {
       // Trainer Changed
       const oldTrainerMsg = `You have been removed from session: ${exists.sessionName}`;
-      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Session Assignment", oldTrainerMsg, exists.trainerId, bid]);
+      await sendAppNotification(exists.trainerId, oldTrainerMsg);
       
       const newTrainerMsg = `You have been assigned to session: ${sessionName}`;
-      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Session Assignment", newTrainerMsg, trainerId, bid]);
+      await sendAppNotification(trainerId, newTrainerMsg);
       
       if (io) {
-        emitToUser(exists.trainerId, "new_notification", { message: oldTrainerMsg });
-        emitToUser(trainerId, "new_notification", { message: newTrainerMsg });
         io.emit("trainerAssigned", { sessionId, oldTrainerId: exists.trainerId, newTrainerId: trainerId });
+      }
+    } else {
+      // Updated
+      const trainerMsg = `Session Updated: ${sessionName}`;
+      await sendAppNotification(exists.trainerId, trainerMsg);
+    }
+    
+    // Notify Booked Members
+    const [bookings] = await pool.query(
+      `SELECT m.userId FROM unified_bookings ub JOIN member m ON ub.memberId = m.id WHERE ub.sessionId = ? AND ub.bookingStatus = 'Booked'`,
+      [sessionId]
+    );
+    for (const b of bookings) {
+      if (b.userId) {
+        await sendAppNotification(b.userId, `Your booked session ${sessionName} has been updated.`);
       }
     }
 
@@ -207,14 +213,23 @@ export const deleteSessionService = async (sessionId) => {
   /* INSERT NOTIFICATIONS & SOCKET EVENT */
   try {
     const io = getIO();
-    const bid = exists.branchId || null;
     
     // Notify Trainer
-    const cancelMsg = `Session Cancelled: ${exists.sessionName}`;
-    await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Session Cancellation", cancelMsg, exists.trainerId, bid]);
+    const cancelMsg = `Assigned session cancelled: ${exists.sessionName}`;
+    await sendAppNotification(exists.trainerId, cancelMsg);
     
+    // Notify Booked Members
+    const [bookings] = await pool.query(
+      `SELECT m.userId FROM unified_bookings ub JOIN member m ON ub.memberId = m.id WHERE ub.sessionId = ? AND ub.bookingStatus = 'Booked'`,
+      [sessionId]
+    );
+    for (const b of bookings) {
+      if (b.userId) {
+        await sendAppNotification(b.userId, `Booked session cancelled: ${exists.sessionName}`);
+      }
+    }
+
     if (io) {
-      emitToUser(exists.trainerId, "new_notification", { message: cancelMsg });
       io.emit("sessionCancelled", { sessionId });
     }
   } catch (err) {
@@ -299,7 +314,7 @@ export const joinSessionService = async (memberId, sessionId) => {
     connection.release();
 
     try {
-      const [mRows] = await pool.query("SELECT id, fullName, email, phone, branchId FROM member WHERE id = ?", [memberId]);
+      const [mRows] = await pool.query("SELECT id, userId, fullName, email, phone, branchId FROM member WHERE id = ?", [memberId]);
       if (mRows.length > 0) {
         const member = mRows[0];
         const sessDate = session.date ? new Date(session.date).toLocaleDateString() : '';
@@ -313,38 +328,33 @@ export const joinSessionService = async (memberId, sessionId) => {
           message: msg
         }).catch(err => console.error("Session notification err:", err));
 
-        /* 6️⃣ INSERT IN-APP NOTIFICATION ALERT */
-        try {
-          const alertMsg = `${member.fullName || 'A member'} booked session: ${session.sessionName}`;
-          await pool.query(
-            "INSERT INTO alert (type, message, memberId, staffId, branchId) VALUES (?, ?, ?, ?, ?)",
-            ["Booking", alertMsg, member.id, session.trainerId, member.branchId || null]
-          );
-          
-          if (session.adminId) {
-            await pool.query(
-              "INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)",
-              ["Booking", alertMsg, session.adminId, member.branchId || null]
-            );
-          }
-        } catch (err) {
-          console.error("Failed to insert session booking alert:", err);
-        }
-
-        /* 7️⃣ EMIT SOCKET EVENTS */
+        /* 6️⃣ INSERT IN-APP NOTIFICATION ALERT & SOCKETS */
         try {
           const io = getIO();
+          const memberUserId = member.userId;
+          const sessionName = session.sessionName;
+
+          // Member
+          const memMsg = `Your booking has been confirmed for ${sessionName}`;
+          if (memberUserId) {
+            await sendAppNotification(memberUserId, memMsg);
+          }
+
+          // Trainer
+          const trainerMsg = `New booking received for ${sessionName} by ${member.fullName || 'A member'}`;
+          await sendAppNotification(session.trainerId, trainerMsg);
+
+          // Admin
+          const adminMsg = `New booking received for ${sessionName} by ${member.fullName || 'A member'}`;
+          if (session.adminId) {
+            await sendAppNotification(session.adminId, adminMsg);
+          }
+
           if (io) {
             io.emit("bookingCreated", { sessionId, classId: sessionId });
-            if (session.trainerId) {
-               emitToUser(session.trainerId, "new_notification", { message: "New member booked your session" });
-            }
-            if (session.adminId) {
-               emitToUser(session.adminId, "new_notification", { message: "New booking received" });
-            }
           }
         } catch (err) {
-          console.error("Failed to emit socket events for session booking:", err);
+          console.error("Failed to process session booking notifications/sockets:", err);
         }
       }
     } catch (err) {

@@ -1,5 +1,6 @@
 import { pool } from "../../config/db.js";
-import { getIO, emitToUser } from "../../config/socket.js";/**************************************
+import { getIO, emitToUser } from "../../config/socket.js";
+import { sendAppNotification } from "../../utils/notificationHelper.js";/**************************************
  * CLASS TYPES
  **************************************/
 export const createClassTypeService = async (name) => {
@@ -79,28 +80,20 @@ export const createScheduleService = async (data) => {
 
   /* INSERT NOTIFICATIONS & SOCKET EVENT */
   try {
-    const [adminRows] = await pool.query("SELECT branchId FROM user WHERE id = ?", [adminId]);
-    const branchId = adminRows.length > 0 ? adminRows[0].branchId : null;
-    
     // 1. Alert for Trainer
-    const trainerMsg = `You have been assigned a new class: ${className}`;
-    await pool.query(
-      "INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)",
-      ["Class Assignment", trainerMsg, trainerId, branchId]
-    );
+    const trainerMsg = `You have been assigned to a new class: ${className} | Date: ${date} | Time: ${startTime} | Capacity: ${capacity}`;
+    await sendAppNotification(trainerId, trainerMsg);
 
-    // 2. Alert for Members (Broadcast to branch)
-    const broadcastMsg = `New Class Available: ${className}`;
-    await pool.query(
-      "INSERT INTO alert (type, message, branchId) VALUES (?, ?, ?)",
-      ["Announcement", broadcastMsg, branchId]
-    );
+    // 2. Alert for Members (Broadcast)
+    const [trainerRow] = await pool.query("SELECT fullName FROM user WHERE id = ?", [trainerId]);
+    const trainerName = trainerRow.length > 0 ? trainerRow[0].fullName : "a trainer";
+    const broadcastMsg = `New Class Available: ${className} | Trainer: ${trainerName} | Date: ${date} | Time: ${startTime}`;
+    await sendAppNotification("all", broadcastMsg);
 
     // 3. Emit Socket Event
     const io = getIO();
     if (io) {
-      io.emit("classCreated", { className, trainerId, date, startTime, branchId });
-      emitToUser(trainerId, "new_notification", { message: trainerMsg });
+      io.emit("classCreated", { className, trainerId, date, startTime });
     }
   } catch (err) {
     console.error("Failed to insert class assignment alert/sockets:", err);
@@ -191,7 +184,7 @@ export const bookClassService = async (memberId, scheduleId) => {
   try {
     /* 1️⃣ MAP userId/memberId → member.id */
     const [memberRows] = await connection.query(
-      "SELECT id, fullName, email, phone, branchId, adminId FROM member WHERE userId = ? OR id = ?",
+      "SELECT id, userId, fullName, email, phone, branchId, adminId FROM member WHERE userId = ? OR id = ?",
       [memberId, memberId]
     );
 
@@ -255,40 +248,29 @@ export const bookClassService = async (memberId, scheduleId) => {
 
     /* 6️⃣ INSERT IN-APP NOTIFICATION ALERT */
     try {
-      const alertMsg = `${member.fullName || 'A member'} booked class: ${schedule.className}`;
-      await pool.query(
-        "INSERT INTO alert (type, message, memberId, staffId, branchId) VALUES (?, ?, ?, ?, ?)",
-        ["Booking", alertMsg, realMemberId, schedule.trainerId, member.branchId || null]
-      );
-      
-      // Also notify Admin
-      if (schedule.adminId) {
-        await pool.query(
-          "INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)",
-          ["Booking", alertMsg, schedule.adminId, member.branchId || null]
-        );
+      const io = getIO();
+      const memberUserId = member.userId;
+      const className = schedule.className;
+
+      // Member
+      const memMsg = `Your booking has been confirmed for ${className}`;
+      if (memberUserId) {
+        await sendAppNotification(memberUserId, memMsg);
       }
+
+      // Trainer
+      const trainerMsg = `New booking received for ${className} by ${member.fullName || 'A member'}`;
+      await sendAppNotification(schedule.trainerId, trainerMsg);
+
+      // Admin
+      const adminMsg = `New booking received for ${className} by ${member.fullName || 'A member'}`;
+      if (schedule.adminId) {
+        await sendAppNotification(schedule.adminId, adminMsg);
+      }
+
+      if (io) io.emit("bookingCreated", { scheduleId, classId: scheduleId });
     } catch (err) {
       console.error("Failed to insert class booking alert:", err);
-    }
-
-    /* 7️⃣ EMIT SOCKET EVENTS */
-    try {
-      const io = getIO();
-      if (io) {
-        // Broadcast to everyone (or room) that a booking happened so capacity updates
-        io.emit("bookingCreated", { scheduleId, classId: scheduleId });
-        // Emit to Trainer
-        if (schedule.trainerId) {
-           emitToUser(schedule.trainerId, "new_notification", { message: "New member booked your class" });
-        }
-        // Emit to Admin
-        if (schedule.adminId) {
-           emitToUser(schedule.adminId, "new_notification", { message: "New booking received" });
-        }
-      }
-    } catch (err) {
-      console.error("Failed to emit socket events for class booking:", err);
     }
 
     return {
@@ -683,20 +665,33 @@ export const updateScheduleService = async (id, data) => {
   /* INSERT NOTIFICATIONS & SOCKET EVENT */
   try {
     const io = getIO();
-    const branchId = exists.branchId || null;
+    const className = exists.className || data.className;
 
     if (data.trainerId && data.trainerId !== exists.trainerId) {
       // Trainer Changed!
       const oldTrainerMsg = `You have been removed from class: ${exists.className}`;
-      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Class Assignment", oldTrainerMsg, exists.trainerId, branchId]);
+      await sendAppNotification(exists.trainerId, oldTrainerMsg);
       
-      const newTrainerMsg = `You have been assigned to class: ${exists.className || data.className}`;
-      await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Class Assignment", newTrainerMsg, data.trainerId, branchId]);
+      const newTrainerMsg = `You have been assigned to class: ${className}`;
+      await sendAppNotification(data.trainerId, newTrainerMsg);
       
       if (io) {
-        emitToUser(exists.trainerId, "new_notification", { message: oldTrainerMsg });
-        emitToUser(data.trainerId, "new_notification", { message: newTrainerMsg });
         io.emit("trainerAssigned", { classId: id, oldTrainerId: exists.trainerId, newTrainerId: data.trainerId });
+      }
+    } else {
+      // General Update Notification
+      const trainerMsg = `Class Updated: ${className}`;
+      await sendAppNotification(exists.trainerId, trainerMsg);
+    }
+
+    // Notify Booked Members
+    const [bookings] = await pool.query(
+      `SELECT m.userId FROM unified_bookings ub JOIN member m ON ub.memberId = m.id WHERE ub.classId = ? AND ub.bookingStatus = 'Booked'`,
+      [id]
+    );
+    for (const b of bookings) {
+      if (b.userId) {
+        await sendAppNotification(b.userId, `Your booked class ${className} has been updated.`);
       }
     }
     
@@ -800,17 +795,26 @@ export const deleteScheduleService = async (id) => {
   /* INSERT NOTIFICATIONS & SOCKET EVENT */
   try {
     const io = getIO();
-    const branchId = existing.branchId || null;
     
     // Notify Trainer
-    const cancelMsg = `Class Cancelled: ${existing.className}`;
-    await pool.query("INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)", ["Class Cancellation", cancelMsg, existing.trainerId, branchId]);
+    const cancelMsg = `Assigned class cancelled: ${existing.className}`;
+    await sendAppNotification(existing.trainerId, cancelMsg);
+    
+    // Notify Booked Members
+    const [bookings] = await pool.query(
+      `SELECT m.userId FROM unified_bookings ub JOIN member m ON ub.memberId = m.id WHERE ub.classId = ? AND ub.bookingStatus = 'Booked'`,
+      [id]
+    );
+    for (const b of bookings) {
+      if (b.userId) {
+        await sendAppNotification(b.userId, `Booked class cancelled: ${existing.className}`);
+      }
+    }
+
     if (io) {
-      emitToUser(existing.trainerId, "new_notification", { message: cancelMsg });
       io.emit("classCancelled", { classId: id });
     }
     
-    // We could notify members if we loop through unified_bookings before deleting
   } catch (err) {
     console.error("Failed to process delete notifications/sockets:", err);
   }

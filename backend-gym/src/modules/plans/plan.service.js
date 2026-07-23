@@ -38,7 +38,13 @@ export const createPlanService = async (data) => {
     if (data[key] !== undefined) {
       fields.push(key);
       placeholders.push("?");
-      values.push(data[key]);
+      
+      // Handle empty discountPercent or price strings
+      if ((key === "discountPercent" || key === "price") && data[key] === "") {
+        values.push(0);
+      } else {
+        values.push(data[key]);
+      }
     }
   }
 
@@ -111,20 +117,27 @@ export const updatePlanService = async (id, data) => {
   }
 
   // Build update query dynamically
-  const updates = [];
+  const fields = [];
   const values = [];
+
   for (const key of allowedFields) {
     if (data[key] !== undefined) {
-      updates.push(`${key} = ?`);
-      values.push(data[key]);
+      fields.push(`${key} = ?`);
+      
+      // Handle empty discountPercent or price strings
+      if ((key === "discountPercent" || key === "price") && data[key] === "") {
+        values.push(0);
+      } else {
+        values.push(data[key]);
+      }
     }
   }
 
-  if (updates.length === 0) return existingPlan; // nothing to update
+  if (fields.length === 0) return existingPlan; // nothing to update
 
   values.push(id);
 
-  await pool.query(`UPDATE plan SET ${updates.join(", ")} WHERE id = ?`, values);
+  await pool.query(`UPDATE plan SET ${fields.join(", ")} WHERE id = ?`, values);
 
   // Return updated plan
   const [updatedRows] = await pool.query("SELECT * FROM plan WHERE id = ?", [id]);

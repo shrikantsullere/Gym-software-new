@@ -5,6 +5,8 @@
 import { pool } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
+import { sendAppNotification } from "../../utils/notificationHelper.js";
+import { getIO, emitToUser } from "../../config/socket.js";
 
 const generate6DigitPassword = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -1484,9 +1486,21 @@ export const createUnifiedBooking = async (req, res) => {
     );
 
     try {
-      const [mRows] = await pool.query("SELECT id, fullName, email, phone FROM member WHERE id = ?", [memberId]);
+      // 1. Fetch Member Details
+      const [mRows] = await pool.query("SELECT m.id, m.userId, m.adminId, u.fullName, u.email, u.phone FROM member m JOIN user u ON m.userId = u.id WHERE m.id = ?", [memberId]);
+      
       if (mRows.length > 0) {
         const member = mRows[0];
+        const adminUserId = member.adminId; // Typically admin's user ID
+        
+        // 2. Fetch Trainer Name
+        let trainerName = "Trainer";
+        if (trainerId) {
+          const [tRows] = await pool.query("SELECT id, fullName FROM user WHERE id = ?", [trainerId]);
+          if (tRows.length > 0) trainerName = tRows[0].fullName;
+        }
+
+        // 3. Dispatch Email to Member
         const msg = `Hi ${member.fullName},\n\nYour ${bookingType} booking on ${date} at ${startTime} has been successfully confirmed.`;
         dispatchNotification({
           category: "templates",
@@ -1496,9 +1510,66 @@ export const createUnifiedBooking = async (req, res) => {
           subject: "Class/Session Booking Confirmed",
           message: msg
         }).catch(err => console.error("Class Booking notification err:", err));
+
+        // 4. In-App Notifications
+        const bookingId = result.insertId;
+
+        // A. Notify Member
+        if (member.userId) {
+          await sendAppNotification(member.userId, msg, {
+            title: "Booking Confirmed",
+            sender_id: adminUserId,
+            reference_type: "BOOKING",
+            reference_id: bookingId
+          });
+        }
+
+        // B. Notify Admin
+        const adminMsg = `New booking received from ${member.fullName}.`;
+        await sendAppNotification(adminUserId, adminMsg, {
+          title: "New Booking",
+          sender_id: member.userId,
+          reference_type: "BOOKING",
+          reference_id: bookingId
+        });
+
+        // C. Notify Trainer
+        if (trainerId) {
+          const trainerMsg = `New member (${member.fullName}) booked your ${bookingType === 'PT' ? 'session' : 'class'}.`;
+          await sendAppNotification(trainerId, trainerMsg, {
+            title: "New Booking",
+            sender_id: member.userId,
+            reference_type: "BOOKING",
+            reference_id: bookingId
+          });
+        }
+
+        // D. Notify Receptionists (roleId = 7)
+        // Find receptionists for this admin/branch
+        const [receptionists] = await pool.query(
+          "SELECT id FROM user WHERE roleId = 7 AND adminId = ?",
+          [adminUserId]
+        );
+        for (let rec of receptionists) {
+          const recMsg = `New ${bookingType === 'PT' ? 'session' : 'class'} booking received from ${member.fullName}.`;
+          await sendAppNotification(rec.id, recMsg, {
+            title: "New Booking",
+            sender_id: member.userId,
+            reference_type: "BOOKING",
+            reference_id: bookingId
+          });
+        }
+
+        // 5. Emit Socket Events for Real-time Dashboard Updates
+        const io = getIO();
+        if (io) {
+          // Broad emit because Receptionists and Admins listen for these
+          io.emit("bookingCreated");
+          io.emit("capacityUpdated");
+        }
       }
     } catch (err) {
-      console.error("Failed to fetch member for class booking notification:", err);
+      console.error("Failed to process booking notifications:", err);
     }
 
     res.json({
@@ -2156,6 +2227,69 @@ export const updateUnifiedBooking = async (req, res) => {
       });
     }
 
+    try {
+      // 1. Fetch updated booking details to notify relevant users
+      const [bRows] = await pool.query(
+        "SELECT b.memberId, b.trainerId, b.bookingType, b.date, b.startTime, m.adminId, m.userId AS memberUserId, u.fullName AS memberName FROM unified_bookings b JOIN member m ON b.memberId = m.id JOIN user u ON m.userId = u.id WHERE b.id = ?",
+        [id]
+      );
+
+      if (bRows.length > 0) {
+        const booking = bRows[0];
+        const adminUserId = booking.adminId;
+        
+        const updateMsg = `Booking update: Your ${booking.bookingType} booking on ${booking.date} at ${booking.startTime} has been updated.`;
+        
+        // A. Notify Member
+        if (booking.memberUserId) {
+          await sendAppNotification(booking.memberUserId, updateMsg, {
+            title: "Booking Updated",
+            sender_id: adminUserId,
+            reference_type: "BOOKING",
+            reference_id: id
+          });
+        }
+        
+        // B. Notify Admin
+        await sendAppNotification(adminUserId, `Booking for ${booking.memberName} was updated.`, {
+          title: "Booking Updated",
+          sender_id: booking.memberUserId,
+          reference_type: "BOOKING",
+          reference_id: id
+        });
+
+        // C. Notify Trainer
+        if (booking.trainerId) {
+          await sendAppNotification(booking.trainerId, `Booking for ${booking.memberName} was updated.`, {
+            title: "Booking Updated",
+            sender_id: booking.memberUserId,
+            reference_type: "BOOKING",
+            reference_id: id
+          });
+        }
+
+        // D. Notify Receptionists
+        const [receptionists] = await pool.query(
+          "SELECT id FROM user WHERE roleId = 7 AND adminId = ?",
+          [adminUserId]
+        );
+        for (let rec of receptionists) {
+          await sendAppNotification(rec.id, `Booking for ${booking.memberName} was updated.`, {
+            title: "Booking Updated",
+            sender_id: booking.memberUserId,
+            reference_type: "BOOKING",
+            reference_id: id
+          });
+        }
+
+        // Emit Socket Event
+        const io = getIO();
+        if (io) io.emit("bookingUpdated");
+      }
+    } catch (err) {
+      console.error("Failed to process booking update notifications:", err);
+    }
+
     return res.json({
       success: true,
       message: "Booking updated successfully",
@@ -2185,6 +2319,18 @@ export const deleteUnifiedBooking = async (req, res) => {
       return res.json({ success: true, message: "Trainer assignment removed!" });
     }
 
+    // 1. Fetch booking details BEFORE deletion for notifications
+    let bookingToNotify = null;
+    try {
+      const [bRows] = await pool.query(
+        "SELECT b.memberId, b.trainerId, b.bookingType, b.date, b.startTime, m.adminId, m.userId AS memberUserId, u.fullName AS memberName FROM unified_bookings b JOIN member m ON b.memberId = m.id JOIN user u ON m.userId = u.id WHERE b.id = ?",
+        [bookingId]
+      );
+      if (bRows.length > 0) bookingToNotify = bRows[0];
+    } catch (err) {
+      console.error("Failed to pre-fetch booking for delete notifications:", err);
+    }
+
     const [result] = await pool.query(
       `DELETE FROM unified_bookings WHERE id = ?`,
       [bookingId]
@@ -2192,6 +2338,65 @@ export const deleteUnifiedBooking = async (req, res) => {
 
     if (!result.affectedRows)
       return res.status(404).json({ success: false, message: "Booking not found" });
+
+    // 2. Dispatch Notifications and Socket Events AFTER deletion
+    if (bookingToNotify) {
+      try {
+        const adminUserId = bookingToNotify.adminId;
+        const cancelMsg = `Booking cancellation: The ${bookingToNotify.bookingType} booking on ${bookingToNotify.date} at ${bookingToNotify.startTime} has been cancelled.`;
+
+        // A. Notify Member
+        if (bookingToNotify.memberUserId) {
+          await sendAppNotification(bookingToNotify.memberUserId, cancelMsg, {
+            title: "Booking Cancelled",
+            sender_id: adminUserId,
+            reference_type: "BOOKING",
+            reference_id: bookingId
+          });
+        }
+
+        // B. Notify Admin
+        await sendAppNotification(adminUserId, `Booking for ${bookingToNotify.memberName} was cancelled.`, {
+          title: "Booking Cancelled",
+          sender_id: bookingToNotify.memberUserId,
+          reference_type: "BOOKING",
+          reference_id: bookingId
+        });
+
+        // C. Notify Trainer
+        if (bookingToNotify.trainerId) {
+          await sendAppNotification(bookingToNotify.trainerId, `Booking for ${bookingToNotify.memberName} was cancelled.`, {
+            title: "Booking Cancelled",
+            sender_id: bookingToNotify.memberUserId,
+            reference_type: "BOOKING",
+            reference_id: bookingId
+          });
+        }
+
+        // D. Notify Receptionists
+        const [receptionists] = await pool.query(
+          "SELECT id FROM user WHERE roleId = 7 AND adminId = ?",
+          [adminUserId]
+        );
+        for (let rec of receptionists) {
+          await sendAppNotification(rec.id, `Booking for ${bookingToNotify.memberName} was cancelled.`, {
+            title: "Booking Cancelled",
+            sender_id: bookingToNotify.memberUserId,
+            reference_type: "BOOKING",
+            reference_id: bookingId
+          });
+        }
+
+        // Emit Socket Events
+        const io = getIO();
+        if (io) {
+          io.emit("bookingCancelled");
+          io.emit("capacityUpdated");
+        }
+      } catch (err) {
+        console.error("Failed to process delete booking notifications:", err);
+      }
+    }
 
     res.json({ success: true, message: "Booking deleted!" });
 

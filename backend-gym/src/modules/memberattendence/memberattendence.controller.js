@@ -1,5 +1,6 @@
 import { pool } from "../../config/db.js";
 import { dispatchNotification } from "../../utils/notificationDispatcher.js";
+import { emitToUser } from "../../config/socket.js";
 
 /* -----------------------------------------------------
    1️⃣  MEMBER/ADMIN CHECK-IN  (Manual + QR + Manual Times)
@@ -249,6 +250,17 @@ export const memberCheckIn = async (req, res, next) => {
       }).catch(err => console.error("Failed to send attendance notification:", err));
     }
 
+    // Emit socket event to admin
+    const adminToNotify = isMember ? memberAdminId : (typeof staffAdminId !== 'undefined' ? staffAdminId : null);
+    if (adminToNotify) {
+      emitToUser(adminToNotify, "checkin_update", {
+        type: isMember ? "member" : "staff",
+        action: "checkin",
+        memberId,
+        branchId: userBranchId
+      });
+    }
+
     res.json({
       success: true,
       message: isMember ? "Member checked in successfully" : "Checked in successfully",
@@ -369,6 +381,36 @@ export const memberCheckOut = async (req, res, next) => {
         success: false,
         message: "Checkout update failed",
       });
+    }
+
+    // Fetch adminId to notify
+    let adminId = null;
+    try {
+      if (record.memberId) {
+        const [mRec] = await pool.query("SELECT adminId FROM member WHERE id = ?", [record.memberId]);
+        if (mRec.length > 0) {
+          adminId = mRec[0].adminId;
+        } else {
+          const [sRec] = await pool.query("SELECT adminId FROM staff WHERE userId = ?", [record.memberId]);
+          if (sRec.length > 0) {
+            adminId = sRec[0].adminId;
+          }
+        }
+      } else if (record.staffId) {
+        const [sRec] = await pool.query("SELECT adminId FROM staff WHERE id = ?", [record.staffId]);
+        if (sRec.length > 0) {
+          adminId = sRec[0].adminId;
+        }
+      }
+
+      if (adminId) {
+        emitToUser(adminId, "checkin_update", {
+          action: "checkout",
+          id: attendanceId
+        });
+      }
+    } catch (err) {
+      console.error("Failed to emit checkout socket update:", err);
     }
 
     res.json({
@@ -521,7 +563,7 @@ export const deleteAttendance = async (req, res, next) => {
 
     // Record exist karta hai?
     const [existing] = await pool.query(
-      `SELECT id FROM memberattendance WHERE id = ?`,
+      `SELECT id, memberId, staffId FROM memberattendance WHERE id = ?`,
       [attendanceId]
     );
 
@@ -530,6 +572,31 @@ export const deleteAttendance = async (req, res, next) => {
         success: false,
         message: "Attendance record not found",
       });
+    }
+
+    const record = existing[0];
+
+    // Fetch adminId to notify
+    let adminId = null;
+    try {
+      if (record.memberId) {
+        const [mRec] = await pool.query("SELECT adminId FROM member WHERE id = ?", [record.memberId]);
+        if (mRec.length > 0) {
+          adminId = mRec[0].adminId;
+        } else {
+          const [sRec] = await pool.query("SELECT adminId FROM staff WHERE userId = ?", [record.memberId]);
+          if (sRec.length > 0) {
+            adminId = sRec[0].adminId;
+          }
+        }
+      } else if (record.staffId) {
+        const [sRec] = await pool.query("SELECT adminId FROM staff WHERE id = ?", [record.staffId]);
+        if (sRec.length > 0) {
+          adminId = sRec[0].adminId;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch adminId for attendance delete emit:", err);
     }
 
     // Delete record
@@ -543,6 +610,17 @@ export const deleteAttendance = async (req, res, next) => {
         success: false,
         message: "Failed to delete attendance",
       });
+    }
+
+    if (adminId) {
+      try {
+        emitToUser(adminId, "checkin_update", {
+          action: "delete",
+          id: attendanceId
+        });
+      } catch (err) {
+        console.error("Failed to emit delete socket update:", err);
+      }
     }
 
     res.json({

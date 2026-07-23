@@ -783,7 +783,8 @@ export const getAttendanceByAdminId = async (req, res, next) => {
       status,
       staffId,
       search,
-      category = "staff", // Default to 'staff' attendance
+      category = "all",
+      view
     } = req.query;
 
     if (!adminId) {
@@ -793,271 +794,73 @@ export const getAttendanceByAdminId = async (req, res, next) => {
       });
     }
 
-    // 1️⃣ Fetch active personnel filtered by category ('staff', 'member', 'all')
-    let staffSql = "";
-    let staffParams = [];
+    // Direct SQL Query to fetch real actual attendance records from memberattendance table
+    let sql = `
+      SELECT 
+        a.id,
+        a.memberId,
+        a.staffId,
+        COALESCE(u.fullName, u_member.fullName, 'Staff/Member') AS name,
+        COALESCE(r.name, r_member.name, 'Staff') AS role,
+        COALESCE(b.name, 'Main Branch') AS branch,
+        DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
+        a.checkIn,
+        a.checkOut,
+        a.mode,
+        a.status,
+        a.notes,
+        sh.shiftType AS shift
+      FROM memberattendance a
+      LEFT JOIN user u ON u.id = a.memberId
+      LEFT JOIN role r ON r.id = u.roleId
+      LEFT JOIN member m ON m.id = a.memberId
+      LEFT JOIN user u_member ON u_member.id = m.userId
+      LEFT JOIN role r_member ON r_member.id = u_member.roleId
+      LEFT JOIN branch b ON b.id = a.branchId
+      LEFT JOIN shifts sh ON (sh.staffIds = a.staffId OR sh.staffIds = a.memberId) AND DATE(sh.shiftDate) = DATE(a.checkIn)
+      WHERE (
+        u.adminId = ? OR m.adminId = ? OR a.branchId IN (SELECT id FROM branch WHERE adminId = ?)
+      )
+    `;
 
-    if (category.toLowerCase() === "member") {
-      staffSql = `
-        SELECT DISTINCT
-          u.id AS userId,
-          IFNULL(m.id, u.id) AS staffId,
-          u.fullName AS name,
-          IFNULL(r.name, 'Member') AS role,
-          u.branchId,
-          b.name AS branchName
-        FROM user u
-        LEFT JOIN member m ON m.userId = u.id
-        LEFT JOIN role r ON r.id = u.roleId
-        LEFT JOIN branch b ON b.id = u.branchId
-        WHERE (u.adminId = ? OR m.adminId = ?)
-          AND u.roleId != 1
-          AND (LOWER(IFNULL(r.name, '')) = 'member' OR EXISTS (SELECT 1 FROM member m2 WHERE m2.userId = u.id))
-      `;
-      staffParams = [adminId, adminId];
-    } else if (category.toLowerCase() === "all") {
-      staffSql = `
-        SELECT DISTINCT
-          u.id AS userId,
-          COALESCE(s.id, m.id, u.id) AS staffId,
-          u.fullName AS name,
-          r.name AS role,
-          u.branchId,
-          b.name AS branchName
-        FROM user u
-        LEFT JOIN staff s ON s.userId = u.id
-        LEFT JOIN member m ON m.userId = u.id
-        LEFT JOIN role r ON r.id = u.roleId
-        LEFT JOIN branch b ON b.id = u.branchId
-        WHERE (u.adminId = ? OR s.adminId = ? OR m.adminId = ?)
-          AND u.roleId != 1
-      `;
-      staffParams = [adminId, adminId, adminId];
-    } else {
-      // Default: 'staff' only (excludes gym members)
-      staffSql = `
-        SELECT DISTINCT
-          u.id AS userId,
-          IFNULL(s.id, u.id) AS staffId,
-          u.fullName AS name,
-          r.name AS role,
-          u.branchId,
-          b.name AS branchName
-        FROM user u
-        LEFT JOIN staff s ON s.userId = u.id
-        LEFT JOIN role r ON r.id = u.roleId
-        LEFT JOIN branch b ON b.id = u.branchId
-        WHERE (u.adminId = ? OR s.adminId = ?)
-          AND u.roleId != 1
-          AND LOWER(IFNULL(r.name, '')) != 'member'
-          AND NOT EXISTS (SELECT 1 FROM member m WHERE m.userId = u.id)
-      `;
-      staffParams = [adminId, adminId];
+    const params = [adminId, adminId, adminId];
+
+    if (date) {
+      sql += ` AND DATE(a.checkIn) = ?`;
+      params.push(date.split('T')[0]);
+    } else if (startDate && endDate) {
+      sql += ` AND DATE(a.checkIn) >= ? AND DATE(a.checkIn) <= ?`;
+      params.push(startDate.split('T')[0], endDate.split('T')[0]);
     }
 
     if (branchId && branchId !== "All") {
-      staffSql += ` AND u.branchId = ?`;
-      staffParams.push(branchId);
+      sql += ` AND a.branchId = ?`;
+      params.push(branchId);
     }
 
-    const [staffList] = await pool.query(staffSql, staffParams);
-
-    // 2️⃣ Determine date list
-    const dateList = [];
-    const todayStr = new Date().toISOString().split("T")[0];
-
-    if (date) {
-      dateList.push(date.split("T")[0]);
-    } else if (startDate && endDate) {
-      let curr = new Date(startDate);
-      const end = new Date(endDate);
-      let count = 0;
-      while (curr <= end && count < 62) {
-        const dStr = curr.toISOString().split("T")[0];
-        if (dStr <= todayStr) {
-          dateList.push(dStr);
-        }
-        curr.setDate(curr.getDate() + 1);
-        count++;
-      }
-      dateList.reverse(); // Most recent first
-    } else {
-      dateList.push(todayStr);
-    }
-
-    if (staffList.length === 0 || dateList.length === 0) {
-      return res.json({ success: true, attendance: [] });
-    }
-
-    const targetIds = staffList.map((s) => s.staffId).filter(Boolean);
-    const userIds = staffList.map((s) => s.userId).filter(Boolean);
-
-    // 3️⃣ Fetch actual attendance events from event log table
-    let attendanceRows = [];
-    if (targetIds.length > 0) {
-      if (category.toLowerCase() === "member") {
-        [attendanceRows] = await pool.query(
-          `
-          SELECT 
-            a.id,
-            a.memberId,
-            a.staffId,
-            DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
-            a.checkIn,
-            a.checkOut,
-            a.mode,
-            a.status,
-            a.notes
-          FROM memberattendance a
-          WHERE a.memberId IN (?)
-            AND DATE(a.checkIn) IN (?)
-          ORDER BY a.checkIn DESC
-        `,
-          [targetIds, dateList]
-        );
-      } else if (category.toLowerCase() === "all") {
-        [attendanceRows] = await pool.query(
-          `
-          SELECT 
-            a.id,
-            a.memberId,
-            a.staffId,
-            DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
-            a.checkIn,
-            a.checkOut,
-            a.mode,
-            a.status,
-            a.notes
-          FROM memberattendance a
-          WHERE (a.memberId IN (?) OR a.staffId IN (?))
-            AND DATE(a.checkIn) IN (?)
-          ORDER BY a.checkIn DESC
-        `,
-          [targetIds, targetIds, dateList]
-        );
-      } else {
-        // staff
-        [attendanceRows] = await pool.query(
-          `
-          SELECT 
-            a.id,
-            a.memberId,
-            a.staffId,
-            DATE_FORMAT(a.checkIn, '%Y-%m-%d') AS date,
-            a.checkIn,
-            a.checkOut,
-            a.mode,
-            a.status,
-            a.notes
-          FROM memberattendance a
-          WHERE (a.staffId IN (?) OR a.memberId IN (?) OR a.memberId IN (?))
-            AND DATE(a.checkIn) IN (?)
-          ORDER BY a.checkIn DESC
-        `,
-          [targetIds, targetIds, userIds, dateList]
-        );
-      }
-    }
-
-    const attendanceMap = new Map();
-    for (const row of attendanceRows) {
-      if (row.staffId) attendanceMap.set(`${row.staffId}_${row.date}`, row);
-      if (row.memberId) attendanceMap.set(`${row.memberId}_${row.date}`, row);
-    }
-
-    // 4️⃣ Derive status dynamically (LEFT JOIN business logic)
-    const result = [];
-    for (const dStr of dateList) {
-      const dayOfWeek = new Date(dStr + "T00:00:00").getDay(); // 0 = Sunday
-      for (const s of staffList) {
-        const keyStaff = `${s.staffId}_${dStr}`;
-        const keyUser = `${s.userId}_${dStr}`;
-        const att = attendanceMap.get(keyStaff) || attendanceMap.get(keyUser);
-
-        if (att) {
-          let computedStatus = att.status || "Present";
-          if (att.checkIn) {
-            const checkInDate = new Date(att.checkIn);
-            const hours = checkInDate.getHours();
-            const minutes = checkInDate.getMinutes();
-            // Configurable/default shift start 09:00 AM + 15m grace -> 09:15
-            if (hours > 9 || (hours === 9 && minutes > 15)) {
-              computedStatus = "Late";
-            } else if (!att.checkOut) {
-              computedStatus = "In Gym";
-            } else {
-              computedStatus = "Present";
-            }
-          }
-
-          result.push({
-            id: att.id,
-            memberId: s.userId,
-            staffId: s.staffId || s.userId,
-            name: s.name || "Unknown",
-            role: s.role || "Staff",
-            branch: s.branchName || "Main Branch",
-            date: dStr,
-            checkIn: att.checkIn,
-            checkOut: att.checkOut,
-            mode: att.mode || "QR",
-            status: computedStatus,
-            notes: att.notes || "",
-          });
-        } else {
-          let computedStatus = "Absent";
-          if (dayOfWeek === 0) {
-            computedStatus = "Weekly Off";
-          }
-          result.push({
-            id: `absent-${s.userId}-${dStr}`,
-            memberId: s.userId,
-            staffId: s.staffId || s.userId,
-            name: s.name || "Unknown",
-            role: s.role || "Staff",
-            branch: s.branchName || "Main Branch",
-            date: dStr,
-            checkIn: null,
-            checkOut: null,
-            mode: "—",
-            status: computedStatus,
-            notes: computedStatus === "Weekly Off" ? "Weekly Off Day" : "Absent",
-          });
-        }
-      }
-    }
-
-    // 5️⃣ Apply optional query filters
-    let finalResult = result;
     if (role && role !== "All") {
-      finalResult = finalResult.filter(
-        (r) => (r.role || "").toLowerCase() === role.toLowerCase()
-      );
+      sql += ` AND (LOWER(r.name) = LOWER(?) OR LOWER(r_member.name) = LOWER(?))`;
+      params.push(role, role);
     }
+
     if (status && status !== "All") {
-      finalResult = finalResult.filter(
-        (r) => (r.status || "").toLowerCase() === status.toLowerCase()
-      );
+      sql += ` AND LOWER(a.status) = LOWER(?)`;
+      params.push(status);
     }
-    if (staffId && staffId !== "All") {
-      finalResult = finalResult.filter(
-        (r) =>
-          String(r.staffId) === String(staffId) ||
-          String(r.memberId) === String(staffId)
-      );
-    }
+
     if (search && search.trim() !== "") {
-      const q = search.toLowerCase().trim();
-      finalResult = finalResult.filter(
-        (r) =>
-          (r.name && r.name.toLowerCase().includes(q)) ||
-          (r.role && r.role.toLowerCase().includes(q))
-      );
+      const q = `%${search.trim()}%`;
+      sql += ` AND (u.fullName LIKE ? OR u_member.fullName LIKE ? OR r.name LIKE ? OR r_member.name LIKE ?)`;
+      params.push(q, q, q, q);
     }
+
+    sql += ` ORDER BY a.checkIn DESC LIMIT 500`;
+
+    const [rows] = await pool.query(sql, params);
 
     res.json({
       success: true,
-      attendance: finalResult,
+      attendance: rows,
     });
   } catch (err) {
     next(err);

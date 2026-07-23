@@ -76,7 +76,7 @@ const ReceptionistPaymentCollection = () => {
           
         } else if (activeTab === 'attendance') {
           // Fetch Attendance
-          const res = await axiosInstance.get(`/memberattendence/admin?adminId=${adminId}`);
+          const res = await axiosInstance.get(`/memberattendence/admin?adminId=${adminId}&category=member`);
           if(res.data.success) setAttendanceRecords(res.data.attendance || res.data.data || []);
           
         } else if (activeTab === 'plans') {

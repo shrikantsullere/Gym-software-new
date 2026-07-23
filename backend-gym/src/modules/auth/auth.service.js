@@ -1127,7 +1127,7 @@ const recentActivitiesQuery = `
     FROM payment p
     JOIN member m ON p.memberId = m.id
     WHERE m.adminId = ?
-      ${bId ? "AND m.branchId = ?" : ""}
+      ${bId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
       AND p.paymentDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
     GROUP BY ${groupByRevenue}
     ORDER BY ${orderByRevenue};
@@ -1142,7 +1142,7 @@ const recentActivitiesQuery = `
     FROM expense e
     JOIN branch b ON e.branchId = b.id
     WHERE b.adminId = ?
-      ${bId ? "AND e.branchId = ?" : ""}
+      ${bId ? "AND (e.branchId = ? OR e.branchId IS NULL)" : ""}
       AND e.date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
     GROUP BY ${groupByExpense}
     ORDER BY ${orderByExpense};
@@ -1157,7 +1157,7 @@ const recentActivitiesQuery = `
     FROM salary s
     JOIN staff st ON s.staffId = st.id
     WHERE st.adminId = ?
-      ${bId ? "AND st.branchId = ?" : ""}
+      ${bId ? "AND (st.branchId = ? OR st.branchId IS NULL)" : ""}
       AND s.periodEnd >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
     GROUP BY ${groupBySalary}
     ORDER BY ${orderBySalary};
@@ -1174,7 +1174,7 @@ const recentActivitiesQuery = `
     FROM payment p
     JOIN member m ON p.memberId = m.id
     WHERE m.adminId = ?
-      ${bId ? "AND m.branchId = ?" : ""}
+      ${bId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
     ORDER BY p.paymentDate DESC
     LIMIT 10;
   `;
@@ -1247,7 +1247,7 @@ const recentActivitiesQuery = `
      FROM payment p
      JOIN member m ON p.memberId = m.id
      WHERE m.adminId = ?
-       ${bId ? "AND m.branchId = ?" : ""}
+       ${bId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
        AND DATE_FORMAT(p.paymentDate, '%Y-%m') = ?`,
     bId ? [adminId, bId, targetMonth] : [adminId, targetMonth]
   ).catch(() => [[{ total: 0 }]]);
@@ -1259,7 +1259,7 @@ const recentActivitiesQuery = `
      FROM expense e
      JOIN branch b ON e.branchId = b.id
      WHERE b.adminId = ?
-       ${bId ? "AND e.branchId = ?" : ""}
+       ${bId ? "AND (e.branchId = ? OR e.branchId IS NULL)" : ""}
        AND DATE_FORMAT(e.date, '%Y-%m') = ?`,
     bId ? [adminId, bId, targetMonth] : [adminId, targetMonth]
   ).catch((err) => { console.error(err); return [[{ total: 0 }]]; });
@@ -1269,7 +1269,7 @@ const recentActivitiesQuery = `
      FROM salary s
      JOIN staff st ON s.staffId = st.id
      WHERE st.adminId = ?
-       ${bId ? "AND st.branchId = ?" : ""}
+       ${bId ? "AND (st.branchId = ? OR st.branchId IS NULL)" : ""}
        AND DATE_FORMAT(s.periodEnd, '%Y-%m') = ?`,
     bId ? [adminId, bId, targetMonth] : [adminId, targetMonth]
   ).catch((err) => { console.error(err); return [[{ total: 0 }]]; });

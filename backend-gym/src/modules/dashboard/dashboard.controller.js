@@ -340,7 +340,7 @@ export const getSalesDashboard = async (req, res, next) => {
         m.fullName AS memberName,
         pl.name AS planName
       FROM member m
-      LEFT JOIN plan pl ON m.planId = pl.id
+      LEFT JOIN memberplan pl ON m.planId = pl.id
       WHERE m.adminId = ?
         ${branchId ? "AND (m.branchId = ? OR m.branchId IS NULL)" : ""}
       ORDER BY m.joinDate DESC

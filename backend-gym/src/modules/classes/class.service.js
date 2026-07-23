@@ -105,7 +105,7 @@ export const createScheduleService = async (data) => {
     });
 
     // 3. Log Admin Activity
-    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+    import("../../utils/activityHelper.js").then(({ logAdminActivity }) => {
       logAdminActivity(adminId, "CREATE_CLASS", `Created new class: ${className}`, result.insertId);
     });
 
@@ -879,7 +879,7 @@ export const deleteScheduleService = async (id) => {
     }
 
     // Log Admin Activity
-    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+    import("../../utils/activityHelper.js").then(({ logAdminActivity }) => {
       logAdminActivity(existing.adminId, "DELETE_CLASS", `Deleted class: ${existing.className}`, id);
     });
 

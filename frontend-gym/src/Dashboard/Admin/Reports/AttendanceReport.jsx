@@ -19,7 +19,7 @@ export default function AttendanceReport() {
     { value: "", label: "Select Role..." },
     {
       value: "staff",
-      label: "Staff (Receptionist, PT, Housekeeping)",
+      label: "Staff (Receptionist, PT )",
     },
     { value: "member", label: "Member" },
   ];

@@ -539,6 +539,11 @@ export const generatePersonalTrainerReportService = async (adminId) => {
 
 export const getReceptionReportService = async (adminId) => {
   // 1️⃣ Fetch all branches of this admin
+  const [branches] = await pool.query(
+    `SELECT id FROM branch WHERE adminId = ?`,
+    [adminId]
+  );
+  const branchIds = branches.map(b => b.id);
 
   // ---------------- WEEKLY ATTENDANCE (ALL BRANCHES) ----------------
   const [members] = await pool.query(

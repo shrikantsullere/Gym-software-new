@@ -2671,17 +2671,17 @@ export const getBookingDetails = async (req, res) => {
         ub.createdAt,
         ub.bookingType,
         ub.classId,
-        c.className AS class_name,
+        COALESCE(c.className, ub.notes, ub.bookingType) AS class_name,
         ub.sessionId,
-        s.sessionName
+        COALESCE(s.sessionName, ub.notes) AS sessionName
       FROM unified_bookings ub
       JOIN member m ON ub.memberId = m.id
       LEFT JOIN classschedule c ON ub.classId = c.id
       LEFT JOIN session s ON ub.sessionId = s.id
-      WHERE (m.adminId = ? OR c.adminId = ? OR s.adminId = ?)
+      WHERE m.adminId = ?
     `;
     
-    const params = [adminId, adminId, adminId];
+    const params = [adminId];
 
     if (trainerId) {
       query += ' AND (ub.trainerId = ? OR c.trainerId = ? OR s.trainerId = ?)';
@@ -2697,10 +2697,6 @@ export const getBookingDetails = async (req, res) => {
     query += ' ORDER BY ub.createdAt DESC';
 
     const [rows] = await pool.query(query, params);
-    
-    import('fs').then(fs => {
-      fs.writeFileSync('scratch_debug_booking.txt', `QUERY: ${query}\nPARAMS: ${JSON.stringify(params)}\nRESULT LENGTH: ${rows.length}\n`, {flag: 'a'});
-    });
 
     res.json({ success: true, data: rows });
   } catch (error) {
@@ -2708,3 +2704,4 @@ export const getBookingDetails = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch booking details' });
   }
 };
+

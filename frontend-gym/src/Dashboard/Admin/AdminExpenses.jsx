@@ -53,8 +53,11 @@ const AdminExpenses = () => {
       const lastDay = new Date(year, Number(month), 0).getDate();
       const endDate = `${year}-${month}-${lastDay}`;
 
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const branchId = user.branchId || 0;
+
       const res = await axios.get(
-        `${BaseUrl}expenses/branch/0?from=${startDate}&to=${endDate}`,
+        `${BaseUrl}expenses/branch/${branchId}?from=${startDate}&to=${endDate}`,
         { headers }
       );
       if (res.data?.success && Array.isArray(res.data.expenses)) {

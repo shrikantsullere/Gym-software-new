@@ -530,16 +530,44 @@ export const sendPersonalNotificationService = async ({ memberId, memberUserId, 
 };
 
 export const getPersonalNotifHistoryService = async (adminId) => {
-  const [rows] = await pool.query(
-    `SELECT pn.*, m.fullName AS memberName
-     FROM personal_notification pn
-     LEFT JOIN member m ON m.id = pn.memberId
-     WHERE pn.sentBy IN (SELECT id FROM user WHERE adminId = ? OR id = ?)
-     ORDER BY pn.createdAt DESC
-     LIMIT 50`,
-    [adminId, adminId]
-  );
-  return rows;
+  try {
+    const [rows] = await pool.query(
+      `SELECT pn.*, m.fullName AS memberName
+       FROM personal_notification pn
+       LEFT JOIN member m ON m.id = pn.memberId
+       WHERE pn.sentBy IN (SELECT id FROM user WHERE adminId = ? OR id = ?) OR pn.sentBy IS NULL
+       ORDER BY pn.createdAt DESC
+       LIMIT 50`,
+      [adminId, adminId]
+    );
+    return rows;
+  } catch (err) {
+    console.warn("Notice in getPersonalNotifHistoryService:", err.message);
+    try {
+      await pool.query(
+        `CREATE TABLE IF NOT EXISTS personal_notification (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          memberId INT NOT NULL,
+          category VARCHAR(100) DEFAULT 'General',
+          message TEXT NOT NULL,
+          sentBy INT NULL,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`
+      );
+      const [rows] = await pool.query(
+        `SELECT pn.*, m.fullName AS memberName
+         FROM personal_notification pn
+         LEFT JOIN member m ON m.id = pn.memberId
+         WHERE pn.sentBy IN (SELECT id FROM user WHERE adminId = ? OR id = ?) OR pn.sentBy IS NULL
+         ORDER BY pn.createdAt DESC
+         LIMIT 50`,
+        [adminId, adminId]
+      );
+      return rows;
+    } catch (e) {
+      return [];
+    }
+  }
 };
 export const deleteAnnouncementService = async (id, adminId) => {
   if (adminId) {

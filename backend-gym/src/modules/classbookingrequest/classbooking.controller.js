@@ -1459,7 +1459,7 @@ export const createUnifiedBooking = async (req, res) => {
     /* =========================
        5️⃣ CREATE BOOKING
     ========================= */
-    await pool.query(
+    const [result] = await pool.query(
       `
       INSERT INTO unified_bookings
       (memberId, trainerId, sessionId, classId, date, endDate,

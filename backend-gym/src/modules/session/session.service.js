@@ -89,7 +89,7 @@ export const createSessionService = async (data) => {
     });
 
     // 3. Log Admin Activity
-    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+    import("../../utils/activityHelper.js").then(({ logAdminActivity }) => {
       logAdminActivity(adminId, "CREATE_SESSION", `Created new session: ${sessionName}`, sessionId);
     });
 
@@ -263,7 +263,7 @@ export const deleteSessionService = async (sessionId) => {
     }
 
     // Log Admin Activity
-    import("../../../utils/activityHelper.js").then(({ logAdminActivity }) => {
+    import("../../utils/activityHelper.js").then(({ logAdminActivity }) => {
       logAdminActivity(exists.adminId, "DELETE_SESSION", `Deleted session: ${exists.sessionName}`, sessionId);
     });
 

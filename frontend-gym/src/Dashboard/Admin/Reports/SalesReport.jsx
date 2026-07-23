@@ -53,6 +53,7 @@ export default function SalesReport() {
     { value: "receptionist", label: "Receptionist" },
     { value: "personal_trainer", label: "Personal Trainer" },
     { value: "general_trainer", label: "General Trainer" },
+    // { value: "housekeeping", label: "Housekeeping" },
   ];
 
   const [dateFrom, setDateFrom] = useState(getMonthStartDate());

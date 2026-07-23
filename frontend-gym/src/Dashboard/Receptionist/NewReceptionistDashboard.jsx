@@ -83,8 +83,8 @@ const NewReceptionistDashboard = () => {
       bg: "#dcfce7",
     },
     {
-      label: "Today's Revenue",
-      value: `₹${Number(s?.todayRevenue ?? 0).toLocaleString("en-IN")}`,
+      label: Number(s?.todayRevenue || 0) > 0 ? "Today's Revenue" : "Total Revenue",
+      value: `₹${Number((Number(s?.todayRevenue || 0) > 0 ? s?.todayRevenue : (s?.totalRevenue || s?.monthRevenue || 0))).toLocaleString("en-IN")}`,
       icon: <FaRupeeSign size={22} />,
       color: "#9333ea",
       bg: "#f3e8ff",

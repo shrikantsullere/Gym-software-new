@@ -133,6 +133,9 @@ export const getTrainerDashboardService = async (trainerId) => {
   );
   let totalMembers = totalRow?.totalMembers || 0;
 
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // 'YYYY-MM-DD'
+
   // 2) Today's check-ins
   const [[checkRow]] = await pool.query(
     `SELECT COUNT(DISTINCT ma.id) AS todaysCheckIns
@@ -142,8 +145,8 @@ export const getTrainerDashboardService = async (trainerId) => {
      LEFT JOIN memberplan p1 ON mpa.planId = p1.id
      LEFT JOIN memberplan p2 ON m.planId = p2.id
      WHERE (p1.trainerId IN (?, ?) OR p2.trainerId IN (?, ?) OR m.trainerId IN (?, ?))
-       AND DATE(ma.checkIn) = CURDATE()`,
-    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId]
+       AND DATE(CONVERT_TZ(ma.checkIn, '+00:00', '+05:30')) = ?`,
+    [realStaffId, realUserId, realStaffId, realUserId, realStaffId, realUserId, todayStr]
   );
   let todaysCheckIns = checkRow?.todaysCheckIns || 0;
 
@@ -156,10 +159,10 @@ export const getTrainerDashboardService = async (trainerId) => {
           SUM(price) AS totalEarnings
        FROM unified_bookings
        WHERE trainerId IN (?, ?)
-         AND date >= CURDATE() - INTERVAL 6 DAY
+         AND date >= ? - INTERVAL 6 DAY
        GROUP BY DATE(date)
        ORDER BY date`,
-      [realStaffId, realUserId]
+      [realStaffId, realUserId, todayStr]
     );
     earningsOverview = earningRows.map((r) => ({
       date: r.date,

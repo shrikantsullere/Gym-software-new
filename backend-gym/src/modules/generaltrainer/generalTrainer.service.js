@@ -921,28 +921,30 @@ export const deleteAttendanceRecordService = async (id) => {
 export const getDashboardDataService = async (adminId) => {
   if (!adminId) throw { status: 400, message: "adminId is required" };
 
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // 'YYYY-MM-DD'
+
   try {
     /* =========================
        WEEKLY ATTENDANCE (7 DAYS)
-       memberattendance → user → adminId
+       memberattendance → member → adminId
     ========================= */
     const [attendanceData] = await pool.query(
       `
       SELECT 
-        DATE(ma.checkIn) AS date,
+        DATE_FORMAT(CONVERT_TZ(ma.checkIn, '+00:00', '+05:30'), '%Y-%m-%d') AS date,
         COUNT(*) AS count
       FROM memberattendance ma
-      JOIN user u ON ma.memberId = u.id
-      WHERE u.adminId = ?
-        AND ma.checkIn >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-      GROUP BY DATE(ma.checkIn)
+      JOIN member m ON ma.memberId = m.id
+      WHERE m.adminId = ?
+        AND ma.checkIn >= ? - INTERVAL 7 DAY
+      GROUP BY DATE(CONVERT_TZ(ma.checkIn, '+00:00', '+05:30'))
       ORDER BY date ASC
       `,
-      [adminId]
+      [adminId, todayStr]
     );
 
     const weeklyAttendanceTrend = [];
-    const today = new Date();
 
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
@@ -968,10 +970,10 @@ export const getDashboardDataService = async (adminId) => {
       FROM classschedule cs
       JOIN user u ON cs.trainerId = u.id
       WHERE u.adminId = ?
-        AND cs.date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        AND cs.date >= ? - INTERVAL 30 DAY
       GROUP BY cs.className
       `,
-      [adminId]
+      [adminId, todayStr]
     );
 
     const classDistribution = classData.map((c) => ({
@@ -981,7 +983,7 @@ export const getDashboardDataService = async (adminId) => {
 
     /* =========================
        TODAY CLASSES
-    ========================= */
+     ========================= */
     const [todayClasses] = await pool.query(
       `
       SELECT 
@@ -996,11 +998,11 @@ export const getDashboardDataService = async (adminId) => {
       JOIN user u ON cs.trainerId = u.id
       LEFT JOIN booking b ON cs.id = b.scheduleId
       WHERE u.adminId = ?
-        AND DATE(cs.date) = CURRENT_DATE
+        AND DATE(cs.date) = ?
       GROUP BY cs.id
       ORDER BY cs.startTime
       `,
-      [adminId]
+      [adminId, todayStr]
     );
 
     const now = new Date();
@@ -1103,11 +1105,11 @@ export const getDashboardDataService = async (adminId) => {
       JOIN user u ON cs.trainerId = u.id
       LEFT JOIN booking b ON cs.id = b.scheduleId
       WHERE u.adminId = ?
-        AND DATE(cs.date) = CURRENT_DATE
+        AND DATE(cs.date) = ?
       GROUP BY cs.id
       ORDER BY cs.startTime
       `,
-      [adminId]
+      [adminId, todayStr]
     );
 
     const dailyClassSchedule = dailySchedule.map((cls) => ({

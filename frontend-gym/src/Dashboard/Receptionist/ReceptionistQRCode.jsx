@@ -142,16 +142,39 @@ const ReceptionistQRCode = () => {
 
       if (data.success) {
         // Update specific member to show checked out status
-        setAttendance(attendance.map(member =>
-          member.attendance_id === id
-            ? {
+        setAttendance(attendance.map(member => {
+          if (member.attendance_id === id) {
+            const checkoutNow = new Date();
+            const checkoutTimeStr = checkoutNow.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            // Calculate work hours from checkin to now
+            let workHours = '--';
+            if (member.checkin_time) {
+              // Parse the checkin_time string back to a comparable time today
+              const [timePart, period] = member.checkin_time.split(' ');
+              let [hours, minutes] = timePart.split(':').map(Number);
+              if (period === 'PM' && hours !== 12) hours += 12;
+              if (period === 'AM' && hours === 12) hours = 0;
+              const checkInDate = new Date();
+              checkInDate.setHours(hours, minutes, 0, 0);
+              const diffMs = checkoutNow - checkInDate;
+              if (diffMs > 0) {
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                workHours = `${diffHours}h ${diffMinutes}m`;
+              }
+            }
+
+            return {
               ...member,
               checkingOut: false,
               checkedOut: true,
-              checkout_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
-            : member
-        ));
+              checkout_time: checkoutTimeStr,
+              workHours: workHours
+            };
+          }
+          return member;
+        }));
         alert('Check-out successful!');
       } else {
         alert(data.message || 'Check-out failed');

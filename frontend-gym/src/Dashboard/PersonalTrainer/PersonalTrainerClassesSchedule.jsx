@@ -62,7 +62,7 @@ const PersonalTrainerClassesSchedule = () => {
         return matchesId || matchesName;
       });
 
-      const displayClasses = trainerClasses.length > 0 ? trainerClasses : allClasses;
+      const displayClasses = trainerClasses;
 
       // Transform data to match the new API response structure
       const transformedClasses = displayClasses.map(classItem => ({

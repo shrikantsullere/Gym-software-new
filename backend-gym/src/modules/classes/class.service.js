@@ -1,6 +1,5 @@
 import { pool } from "../../config/db.js";
-
-/**************************************
+import { getIO, emitToUser } from "../../config/socket.js";/**************************************
  * CLASS TYPES
  **************************************/
 export const createClassTypeService = async (name) => {
@@ -77,6 +76,35 @@ export const createScheduleService = async (data) => {
       price,
     ]
   );
+
+  /* INSERT NOTIFICATIONS & SOCKET EVENT */
+  try {
+    const [adminRows] = await pool.query("SELECT branchId FROM user WHERE id = ?", [adminId]);
+    const branchId = adminRows.length > 0 ? adminRows[0].branchId : null;
+    
+    // 1. Alert for Trainer
+    const trainerMsg = `You have been assigned a new class: ${className}`;
+    await pool.query(
+      "INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)",
+      ["Class Assignment", trainerMsg, trainerId, branchId]
+    );
+
+    // 2. Alert for Members (Broadcast to branch)
+    const broadcastMsg = `New Class Available: ${className}`;
+    await pool.query(
+      "INSERT INTO alert (type, message, branchId) VALUES (?, ?, ?)",
+      ["Announcement", broadcastMsg, branchId]
+    );
+
+    // 3. Emit Socket Event
+    const io = getIO();
+    if (io) {
+      io.emit("classCreated", { className, trainerId, date, startTime, branchId });
+      emitToUser(trainerId, "new_notification", { message: trainerMsg });
+    }
+  } catch (err) {
+    console.error("Failed to insert class assignment alert/sockets:", err);
+  }
 
   return {
     id: result.insertId,
@@ -157,68 +185,122 @@ export const listSchedulesService = async (branchId) => {
 //   };
 // };
 export const bookClassService = async (memberId, scheduleId) => {
-  /**
-   * ⚠️ memberId coming from frontend = userId
-   */
+  const connection = await pool.getConnection();
+  await connection.beginTransaction();
 
-  /* 1️⃣ MAP userId/memberId → member.id */
-  const [memberRows] = await pool.query(
-    "SELECT id FROM member WHERE userId = ? OR id = ?",
-    [memberId, memberId]
-  );
+  try {
+    /* 1️⃣ MAP userId/memberId → member.id */
+    const [memberRows] = await connection.query(
+      "SELECT id, fullName, email, phone, branchId, adminId FROM member WHERE userId = ? OR id = ?",
+      [memberId, memberId]
+    );
 
-  if (memberRows.length === 0) {
-    throw {
-      status: 400,
-      message: "Member profile not found for this user",
+    if (memberRows.length === 0) {
+      throw { status: 400, message: "Member profile not found for this user" };
+    }
+
+    const member = memberRows[0];
+    const realMemberId = member.id;
+
+    /* 2️⃣ CHECK SCHEDULE EXISTS AND LOCK ROW (FOR UPDATE) */
+    const [scheduleRows] = await connection.query(
+      "SELECT * FROM classschedule WHERE id = ? FOR UPDATE",
+      [scheduleId]
+    );
+
+    if (scheduleRows.length === 0) {
+      throw { status: 404, message: "Schedule not found" };
+    }
+
+    const schedule = scheduleRows[0];
+
+    /* 3️⃣ CHECK IF ALREADY BOOKED IN UNIFIED_BOOKINGS */
+    const [existingRows] = await connection.query(
+      "SELECT id FROM unified_bookings WHERE memberId = ? AND classId = ? AND bookingStatus != 'Cancelled'",
+      [realMemberId, scheduleId]
+    );
+
+    if (existingRows.length > 0) {
+      throw { status: 400, message: "Already booked for this class" };
+    }
+
+    /* 4️⃣ CHECK CAPACITY */
+    const [bookings] = await connection.query(
+      "SELECT COUNT(*) AS count FROM unified_bookings WHERE classId = ? AND bookingStatus != 'Cancelled'",
+      [scheduleId]
+    );
+
+    if (bookings[0].count >= schedule.capacity) {
+      throw { status: 400, message: "Class is full" };
+    }
+
+    /* 5️⃣ INSERT BOOKING INTO UNIFIED_BOOKINGS */
+    const [result] = await connection.query(
+      `INSERT INTO unified_bookings 
+       (memberId, trainerId, classId, date, startTime, endTime, bookingType, bookingStatus, paymentStatus, branchId)
+       VALUES (?, ?, ?, ?, ?, ?, 'GROUP', 'Booked', 'Pending', ?)`,
+      [
+        realMemberId, 
+        schedule.trainerId, 
+        scheduleId, 
+        schedule.date, 
+        schedule.startTime, 
+        schedule.endTime, 
+        member.branchId || null
+      ]
+    );
+
+    await connection.commit();
+    connection.release();
+
+    /* 6️⃣ INSERT IN-APP NOTIFICATION ALERT */
+    try {
+      const alertMsg = `${member.fullName || 'A member'} booked class: ${schedule.className}`;
+      await pool.query(
+        "INSERT INTO alert (type, message, memberId, staffId, branchId) VALUES (?, ?, ?, ?, ?)",
+        ["Booking", alertMsg, realMemberId, schedule.trainerId, member.branchId || null]
+      );
+      
+      // Also notify Admin
+      if (schedule.adminId) {
+        await pool.query(
+          "INSERT INTO alert (type, message, staffId, branchId) VALUES (?, ?, ?, ?)",
+          ["Booking", alertMsg, schedule.adminId, member.branchId || null]
+        );
+      }
+    } catch (err) {
+      console.error("Failed to insert class booking alert:", err);
+    }
+
+    /* 7️⃣ EMIT SOCKET EVENTS */
+    try {
+      const io = getIO();
+      if (io) {
+        // Broadcast to everyone (or room) that a booking happened so capacity updates
+        io.emit("bookingCreated", { scheduleId, classId: scheduleId });
+        // Emit to Trainer
+        if (schedule.trainerId) {
+           emitToUser(schedule.trainerId, "new_notification", { message: "New member booked your class" });
+        }
+        // Emit to Admin
+        if (schedule.adminId) {
+           emitToUser(schedule.adminId, "new_notification", { message: "New booking received" });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to emit socket events for class booking:", err);
+    }
+
+    return {
+      id: result.insertId,
+      memberId: realMemberId,
+      scheduleId,
     };
+  } catch (error) {
+    await connection.rollback();
+    connection.release();
+    throw error;
   }
-
-  const realMemberId = memberRows[0].id;
-
-  /* 2️⃣ CHECK IF ALREADY BOOKED */
-  const [existingRows] = await pool.query(
-    "SELECT id FROM booking WHERE memberId = ? AND scheduleId = ?",
-    [realMemberId, scheduleId]
-  );
-
-  if (existingRows.length > 0) {
-    throw { status: 400, message: "Already booked for this class" };
-  }
-
-  /* 3️⃣ CHECK SCHEDULE EXISTS */
-  const [scheduleRows] = await pool.query(
-    "SELECT * FROM classschedule WHERE id = ?",
-    [scheduleId]
-  );
-
-  if (scheduleRows.length === 0) {
-    throw { status: 404, message: "Schedule not found" };
-  }
-
-  const schedule = scheduleRows[0];
-
-  /* 4️⃣ CHECK CAPACITY */
-  const [bookings] = await pool.query(
-    "SELECT COUNT(*) AS count FROM booking WHERE scheduleId = ?",
-    [scheduleId]
-  );
-
-  if (bookings[0].count >= schedule.capacity) {
-    throw { status: 400, message: "Class is full" };
-  }
-
-  /* 5️⃣ INSERT BOOKING (FK SAFE) */
-  const [result] = await pool.query(
-    "INSERT INTO booking (memberId, scheduleId) VALUES (?, ?)",
-    [realMemberId, scheduleId]
-  );
-
-  return {
-    id: result.insertId,
-    memberId: realMemberId,
-    scheduleId,
-  };
 };
 
 // export const getScheduledClassesWithBookingStatusService = async (userId) => {

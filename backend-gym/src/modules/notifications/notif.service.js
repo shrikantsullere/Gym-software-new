@@ -191,39 +191,47 @@ export const sendNotificationService = async ({ type, to, message, memberId, sub
 import { formatISTDate } from "../../utils/dateHelper.js";
 
 export const getUserNotificationsService = async (userId) => {
-  const [rows] = await pool.query(
-    `SELECT * FROM notificationlog 
-     WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
-       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH')
-       AND (status = 'UNREAD' OR status = 'PENDING' OR is_read = FALSE)
-     ORDER BY createdAt DESC LIMIT 20`,
-    [userId.toString()]
-  );
-  return rows.map(r => ({
-    ...r,
-    ...formatISTDate(r.createdAt)
-  }));
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM notificationlog 
+       WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
+         AND status IN ('UNREAD', 'PENDING')
+       ORDER BY createdAt DESC LIMIT 20`,
+      [userId.toString()]
+    );
+    return rows.map(r => ({
+      ...r,
+      ...(formatISTDate ? formatISTDate(r.createdAt) : {})
+    }));
+  } catch (err) {
+    console.error("getUserNotificationsService error:", err.message);
+    return [];
+  }
 };
 
 export const getAllUserNotificationsService = async (userId) => {
-  const [rows] = await pool.query(
-    `SELECT * FROM notificationlog 
-     WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff') 
-       AND type IN ('IN-APP', 'SYSTEM_ALERT', 'APP_PUSH')
-     ORDER BY createdAt DESC LIMIT 100`,
-    [userId.toString()]
-  );
-  return rows.map(r => ({
-    ...r,
-    ...formatISTDate(r.createdAt)
-  }));
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM notificationlog 
+       WHERE (\`to\` = ? OR \`to\` = 'all' OR \`to\` = 'staff')
+       ORDER BY createdAt DESC LIMIT 100`,
+      [userId.toString()]
+    );
+    return rows.map(r => ({
+      ...r,
+      ...(formatISTDate ? formatISTDate(r.createdAt) : {})
+    }));
+  } catch (err) {
+    console.error("getAllUserNotificationsService error:", err.message);
+    return [];
+  }
 };
 
 export const markAsReadService = async (id) => {
   const [rows] = await pool.query(`SELECT \`to\` FROM notificationlog WHERE id = ?`, [id]);
   
   await pool.query(
-    `UPDATE notificationlog SET status = 'READ', is_read = TRUE WHERE id = ?`,
+    `UPDATE notificationlog SET status = 'READ' WHERE id = ?`,
     [id]
   );
   

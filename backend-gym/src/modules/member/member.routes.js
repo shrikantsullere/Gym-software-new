@@ -63,7 +63,14 @@ router.put(
 /** Soft Delete / Deactivate Member */
 router.delete(
   "/delete/:id",
-  verifyToken(["Superadmin", "Admin", "receptionist", "manager"]),
+  verifyToken([
+    "Superadmin", "SuperAdmin", "SUPERADMIN",
+    "Admin", "admin", "ADMIN",
+    "receptionist", "Receptionist", "RECEPTIONIST",
+    "manager", "Manager", "MANAGER",
+    "sales_agent", "Sales Agent", "salesagent", "SALES_AGENT",
+    "Staff", "staff", "STAFF"
+  ]),
   deleteMember
 );
 

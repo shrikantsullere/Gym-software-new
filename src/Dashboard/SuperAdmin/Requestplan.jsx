@@ -15,6 +15,13 @@ const RequestedPlans = () => {
   const [selectedRequestIndex, setSelectedRequestIndex] = useState(null);
   const [onboardPassword, setOnboardPassword] = useState("");
   const [onboardError, setOnboardError] = useState("");
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const openViewModal = (item) => {
+    setSelectedItem(item);
+    setShowViewModal(true);
+  };
 
   // 🔹 EXPORT REQUESTED PLANS TO EXCEL
   const exportRequestsToExcel = () => {
@@ -366,7 +373,7 @@ const RequestedPlans = () => {
                               <button
                                 className="btn btn-sm btn-outline-secondary"
                                 title="View Details"
-                                onClick={() => alert(`View details for ${item.admin}`)}
+                                onClick={() => openViewModal(item)}
                                 style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
                               >
                                 <FaEye size={14} />
@@ -598,7 +605,7 @@ const RequestedPlans = () => {
                         className="btn btn-outline-secondary w-100 rounded-pill py-2 d-flex align-items-center justify-content-center gap-2"
                         title="View Details"
                         style={{ fontSize: "13px" }}
-                        onClick={() => alert(`View details for ${item.admin}`)}
+                        onClick={() => openViewModal(item)}
                       >
                         <FaEye size={14} /> View Details
                       </button>
@@ -609,7 +616,69 @@ const RequestedPlans = () => {
             ))
           )}
         </div>
+        </div>
       </div>
+
+      {/* View Details Modal */}
+      {showViewModal && selectedItem && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header bg-light border-0">
+                <h5 className="modal-title fw-bold">Request Details</h5>
+                <button type="button" className="btn-close" onClick={() => setShowViewModal(false)}></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="row g-3">
+                  <div className="col-12 text-center mb-3">
+                    <h5 className="fw-bold mb-1">{selectedItem.admin}</h5>
+                    <p className="text-muted small mb-0">{selectedItem.email} | {selectedItem.phone}</p>
+                  </div>
+                  <div className="col-6">
+                    <small className="text-muted d-block">Plan Requested</small>
+                    <span className="fw-semibold">{selectedItem.plan}</span>
+                  </div>
+                  <div className="col-6">
+                    <small className="text-muted d-block">Amount</small>
+                    <span className="fw-semibold text-primary">₹{selectedItem.amount}</span>
+                  </div>
+                  <div className="col-6">
+                    <small className="text-muted d-block">Billing Cycle</small>
+                    <span className="fw-semibold">{selectedItem.billing}</span>
+                  </div>
+                  <div className="col-6">
+                    <small className="text-muted d-block">Requested On</small>
+                    <span className="fw-semibold">{selectedItem.purchaseDate}</span>
+                  </div>
+                  <div className="col-6">
+                    <small className="text-muted d-block">Start Date</small>
+                    <span className="fw-semibold text-success">{selectedItem.startDate}</span>
+                  </div>
+                  <div className="col-6">
+                    <small className="text-muted d-block">Expiry Date</small>
+                    <span className="fw-semibold text-danger">{selectedItem.expiryDate}</span>
+                  </div>
+                  <div className="col-12 mt-3 text-center">
+                    <span 
+                      className="badge rounded-pill px-3 py-2"
+                      style={{ 
+                        backgroundColor: getStatusColor(selectedItem.status).bg,
+                        color: getStatusColor(selectedItem.status).color,
+                        fontSize: "14px"
+                      }}
+                    >
+                      Status: {selectedItem.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer border-0">
+                <button type="button" className="btn btn-secondary w-100 rounded-pill" onClick={() => setShowViewModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

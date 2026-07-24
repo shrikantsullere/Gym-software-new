@@ -1,7 +1,7 @@
 
 // src/pages/Login.js
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../Api/axiosInstance";
 
 const Login = () => {
@@ -171,6 +171,12 @@ const Login = () => {
                       )}
                     </span>
                   </div>
+                </div>
+
+                <div className="d-flex justify-content-end mb-3">
+                  <Link to="/forgot-password" className="text-decoration-none" style={{ fontSize: '0.9rem', color: '#6c757d' }}>
+                    Forgot Password?
+                  </Link>
                 </div>
 
                 <button

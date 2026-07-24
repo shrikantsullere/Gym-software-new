@@ -807,7 +807,7 @@ const AdminMember = () => {
         : (memberDetails.planId ? [memberDetails.planId] : []);
 
       const goalVal = member.goal || memberDetails.goal || "";
-      setEditGoalType(["Weight Loss", "Weight Gain", "Body Building"].includes(goalVal) ? goalVal : (goalVal ? "Other" : ""));
+      setEditGoalType(["Fat Loss", "Muscle Gain", "Maintenance", "Body Builder"].includes(goalVal) ? goalVal : (goalVal ? "Other" : ""));
 
       setEditMember({
         id: member.id,
@@ -921,8 +921,8 @@ const AdminMember = () => {
         filtered = apiPlans.filter((plan) => plan.trainerType === "personal");
         break;
       case "General Trainer":
-        // Filter for plans where trainerType is "general"
-        filtered = apiPlans.filter((plan) => plan.trainerType === "general");
+        // Filter for plans where trainerType is "general" or type is "GENERAL"
+        filtered = apiPlans.filter((plan) => plan.trainerType === "general" || plan.type === "GENERAL");
         break;
       case "Group Classes":
         // Filter for plans where type is "GROUP"
@@ -1486,11 +1486,19 @@ const handleDownloadReceipt = async (member) => {
   const getFilteredTrainers = (interestedIn) => {
     if (!interestedIn) return allTrainers;
     const lower = (interestedIn || "").toLowerCase();
+    
+    // STRICT FILTERING based on roleId to prevent 'receptionist' from matching 'pt'
     if (lower.includes("personal")) {
-      return allTrainers.filter(t => Number(t.roleId) === 5 || (t.roleName || "").toLowerCase().includes("personal") || (t.roleName || "").toLowerCase().includes("pt"));
+      return allTrainers.filter(t => 
+        Number(t.roleId) === 5 || 
+        (t.roleName && t.roleName.toLowerCase() === "personal trainer")
+      );
     }
     if (lower.includes("general")) {
-      return allTrainers.filter(t => Number(t.roleId) === 6 || (t.roleName || "").toLowerCase().includes("general") || (t.roleName || "").toLowerCase().includes("gt"));
+      return allTrainers.filter(t => 
+        Number(t.roleId) === 6 || 
+        (t.roleName && t.roleName.toLowerCase() === "general trainer")
+      );
     }
     return allTrainers;
   };
@@ -2108,9 +2116,10 @@ const handleDownloadReceipt = async (member) => {
                         }}
                       >
                         <option value="">Select Goal</option>
-                        <option value="Weight Loss">Weight Loss</option>
-                        <option value="Weight Gain">Weight Gain</option>
-                        <option value="Body Building">Body Building</option>
+                        <option value="Fat Loss">Fat Loss</option>
+                        <option value="Muscle Gain">Muscle Gain</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Body Builder">Body Builder</option>
                         <option value="Other">Other (Specify)</option>
                       </select>
                       {newGoalType === "Other" && (
@@ -2651,9 +2660,10 @@ const handleDownloadReceipt = async (member) => {
                         }}
                       >
                         <option value="">Select Goal</option>
-                        <option value="Weight Loss">Weight Loss</option>
-                        <option value="Weight Gain">Weight Gain</option>
-                        <option value="Body Building">Body Building</option>
+                        <option value="Fat Loss">Fat Loss</option>
+                        <option value="Muscle Gain">Muscle Gain</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Body Builder">Body Builder</option>
                         <option value="Other">Other (Specify)</option>
                       </select>
                       {editGoalType === "Other" && (

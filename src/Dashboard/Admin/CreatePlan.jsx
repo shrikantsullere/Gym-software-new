@@ -32,6 +32,7 @@ const CreatePlan = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [membershipPlans, setMembershipPlans] = useState([]);
+  const [generalPlans, setGeneralPlans] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [planToDelete, setPlanToDelete] = useState({ id: null, type: null });
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -172,6 +173,7 @@ const CreatePlan = () => {
         setPlansLoaded(true);
         setGroupPlans(formattedPlans.filter((p) => p.type === "group"));
         setPersonalPlans(formattedPlans.filter((p) => p.type === "personal"));
+        setGeneralPlans(formattedPlans.filter((p) => p.type === "general"));
         setMembershipPlans(formattedPlans.filter((p) => p.type === "member"));
       } else {
         setError("Failed to fetch plans.");
@@ -315,6 +317,7 @@ const CreatePlan = () => {
   const getPlansByType = (type) => {
     if (type === "group") return groupPlans;
     if (type === "personal") return personalPlans;
+    if (type === "general") return generalPlans;
     if (type === "member") return membershipPlans;
     return [];
   };
@@ -322,6 +325,7 @@ const CreatePlan = () => {
   const updatePlansByType = (type, updatedPlans) => {
     if (type === "group") setGroupPlans(updatedPlans);
     else if (type === "personal") setPersonalPlans(updatedPlans);
+    else if (type === "general") setGeneralPlans(updatedPlans);
     else if (type === "member") setMembershipPlans(updatedPlans);
   };
 
@@ -379,7 +383,9 @@ const CreatePlan = () => {
             ? groupPlans
             : newPlan.type === "personal"
               ? personalPlans
-              : membershipPlans;
+              : newPlan.type === "general"
+                ? generalPlans
+                : membershipPlans;
         updatePlansByType(newPlan.type, [...currentPlans, plan]);
         setApiPlans([...apiPlans, plan]);
         setNewPlan({
@@ -1127,7 +1133,7 @@ const CreatePlan = () => {
           Plan & Booking Management
         </h1>
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 p-3 bg-white rounded shadow-sm border">
-          <div className="d-flex flex-column flex-md-row gap-3 w-100 w-md-auto">
+          <div className="d-flex flex-column flex-md-row gap-3 w-100 w-md-auto flex-wrap">
             <Button
               variant={activeTab === "group" ? "primary" : "outline-primary"}
               onClick={() => setActiveTab("group")}
@@ -1159,6 +1165,21 @@ const CreatePlan = () => {
               Personal Training Plans
             </Button>
             <Button
+              variant={activeTab === "general" ? "primary" : "outline-primary"}
+              onClick={() => setActiveTab("general")}
+              className="px-3 px-md-4 py-2 fw-medium d-flex align-items-center justify-content-center"
+              style={{
+                backgroundColor:
+                  activeTab === "general" ? customColor : "transparent",
+                borderColor: customColor,
+                color: activeTab === "general" ? "white" : customColor,
+                width: "100%",
+                maxWidth: "300px",
+              }}
+            >
+              General Training Plans
+            </Button>
+            <Button
               variant={activeTab === "member" ? "primary" : "outline-primary"}
               onClick={() => setActiveTab("member")}
               className="px-3 px-md-4 py-2 fw-medium d-flex align-items-center justify-content-center"
@@ -1166,11 +1187,6 @@ const CreatePlan = () => {
                 backgroundColor:
                   activeTab === "member" ? customColor : "transparent",
                 borderColor: customColor,
-                color: activeTab === "member" ? "white" : customColor,
-                width: "100%",
-                maxWidth: "300px",
-              }}
-            >
               MemberShip Plans
             </Button>
           </div>
@@ -1184,9 +1200,11 @@ const CreatePlan = () => {
                 type:
                   activeTab === "personal"
                     ? "personal"
-                    : activeTab === "member"
-                      ? "member"
-                      : "group",
+                    : activeTab === "general"
+                      ? "general"
+                      : activeTab === "member"
+                        ? "member"
+                        : "group",
                 trainerType: "",
                 trainerId: "",
               });
@@ -1257,6 +1275,31 @@ const CreatePlan = () => {
                     <Row className="g-2 g-md-3">
                       {getPlansByType("personal").map((plan) =>
                         renderPlanCard(plan, "personal")
+                      )}
+                    </Row>
+                  )}
+                </Tab.Pane>
+                <Tab.Pane eventKey="general">
+                  {loading && !plansLoaded ? (
+                    <div className="text-center py-5">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                        style={{ color: customColor }}
+                      >
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="mt-3">Loading plans...</p>
+                    </div>
+                  ) : generalPlans.length === 0 ? (
+                    <div className="text-center py-5">
+                      <div className="display-4 mb-3">📋</div>
+                      <p className="fs-5">No general plans found.</p>
+                    </div>
+                  ) : (
+                    <Row className="g-2 g-md-3">
+                      {getPlansByType("general").map((plan) =>
+                        renderPlanCard(plan, "general")
                       )}
                     </Row>
                   )}
@@ -1615,6 +1658,7 @@ const CreatePlan = () => {
                   style={{ padding: "12px", fontSize: "1rem" }}
                 >
                   <option value="personal">Personal Training Plan</option>
+                  <option value="general">General Training Plan</option>
                   <option value="group">Group Class Plan</option>
                   <option value="member">MemberShip Plan</option>
                 </Form.Select>

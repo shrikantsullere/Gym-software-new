@@ -208,7 +208,8 @@ const RequestedPlans = () => {
   }
 
   return (
-    <div className="min-vh-100 bg-light" style={{ fontFamily: "Inter, sans-serif" }}>
+    <>
+      <div className="min-vh-100 bg-light" style={{ fontFamily: "Inter, sans-serif" }}>
       {/* HEADER */}
       <div className="container-fluid p-3 p-md-4">
         <div className="row align-items-center mb-4 g-3">
@@ -679,7 +680,8 @@ const RequestedPlans = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

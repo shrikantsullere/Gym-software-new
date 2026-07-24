@@ -563,7 +563,7 @@ const AdminMember = () => {
       );
 
       if (response.data) {
-        const createdMemberId = response.data.data?.memberId;
+        const createdMemberId = response.data.member?.id || response.data.data?.memberId;
 
         // If trainer is selected, assign it
         if (newMember.trainerId && createdMemberId) {
@@ -694,7 +694,7 @@ const AdminMember = () => {
               memberId: editMember.id,
               trainerId: parseInt(editMember.trainerId),
               trainerType: editMember.interestedIn === "General Trainer" ? "general" : "personal",
-              adminId,
+              adminId: effectiveAdminId,
             });
           } catch (trainerErr) {
             console.error("Failed to automatically assign trainer:", trainerErr);

@@ -74,11 +74,6 @@ const AnnouncementBanner = () => {
 
   if (!visible || dismissed || announcements.length === 0) return null;
 
-  // Build a combined scrolling text from all announcements
-  const marqueeText = announcements
-    .map((a) => `📢 ${a.subject}: ${a.message}`)
-    .join("     ✦     ");
-
   return (
     <div
       style={{
@@ -124,14 +119,32 @@ const AnnouncementBanner = () => {
       >
         <span
           style={{
-            display: "inline-block",
-            animation: `marqueeScroll ${Math.max(20, marqueeText.length * 0.08)}s linear infinite`,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "30px",
+            animation: `marqueeScroll ${Math.max(20, announcements.length * 15)}s linear infinite`,
             fontSize: "13px",
             fontWeight: "500",
             letterSpacing: "0.02em"
           }}
         >
-          {marqueeText}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{marqueeText}
+          {announcements.map((a, i) => (
+            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <span>📢 {a.subject}: {a.message}</span>
+              {a.imageUrl && (
+                <img src={a.imageUrl} alt="announcement" style={{ height: "20px", width: "auto", borderRadius: "4px" }} />
+              )}
+            </span>
+          ))}
+          {/* Duplicate for seamless scrolling */}
+          {announcements.map((a, i) => (
+            <span key={`dup-${i}`} style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <span>📢 {a.subject}: {a.message}</span>
+              {a.imageUrl && (
+                <img src={a.imageUrl} alt="announcement" style={{ height: "20px", width: "auto", borderRadius: "4px" }} />
+              )}
+            </span>
+          ))}
         </span>
       </div>
 

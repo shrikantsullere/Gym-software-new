@@ -135,9 +135,18 @@ const Navbar = ({ toggleSidebar }) => {
   useEffect(() => {
     if (!socket) return;
     
+    // Sync unread notifications whenever the socket reconnects
+    const handleConnect = () => {
+      fetchUnreadNotifications();
+    };
+    socket.on("connect", handleConnect);
+
     // Real-time: new notification arrives → add to list
     const handleNewNotification = (data) => {
-      setNotifications(prev => [data, ...prev]);
+      setNotifications(prev => {
+        if (prev.some(n => n.id === data.id)) return prev;
+        return [data, ...prev];
+      });
     };
 
     const handleNotificationRead = (data) => {
@@ -153,6 +162,7 @@ const Navbar = ({ toggleSidebar }) => {
     socket.on("all_notifications_read", handleAllNotificationsRead);
 
     return () => {
+      socket.off("connect", handleConnect);
       socket.off("new_notification", handleNewNotification);
       socket.off("notification_read", handleNotificationRead);
       socket.off("all_notifications_read", handleAllNotificationsRead);

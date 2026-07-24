@@ -312,26 +312,32 @@ const exportMembersToPDF = async () => {
     );
   };
 
-  // ✅ Subscription Plan Badge (Basic / Growth / Premium / Trial)
-  const getSubscriptionBadge = (plan, isTrial) => {
-    if (isTrial || (plan && plan.toLowerCase().includes("trial"))) {
-      return (
-        <span className="badge rounded-pill px-2 py-1" style={{ backgroundColor: "#E2F0D9", color: "#385723", fontWeight: "600", fontSize: "0.73rem" }}>
-          7-Day Trial
-        </span>
-      );
+  // ✅ Subscription Plan — shows plan name + category badge
+  const getSubscriptionBadge = (plan, isTrial, planName, planCategory) => {
+    // Determine category label and color
+    const cat = (planCategory || plan || "").toLowerCase();
+    let bg, color, label;
+    if (isTrial || cat.includes("trial") || cat.includes("free") || (plan && plan.toLowerCase().includes("trial"))) {
+      bg = "#E2F0D9"; color = "#385723"; label = "Trial";
+    } else if (cat.includes("premium") || cat.includes("pro")) {
+      bg = "#D1F4E1"; color = "#157347"; label = "Premium";
+    } else if (cat.includes("growth")) {
+      bg = "#FFF3CD"; color = "#856404"; label = "Growth";
+    } else if (cat.includes("basic")) {
+      bg = "#E8F4FD"; color = "#0969DA"; label = "Basic";
+    } else {
+      bg = "#F0F0F0"; color = "#555"; label = planCategory || plan || "Basic";
     }
-    const p = (plan || "Basic").toLowerCase();
-    const colors = {
-      basic: { bg: "#E8F4FD", color: "#0969DA", label: "Basic" },
-      growth: { bg: "#FFF3CD", color: "#856404", label: "Growth" },
-      premium: { bg: "#D1F4E1", color: "#157347", label: "Premium" },
-    };
-    const style = colors[p] || colors.basic;
+    const displayName = planName || plan || "—";
     return (
-      <span className="badge rounded-pill px-2 py-1" style={{ backgroundColor: style.bg, color: style.color, fontWeight: "600", fontSize: "0.73rem" }}>
-        {style.label}
-      </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <span style={{ fontSize: "0.78rem", fontWeight: "600", color: "#333", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "120px" }} title={displayName}>
+          {displayName}
+        </span>
+        <span className="badge rounded-pill px-2 py-1" style={{ backgroundColor: bg, color, fontWeight: "600", fontSize: "0.68rem", width: "fit-content" }}>
+          {label}
+        </span>
+      </div>
     );
   };
 
@@ -566,7 +572,7 @@ const exportMembersToPDF = async () => {
                           <strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{admin.fullName}</strong>
                           <small className="text-muted" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{admin.email}</small>
                         </td>
-                        <td style={{ fontSize: "0.855rem" }}>{getSubscriptionBadge(admin.subscriptionPlan, admin.isTrial)}</td>
+                        <td style={{ fontSize: "0.855rem", minWidth: "130px" }}>{getSubscriptionBadge(admin.subscriptionPlan, admin.isTrial, admin.planDisplayName || admin.planName, admin.planCategory)}</td>
                         <td style={{ fontSize: "0.855rem" }}>{getExpiryBadge(admin.licenseExpiryDate)}</td>
                         <td style={{ fontSize: "0.855rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{admin.gymName || "—"}</td>
                         <td style={{ fontSize: "0.78rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span className="text-muted">{admin.gstNumber || "—"}</span></td>
@@ -615,7 +621,7 @@ const exportMembersToPDF = async () => {
                         </div>
                         <div className="col-6">
                           <small className="text-muted d-block">Subscription</small>
-                          {getSubscriptionBadge(admin.subscriptionPlan, admin.isTrial)}
+                          {getSubscriptionBadge(admin.subscriptionPlan, admin.isTrial, admin.planDisplayName || admin.planName, admin.planCategory)}
                         </div>
                         <div className="col-12 mt-1">
                           <small className="text-muted d-block">Expiry</small>

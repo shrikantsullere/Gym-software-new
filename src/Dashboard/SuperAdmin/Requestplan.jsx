@@ -680,7 +680,6 @@ const RequestedPlans = () => {
           </div>
         </div>
       )}
-      </div>
     </>
   );
 };

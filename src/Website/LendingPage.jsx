@@ -821,7 +821,7 @@ const LendingPage = () => {
                 <div className="section-badge">
                   <FaTrophy className="badge-icon" /> Why Choose Us
                 </div>
-                <h2>Why <span className="highlight">FitManager Pro</span> Stands Out</h2>
+                <h2>Why <span className="highlight">Gym Soft  </span> Stands Out</h2>
                 <p>Our gym management system is designed to help you save time, increase revenue, and provide an exceptional experience for your members.</p>
                 <div className="benefits-list">
                   {benefits.map((benefit, index) => (

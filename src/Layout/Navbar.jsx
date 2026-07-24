@@ -91,7 +91,7 @@ const Navbar = ({ toggleSidebar }) => {
     try {
       const u = getUserFromLocalStorage();
       if (u && u.id) {
-        const res = await axiosInstance.get(`/notif/user/${u.id}`);
+        const res = await axiosInstance.get(`/app-notifications?limit=50`);
         if (res.data && res.data.notifications) {
           setNotifications(res.data.notifications);
         }
@@ -113,9 +113,8 @@ const Navbar = ({ toggleSidebar }) => {
   // Mark notification as read — removes from unread list + updates DB
   const markNotificationRead = async (id) => {
     try {
-      await axiosInstance.put(`/notif/read/${id}`);
-      // Remove from local unread list so badge count decreases
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      await axiosInstance.patch(`/app-notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
@@ -124,11 +123,8 @@ const Navbar = ({ toggleSidebar }) => {
   // Mark ALL unread notifications as read
   const markAllRead = async () => {
     try {
-      const u = getUserFromLocalStorage();
-      if (u && u.id) {
-        await axiosInstance.put(`/notif/read-all/${u.id}`);
-        setNotifications([]);
-      }
+      await axiosInstance.patch(`/app-notifications/read-all`);
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (err) {
       console.error("Failed to mark all as read:", err);
     }
@@ -139,17 +135,17 @@ const Navbar = ({ toggleSidebar }) => {
   useEffect(() => {
     if (!socket) return;
     
-    // Real-time: new notification arrives → add to unread list → red dot appears
+    // Real-time: new notification arrives → add to list
     const handleNewNotification = (data) => {
       setNotifications(prev => [data, ...prev]);
     };
 
     const handleNotificationRead = (data) => {
-      setNotifications(prev => prev.filter(n => n.id !== data.id));
+      setNotifications(prev => prev.map(n => n.id === data.id ? { ...n, isRead: true } : n));
     };
 
     const handleAllNotificationsRead = () => {
-      setNotifications([]);
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     };
 
     socket.on("new_notification", handleNewNotification);
@@ -357,12 +353,12 @@ const Navbar = ({ toggleSidebar }) => {
             >
               <FaBell size={22} />
               {/* Red dot only shows when there are UNREAD notifications */}
-              {notifications.length > 0 && (
+              {notifications.filter(n => !n.isRead).length > 0 && (
                 <span 
                   className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
                   style={{ fontSize: '0.65rem', minWidth: '18px' }}
                 >
-                  {notifications.length > 99 ? '99+' : notifications.length}
+                  {notifications.filter(n => !n.isRead).length > 99 ? '99+' : notifications.filter(n => !n.isRead).length}
                 </span>
               )}
             </button>
@@ -384,12 +380,12 @@ const Navbar = ({ toggleSidebar }) => {
                 >
                   <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>🔔 Notifications</span>
                   <div className="d-flex align-items-center gap-2">
-                    {notifications.length > 0 && (
+                    {notifications.filter(n => !n.isRead).length > 0 && (
                       <span className="badge bg-danger rounded-pill px-2 py-1" style={{ fontSize: "0.7rem" }}>
-                        {notifications.length} Unread
+                        {notifications.filter(n => !n.isRead).length} Unread
                       </span>
                     )}
-                    {notifications.length > 0 && (
+                    {notifications.filter(n => !n.isRead).length > 0 && (
                       <button 
                         className="btn btn-sm btn-outline-secondary py-0 px-2"
                         style={{ fontSize: "0.7rem", lineHeight: "1.8" }}
@@ -414,14 +410,16 @@ const Navbar = ({ toggleSidebar }) => {
                       <li 
                         key={n.id} 
                         className="list-group-item list-group-item-action p-3 border-bottom"
-                        style={{ cursor: 'pointer', background: "#f8faff", transition: "background-color 0.15s" }}
+                        style={{ cursor: 'pointer', background: n.isRead ? "#fff" : "#f8faff", transition: "background-color 0.15s", opacity: n.isRead ? 0.8 : 1 }}
                         onClick={() => {
-                          markNotificationRead(n.id);
-                          if (n.reference_type === 'CLASS') {
+                          if (!n.isRead) markNotificationRead(n.id);
+                          if (n.actionUrl) {
+                            navigate(n.actionUrl);
+                          } else if (n.referenceType === 'CLASS' || n.reference_type === 'CLASS') {
                             if (profile.role === 'Member') navigate('/member/classschedule');
                             else if (profile.role === 'Trainer' || profile.role === 'General Trainer' || profile.role === 'Personal Trainer') navigate('/trainer/classesschedule');
                             else navigate('/admin/classesschedule');
-                          } else if (n.reference_type === 'SESSION') {
+                          } else if (n.referenceType === 'SESSION' || n.reference_type === 'SESSION') {
                             if (profile.role === 'Member') navigate('/member/sessions');
                             else if (profile.role === 'Trainer' || profile.role === 'General Trainer' || profile.role === 'Personal Trainer') navigate('/trainer/sessions');
                             else navigate('/admin/personaltraining');
@@ -432,8 +430,11 @@ const Navbar = ({ toggleSidebar }) => {
                         onMouseLeave={e => e.currentTarget.style.background = "#f8faff"}
                       >
                         <div className="d-flex w-100 justify-content-between align-items-center mb-1">
-                          <small className="text-primary fw-bold" style={{ fontSize: "0.8rem" }}>
-                            🔵 {n.title || n.type}
+                          <small className={n.isRead ? "text-secondary fw-bold" : "text-primary fw-bold"} style={{ fontSize: "0.8rem" }}>
+                            {n.type && (n.type.includes('SUBSCRIPTION') || n.type.includes('PLAN')) ? '💳 ' : 
+                             n.type && n.type.includes('MEMBER') ? '👤 ' : 
+                             n.type === 'ANNOUNCEMENT_CREATED' ? '📢 ' : '🔵 '}
+                            {n.title || n.type}
                           </small>
                           <small className="text-muted" style={{ fontSize: "0.7rem" }}>
                             {n.formatted_date ? `${n.formatted_date} • ${n.formatted_time} ${n.timezone}` : new Date(n.createdAt).toLocaleString()}

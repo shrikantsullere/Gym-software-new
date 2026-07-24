@@ -153,6 +153,7 @@ import AutomationSettings from "./Dashboard/SuperAdmin/AutomationSettings";
 import NotificationCredits from "./Dashboard/Admin/NotificationCredits";
 import Notifications from "./Pages/Notifications";
 import BookingDetailsList from "./Dashboard/Admin/Bookings/BookingDetailsList";
+import PublicAttendance from "./Website/PublicAttendance";
 
 // Wrapper to extract memberId from URL params
 const MemberAssessmentWrapper = () => {
@@ -285,6 +286,7 @@ function App() {
     location.pathname === "/forgot-password" ||
     location.pathname === "/privacy-policy" ||
     location.pathname === "/terms-of-service" ||
+    location.pathname.startsWith("/public-attendance") ||
     isDynamicPage;
 
 
@@ -299,6 +301,7 @@ function App() {
           <Route path="/" element={<LendingPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/public-attendance" element={<PublicAttendance />} />
           <Route path="/:slug/:adminId" element={<DynamicPage />} />
           <Route path="/:adminId" element={<DynamicPage />} />
         </Routes>

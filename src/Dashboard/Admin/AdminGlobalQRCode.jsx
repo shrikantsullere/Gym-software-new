@@ -9,19 +9,7 @@ import axiosInstance from '../../Api/axiosInstance';
  * AdminGlobalQRCode - Admin creates and manages the global gym QR code
  * This QR code is displayed at the gym entrance for members to scan
  */
-// Helper function to generate random nonce (moved to top for use in useState)
-function generateNonce(len = 16) {
-  const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const arr = new Uint8Array(len);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, (n) => alpha[n % alpha.length]).join("");
-}
-
 const AdminGlobalQRCode = () => {
-  const CODE_TTL = 15; // 15 seconds - QR code valid for 15 seconds
-  const [qrNonce, setQrNonce] = useState(() => generateNonce(16));
-  const [secondsLeft, setSecondsLeft] = useState(CODE_TTL);
-  const [issuedAt, setIssuedAt] = useState(new Date());
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -32,83 +20,23 @@ const AdminGlobalQRCode = () => {
   const branchName = userData.branchName || userData.fullName || 'Gym Branch';
   const adminId = userData.id; // Admin's own ID
   
-  // Generate global QR code value - Admin's QR code for their staff to scan
+  // Generate global QR code value as a public web link
   const qrValue = useMemo(() => {
-    const qrData = {
-      purpose: "gym_checkin_global",
-      adminId: adminId, // Admin ID - required for staff validation
-      adminName: userData.fullName || 'Admin',
-      branchId: branchId, // Keep for reference but validation is based on adminId
-      branchName: branchName,
-      issued_at: issuedAt.toISOString(),
-      nonce: qrNonce,
-      expires_at: new Date(issuedAt.getTime() + CODE_TTL * 1000).toISOString()
-    };
-    return JSON.stringify(qrData);
-  }, [qrNonce, adminId, branchId, branchName, issuedAt, userData.fullName]);
+    // Always use live domain so printed QR works everywhere
+    const baseUrl = "https://gymsoftware.space";
+    return `${baseUrl}/public-attendance?adminId=${adminId}&branchId=${branchId}`;
+  }, [adminId, branchId]);
 
-  // Format dates for display
-  const formattedIssueDate = format(issuedAt, "MMM dd, yyyy HH:mm:ss");
-  const formattedExpiryDate = format(new Date(issuedAt.getTime() + CODE_TTL * 1000), "MMM dd, yyyy HH:mm:ss");
-
-  // Generate new QR code function (must be defined before useEffect)
+  // Generate new QR code function (no longer needs to generate nonce, just placeholder)
   const generateNewQRCode = () => {
-    setQrNonce(generateNonce(16));
-    setIssuedAt(new Date());
-    setSecondsLeft(CODE_TTL);
-    setSuccess('New QR code generated successfully!');
+    setSuccess('QR code is now static and does not need to be regenerated!');
     setTimeout(() => setSuccess(null), 3000);
   };
 
-  // Countdown timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          generateNewQRCode();
-          return CODE_TTL;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [qrNonce]);
-
-  // Ensure QR code is valid on mount
-  useEffect(() => {
-    if (!qrNonce || qrNonce.length < 10) {
-      setQrNonce(generateNonce(16));
-      setIssuedAt(new Date());
-      setSecondsLeft(CODE_TTL);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Save QR code to backend (optional - for tracking)
+  // Optional function if save was used elsewhere, left empty to avoid errors
   const saveQRCode = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Optionally save QR code info to backend
-      // This allows tracking which QR codes were generated
-      const response = await axiosInstance.post('qrcode/generate', {
-        branchId: branchId,
-        nonce: qrNonce,
-        issuedAt: issuedAt.toISOString(),
-        expiresAt: new Date(issuedAt.getTime() + CODE_TTL * 1000).toISOString()
-      });
-
-      if (response.data.success) {
-        setSuccess('QR code saved successfully!');
-        setTimeout(() => setSuccess(null), 3000);
-      }
-    } catch (err) {
-      // If endpoint doesn't exist, that's okay - QR code still works
-      // Silently fail - endpoint is optional
-    } finally {
-      setLoading(false);
-    }
+    setSuccess('QR code is now static!');
+    setTimeout(() => setSuccess(null), 3000);
   };
 
   // Download QR code as image
@@ -150,7 +78,7 @@ const AdminGlobalQRCode = () => {
             <img src="${document.getElementById('qr-code-canvas')?.toDataURL('image/png')}" alt="QR Code" style="width: 400px; height: 400px;" />
           </div>
           <div class="info">
-            <p><strong>Valid until:</strong> ${formattedExpiryDate}</p>
+            <p><strong>Status:</strong> Static QR Code</p>
             <p>Members can scan this QR code to check in</p>
           </div>
         </body>
@@ -159,9 +87,6 @@ const AdminGlobalQRCode = () => {
     printWindow.document.close();
     printWindow.print();
   };
-
-  // Format countdown text
-  const countdownText = `${String(Math.floor(secondsLeft / 3600)).padStart(2, "0")}:${String(Math.floor((secondsLeft % 3600) / 60)).padStart(2, "0")}:${String(secondsLeft % 60).padStart(2, "0")}`;
 
   return (
     <div className="container-fluid p-4">
@@ -175,7 +100,7 @@ const AdminGlobalQRCode = () => {
             <small className="text-white-50">Display this QR code at the gym entrance</small>
           </div>
           <Badge bg="light" text="dark" className="fs-6 px-3 py-2">
-            {countdownText}
+            Static Link
           </Badge>
         </Card.Header>
         <Card.Body>
@@ -194,7 +119,7 @@ const AdminGlobalQRCode = () => {
             {/* QR Code Display */}
             <div className="col-md-6 text-center mb-4">
               <div className="bg-white p-4 rounded-3 border shadow-sm d-inline-block">
-                {qrValue && qrValue.length > 50 ? (
+                {qrValue ? (
                   <QRCodeCanvas 
                     id="qr-code-canvas"
                     value={qrValue} 
@@ -214,11 +139,8 @@ const AdminGlobalQRCode = () => {
               
               <div className="mt-3">
                 <h6 className="fw-bold">{branchName}</h6>
-                <p className="text-muted mb-2">
-                  <small>Issued: {formattedIssueDate}</small>
-                </p>
                 <p className="text-muted mb-3">
-                  <small>Expires: {formattedExpiryDate}</small>
+                  <small>Static QR Code</small>
                 </p>
                 
                 <div className="d-flex gap-2 justify-content-center flex-wrap">
@@ -259,27 +181,21 @@ const AdminGlobalQRCode = () => {
                   </p>
                 </div>
                 <div className="list-group-item">
-                  <h6 className="mb-1">2. Staff Scanning</h6>
+                  <h6 className="mb-1">2. Scanning & Attendance</h6>
                   <p className="mb-0 text-muted small">
-                    Your staff (Members, Receptionists, General Trainers, Personal Trainers) will scan this QR code using their mobile app to check in
+                    Members or Staff can scan this QR code using their default phone camera. It will open a secure web link where they can enter their registered Phone Number and mark their check-in/out.
                   </p>
                 </div>
                 <div className="list-group-item">
-                  <h6 className="mb-1">3. Admin Cannot Check-in</h6>
+                  <h6 className="mb-1">3. Static Link</h6>
                   <p className="mb-0 text-muted small">
-                    <strong>Note:</strong> Admin cannot check-in themselves. Only staff members assigned to you can scan and check-in.
+                    This QR code is static. You can print it once and paste it anywhere in the gym.
                   </p>
                 </div>
                 <div className="list-group-item">
-                  <h6 className="mb-1">4. Auto Refresh</h6>
+                  <h6 className="mb-1">4. Secure Connectivity</h6>
                   <p className="mb-0 text-muted small">
-                    QR code automatically refreshes every 15 seconds for security. You can also manually generate a new code.
-                  </p>
-                </div>
-                <div className="list-group-item">
-                  <h6 className="mb-1">5. Security</h6>
-                  <p className="mb-0 text-muted small">
-                    Each QR code contains your Admin ID. Only staff assigned to you can successfully check-in using this QR code.
+                    All check-ins performed via this QR code are securely recorded and will instantly reflect in your Attendance Reports.
                   </p>
                 </div>
               </div>
@@ -297,15 +213,9 @@ const AdminGlobalQRCode = () => {
                       <td>{branchName}</td>
                     </tr>
                     <tr>
-                      <td><strong>Nonce:</strong></td>
-                      <td><code className="small">{qrNonce}</code></td>
-                    </tr>
-                    <tr>
                       <td><strong>Status:</strong></td>
                       <td>
-                        <Badge bg={secondsLeft > 5 ? "success" : "warning"}>
-                          {secondsLeft > 5 ? "Active" : "Expiring Soon"}
-                        </Badge>
+                        <Badge bg="success">Active (Static)</Badge>
                       </td>
                     </tr>
                   </tbody>

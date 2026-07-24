@@ -419,7 +419,7 @@ const exportMembersToPDF = async () => {
 
       if (response?.data?.success) {
         if (modalType === "add") {
-          setAdmins([...admins, response.data.user]);
+          setAdmins([response.data.user, ...admins]);
           alert("New admin added successfully!");
         } else {
           const updatedAdmins = admins.map((admin) =>

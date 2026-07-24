@@ -537,7 +537,7 @@ const WalkInRegistration = () => {
                                 id: getNextId(),
                                 ...formData
                               };
-                              setWalkIns(prev => [...prev, newWalkIn]);
+                              setWalkIns(prev => [newWalkIn, ...prev]);
                               alert('New walk-in registration added successfully!');
                               
                               if (convertedLeadId) {

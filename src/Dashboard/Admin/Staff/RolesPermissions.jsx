@@ -283,7 +283,7 @@ const ManageRoles = () => {
                             role_description: description,
                             permissions_json: permissions
                           };
-                          setRoles(prev => [...prev, newRole]);
+                          setRoles(prev => [newRole, ...prev]);
                           alert("Role created successfully!");
                         }
 

@@ -187,31 +187,8 @@ const LendingPage = () => {
 
     setPurchaseFormData(prev => ({
       ...prev,
-      selectedPlan: selectedName,
-      billingDuration: selectedPlanObj ? selectedPlanObj.duration : 'Monthly'
+      selectedPlan: selectedName
     }));
-  };
-
-  const calculateDiscountedPrice = (basePrice, planDuration, targetDuration, quarterlyDiscount = 5, yearlyDiscount = 15) => {
-    let monthlyPrice = basePrice;
-    if (planDuration === 'Yearly') {
-      monthlyPrice = basePrice / 12;
-    } else if (planDuration === 'Quarterly') {
-      monthlyPrice = basePrice / 3;
-    }
-
-    if (targetDuration === 'Monthly') {
-      return Math.round(monthlyPrice);
-    } else if (targetDuration === 'Quarterly') {
-      const total = monthlyPrice * 3;
-      const discount = (total * quarterlyDiscount) / 100;
-      return Math.round(total - discount);
-    } else if (targetDuration === 'Yearly') {
-      const total = monthlyPrice * 12;
-      const discount = (total * yearlyDiscount) / 100;
-      return Math.round(total - discount);
-    }
-    return Math.round(basePrice);
   };
 
   const getSelectedPlanPrice = () => {
@@ -226,19 +203,13 @@ const LendingPage = () => {
     const matched = allPlans.find(p => p.name.toLowerCase() === purchaseFormData.selectedPlan.toLowerCase());
     if (!matched) return 0;
 
-    // If plan has its own discountPercent (Yearly plans), apply it directly
+    // Apply native discountPercent if present
     const planDiscount = matched.discountPercent || 0;
-    if (matched.duration === 'Yearly' && planDiscount > 0) {
+    if (planDiscount > 0) {
       return Math.round(matched.price - (matched.price * planDiscount / 100));
     }
 
-    return calculateDiscountedPrice(
-      matched.price,
-      matched.duration,
-      purchaseFormData.billingDuration,
-      automationSettings.quarterlyDiscount,
-      automationSettings.yearlyDiscount
-    );
+    return Math.round(matched.price);
   };
 
   // Simplified purchase handler with simulated payment gateway support
@@ -262,7 +233,6 @@ const LendingPage = () => {
       formData.append("email", purchaseFormData.email);
       formData.append("phone", purchaseFormData.phone);
       formData.append("password", purchaseFormData.password);
-      formData.append("billingDuration", purchaseFormData.billingDuration);
       formData.append("startDate", purchaseFormData.startDate);
       formData.append("gstNumber", purchaseFormData.gstNumber || "");
       formData.append("city", purchaseFormData.city);
@@ -1417,100 +1387,7 @@ const LendingPage = () => {
                         }}
                       />
                     </div>
-                    <div className="mb-4">
-                      <label className="form-label d-block mb-2" style={{ color: '#2d3748', fontSize: '0.9rem', fontWeight: '600' }}>
-                        Billing Duration
-                      </label>
-                      <div className="d-flex gap-4 flex-wrap">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="billingDuration"
-                            id="monthly"
-                            value="Monthly"
-                            checked={purchaseFormData.billingDuration === 'Monthly'}
-                            onChange={handlePurchaseFormChange}
-                            style={{
-                              width: '18px',
-                              height: '18px',
-                              cursor: 'pointer',
-                              marginTop: '2px'
-                            }}
-                          />
-                          <label
-                            className="form-check-label ms-2"
-                            htmlFor="monthly"
-                            style={{
-                              fontSize: '0.95rem',
-                              color: '#2d3748',
-                              cursor: 'pointer',
-                              fontWeight: '400'
-                            }}
-                          >
-                            Monthly
-                          </label>
-                        </div>
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="billingDuration"
-                            id="quarterly"
-                            value="Quarterly"
-                            checked={purchaseFormData.billingDuration === 'Quarterly'}
-                            onChange={handlePurchaseFormChange}
-                            style={{
-                              width: '18px',
-                              height: '18px',
-                              cursor: 'pointer',
-                              marginTop: '2px'
-                            }}
-                          />
-                          <label
-                            className="form-check-label ms-2"
-                            htmlFor="quarterly"
-                            style={{
-                              fontSize: '0.95rem',
-                              color: '#2d3748',
-                              cursor: 'pointer',
-                              fontWeight: '400'
-                            }}
-                          >
-                            Quarterly <span className="badge bg-primary text-white small ms-1" style={{ fontSize: '10px' }}>Save {automationSettings.quarterlyDiscount}%</span>
-                          </label>
-                        </div>
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="billingDuration"
-                            id="yearly"
-                            value="Yearly"
-                            checked={purchaseFormData.billingDuration === 'Yearly'}
-                            onChange={handlePurchaseFormChange}
-                            style={{
-                              width: '18px',
-                              height: '18px',
-                              cursor: 'pointer',
-                              marginTop: '2px'
-                            }}
-                          />
-                          <label
-                            className="form-check-label ms-2"
-                            htmlFor="yearly"
-                            style={{
-                              fontSize: '0.95rem',
-                              color: '#2d3748',
-                              cursor: 'pointer',
-                              fontWeight: '400'
-                            }}
-                          >
-                            Yearly <span className="badge bg-success text-white small ms-1" style={{ fontSize: '10px' }}>Save {automationSettings.yearlyDiscount}%</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
+
                     <div className="mb-4">
                       <div className="d-flex align-items-center justify-content-between mb-3">
                         <label className="form-label mb-0" style={{ color: '#2d3748', fontSize: '0.9rem', fontWeight: '600' }}>
@@ -1581,10 +1458,7 @@ const LendingPage = () => {
                         <span className="text-muted">Plan Selected:</span>
                         <span className="fw-semibold text-dark">{purchaseFormData.selectedPlan}</span>
                       </div>
-                      <div className="d-flex justify-content-between mb-1">
-                        <span className="text-muted">Billing Cycle:</span>
-                        <span className="fw-semibold text-dark">{purchaseFormData.billingDuration}</span>
-                      </div>
+
                       <div className="d-flex justify-content-between border-top pt-2 mt-2" style={{ fontSize: '1.05rem' }}>
                         <span className="fw-bold text-dark">Amount to Pay:</span>
                         <span className="fw-bold text-primary">

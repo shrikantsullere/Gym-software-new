@@ -270,7 +270,7 @@ const DutyRoster = () => {
         approved_at: null,
         status: 'Scheduled'
       };
-      setRecords(prev => [...prev, newRecord]);
+      setRecords(prev => [newRecord, ...prev]);
       alert('New shift allocation added successfully!');
     } else if (modalType === 'edit') {
       const staffId = parseInt(formData.get('staff_id'));

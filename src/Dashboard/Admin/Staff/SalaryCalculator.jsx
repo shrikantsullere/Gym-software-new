@@ -599,7 +599,7 @@ const SalaryCalculator = () => {
             staff_phone: staffInfo ? staffInfo.phone : null,
           };
 
-          setSalaries((prev) => [...prev, newSalary]);
+          setSalaries((prev) => [newSalary, ...prev]);
           closeModal();
           alert("Salary record added successfully!");
         } else {

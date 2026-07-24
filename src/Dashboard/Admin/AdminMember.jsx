@@ -563,7 +563,7 @@ const AdminMember = () => {
       );
 
       if (response.data) {
-        const createdMemberId = response.data.member?.id || response.data.data?.memberId;
+        const createdMemberId = response.data.member?.memberId || response.data.member?.id || response.data.data?.memberId;
 
         // If trainer is selected, assign it
         if (newMember.trainerId && createdMemberId) {

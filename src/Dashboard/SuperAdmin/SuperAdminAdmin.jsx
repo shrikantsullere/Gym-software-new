@@ -875,7 +875,7 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
       // 1. Auto-determine the Subscription Tier (Basic, Growth, Premium)
       let subPlan = "Basic";
       const lowPlan = selectedPlan.name.toLowerCase();
-      if (lowPlan.includes("trial")) subPlan = "Trial";
+      if (lowPlan.includes("trial") || lowPlan.includes("free") || selectedPlan.price == 0) subPlan = "7-Day Trial";
       else if (lowPlan.includes("premium") || lowPlan.includes("pro")) subPlan = "Premium";
       else if (lowPlan.includes("growth")) subPlan = "Growth";
 

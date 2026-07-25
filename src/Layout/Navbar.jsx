@@ -275,17 +275,19 @@ const Navbar = ({ toggleSidebar }) => {
       localStorage.removeItem('user');
       localStorage.removeItem('userData');
       localStorage.removeItem('isAuthenticated');
+      sessionStorage.clear();
 
       // Close dropdown
       setDropdownOpen(false);
 
-      // Redirect to login page
-      navigate('/login');
+      // Redirect with a full page reload to clear any React/Redux/Query in-memory state
+      window.location.href = '/login';
     } catch (error) {
       console.error('Error during logout:', error);
       // Even if there's an error, clear localStorage and redirect
       localStorage.clear();
-      navigate('/login');
+      sessionStorage.clear();
+      window.location.href = '/login';
     }
   };
 

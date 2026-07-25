@@ -451,19 +451,21 @@ const Navbar = ({ toggleSidebar }) => {
                           </small>
                         </div>
                         <p className="mb-1 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "0.88rem", lineHeight: "1.4" }}>
-                          {n.message && n.message.includes("📎 Attachment:") ? (
-                            <>
-                              {n.message.split("📎 Attachment:")[0]}
-                              <a 
-                                href={n.message.split("📎 Attachment:")[1]?.trim()} 
-                                target="_blank" rel="noopener noreferrer" 
-                                className="badge bg-info text-white text-decoration-none mt-1 d-inline-block px-2 py-1"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                📎 View Attachment
-                              </a>
-                            </>
-                          ) : n.message}
+                          {n.message ? (
+                            n.message.includes("📎 Attachment:") ? (
+                              <>
+                                {n.message.split("📎 Attachment:")[0].replace(/You can now login at http:\/\/localhost:5173\/login\.?/g, '').replace(/\\n/g, '\n').trim()}
+                                <a 
+                                  href={n.message.split("📎 Attachment:")[1]?.trim()} 
+                                  target="_blank" rel="noopener noreferrer" 
+                                  className="badge bg-info text-white text-decoration-none mt-1 d-inline-block px-2 py-1"
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  📎 View Attachment
+                                </a>
+                              </>
+                            ) : n.message.replace(/You can now login at http:\/\/localhost:5173\/login\.?/g, '').replace(/\\n/g, '\n').trim()
+                          ) : ""}
                         </p>
                         <div className="text-end">
                           <small className="text-primary" style={{ fontSize: "0.7rem" }}>✓ Click to dismiss</small>

@@ -102,6 +102,7 @@ import AttendanceReport from "./Dashboard/Admin/Reports/AttendanceReport";
 import LendingPage from "./Website/LendingPage";
 import PrivacyPolicy from "./Website/PrivacyPolicy";
 import TermsOfService from "./Website/TermsOfService";
+import AboutUs from "./Website/AboutUs";
 import PersonalTrainerSessionBookings from "./Dashboard/Admin/Bookings/PersonalTrainerSessionBookings";
 import CreatePlan from "./Dashboard/Admin/CreatePlan";
 import ViewPlan from "./Dashboard/Member/ViewPlan";
@@ -284,6 +285,7 @@ function App() {
     location.pathname === "/login" ||
     location.pathname === "/signup" ||
     location.pathname === "/forgot-password" ||
+    location.pathname === "/about-us" ||
     location.pathname === "/privacy-policy" ||
     location.pathname === "/terms-of-service" ||
     location.pathname.startsWith("/public-attendance") ||
@@ -299,6 +301,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/" element={<LendingPage />} />
+          <Route path="/about-us" element={<AboutUs />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/public-attendance" element={<PublicAttendance />} />

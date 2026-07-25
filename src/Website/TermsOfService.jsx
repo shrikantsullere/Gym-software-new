@@ -14,7 +14,7 @@ const TermsOfService = () => {
           </Link>
           <div className="d-flex align-items-center gap-2">
             <FaFileSignature className="text-primary fs-4" />
-            <span className="fw-bold text-dark fs-5">Speed Fitness SaaS</span>
+            <span className="fw-bold text-dark fs-5">Gymsoft</span>
           </div>
         </div>
       </header>
@@ -46,7 +46,7 @@ const TermsOfService = () => {
           <div className="col-lg-10 col-xl-8">
             <div className="bg-white rounded-4 p-4 p-md-5 shadow-sm border border-light">
               <p className="text-muted mb-4 lead">
-                Welcome to Speed Fitness SaaS Platform. By registering an account, purchasing a subscription license, or using our dashboard features, you agree to comply with and be bound by the following Terms of Service. Please read them carefully.
+                Welcome to Gymsoft SaaS Platform. By registering an account, purchasing a subscription license, or using our dashboard features, you agree to comply with and be bound by the following Terms of Service. Please read them carefully.
               </p>
 
               {/* Section 1 */}
@@ -56,7 +56,7 @@ const TermsOfService = () => {
                   1. Acceptance & Agreement
                 </h4>
                 <p className="text-muted">
-                  These Terms of Service ("Terms") govern your access to and use of the Speed Fitness Gym Management SaaS software, dashboard platforms, and SMS/WhatsApp integrations. By using our Services, you represent that you are at least 18 years old and possess the legal authority to bind your business organization.
+                  These Terms of Service ("Terms") govern your access to and use of the Gymsoft Gym Management SaaS software, dashboard platforms, and SMS/WhatsApp integrations. By using our Services, you represent that you are at least 18 years old and possess the legal authority to bind your business organization.
                 </p>
               </div>
 
@@ -102,7 +102,7 @@ const TermsOfService = () => {
                   4. Limitation of Liability
                 </h4>
                 <p className="text-muted">
-                  The SaaS Platform and its integrations are provided on an "as-is" and "as-available" basis. Speed Fitness SaaS does not guarantee 100% uninterrupted uptime or immediate message delivery via third-party telecom operators or Meta Cloud servers. In no event shall we be liable for lost profits, database corruption, or secondary operational delays.
+                  The SaaS Platform and its integrations are provided on an "as-is" and "as-available" basis. Gymsoft SaaS does not guarantee 100% uninterrupted uptime or immediate message delivery via third-party telecom operators or Meta Cloud servers. In no event shall we be liable for lost profits, database corruption, or secondary operational delays.
                 </p>
               </div>
 
@@ -116,7 +116,7 @@ const TermsOfService = () => {
                   For subscription inquiries, technical troubleshooting, billing discrepancies, or API settings assistance, please contact our support department:
                 </p>
                 <p className="text-primary fw-semibold mt-2">
-                  Email: support@speedfitness-saas.com
+                  Email: raj@gymsoftware.space
                 </p>
               </div>
             </div>
@@ -126,7 +126,7 @@ const TermsOfService = () => {
 
       {/* Mini Footer */}
       <footer className="bg-white border-top py-4 text-center text-muted small">
-        <p className="mb-0">&copy; {new Date().getFullYear()} Speed Fitness SaaS. All rights reserved.</p>
+        <p className="mb-0">&copy; {new Date().getFullYear()} Gymsoft. All rights reserved.</p>
       </footer>
     </div>
   );

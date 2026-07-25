@@ -1002,7 +1002,7 @@ const LendingPage = () => {
           >
             <div className="cta-badge">Ready to get started?</div>
             <h2>Transform Your Gym <span className="highlight">Today</span></h2>
-            <p>Join thousands of gym owners who have already streamlined their operations with FitManager Pro.</p>
+            <p>Join thousands of gym owners who have already streamlined their operations with Gymsoft.</p>
             <div className="cta-buttons">
               <Button variant="light" size="lg" className="mr-3" onClick={() => handlePurchaseClick('7-Day Free Trial')}>
                 Start Free Trial
@@ -1019,71 +1019,63 @@ const LendingPage = () => {
       {/* Footer */}
       <footer id="contact" className="footer">
         <Container>
-          <Row>
-            <Col lg={4} md={6}>
+          <Row className="justify-content-between">
+            <Col lg={4} md={6} className="mb-4 mb-lg-0">
               <div className="footer-brand">
                 <div className="brand-container">
-                  <div className="brand-icon-wrapper">
-                    <FaDumbbell className="brand-icon" />
+                  <div className="brand-icon-wrapper" style={{ background: 'transparent' }}>
+                    <img src="/logo.png" alt="Gymsoft Logo" style={{ height: '40px', width: 'auto' }} />
                   </div>
-                  <span>FitManager Pro</span>
+                  <span>Gymsoft</span>
                 </div>
                 <p>The all-in-one gym management solution for modern fitness centers.</p>
+                <div className="contact-info mt-4 text-start">
+                  <h5 className="text-white mb-2">Contact Us</h5>
+                  <p className="mb-1" style={{ color: '#a0aec0' }}><strong>Gymsoft</strong></p>
+                  <p className="mb-1" style={{ color: '#a0aec0' }}>DPT 808 B, F-79 & 80, DLF Prime Tower, Pocket F,</p>
+                  <p className="mb-1" style={{ color: '#a0aec0' }}>Okhla Phase 1, Okhla Industrial Estate,</p>
+                  <p className="mb-3" style={{ color: '#a0aec0' }}>South East Delhi, Delhi, 110020</p>
+                  <p className="mb-3" style={{ color: '#a0aec0' }}>
+                    Email Id – <a href="mailto:support@gymsoftware.space" style={{ color: '#63b3ed', textDecoration: 'none' }}>support@gymsoftware.space</a>
+                  </p>
+                </div>
                 <div className="social-icons">
-                  <a href="#"><FaFacebook /></a>
-                  <a href="#"><FaTwitter /></a>
-                  <a href="#"><FaInstagram /></a>
-                  <a href="#"><FaYoutube /></a>
+                  <a href="https://www.facebook.com/people/Gymsoft/61591561408740/" target="_blank" rel="noopener noreferrer"><FaFacebook /></a>
+                  <a href="https://www.instagram.com/gyms0ft/" target="_blank" rel="noopener noreferrer"><FaInstagram /></a>
+                  <a href="https://www.youtube.com/@Gymsoft-c7e" target="_blank" rel="noopener noreferrer"><FaYoutube /></a>
                 </div>
               </div>
             </Col>
-            <Col lg={2} md={6}>
+            <Col lg={2} md={4} className="mb-4 mb-md-0">
               <div className="footer-links">
                 <h5>Product</h5>
                 <ul>
-                  <li><a href="#">Features</a></li>
-                  <li><a href="#">Pricing</a></li>
-                  <li><a href="#">Integrations</a></li>
-                  <li><a href="#">Updates</a></li>
+                  <li><a href="#features">Features</a></li>
+                  <li><a href="#pricing">Pricing</a></li>
                 </ul>
               </div>
             </Col>
-            <Col lg={2} md={6}>
+            <Col lg={2} md={4} className="mb-4 mb-md-0">
               <div className="footer-links">
                 <h5>Company</h5>
                 <ul>
-                  <li><a href="#">About Us</a></li>
-                  <li><a href="#">Careers</a></li>
-                  <li><a href="#">Blog</a></li>
-                  <li><a href="#">Contact</a></li>
+                  <li><Link to="/about-us">About Us</Link></li>
+                  <li><a href="#contact">Contact Us</a></li>
                 </ul>
               </div>
             </Col>
-            <Col lg={2} md={6}>
-              <div className="footer-links">
-                <h5>Support</h5>
-                <ul>
-                  <li><a href="#">Help Center</a></li>
-                  <li><a href="#">Documentation</a></li>
-                  <li><a href="#">Community</a></li>
-                  <li><a href="#">Status</a></li>
-                </ul>
-              </div>
-            </Col>
-            <Col lg={2} md={6}>
+            <Col lg={2} md={4}>
               <div className="footer-links">
                 <h5>Legal</h5>
                 <ul>
                   <li><Link to="/privacy-policy">Privacy Policy</Link></li>
                   <li><Link to="/terms-of-service">Terms of Service</Link></li>
-                  <li><a href="#">Cookie Policy</a></li>
-                  <li><a href="#">Security</a></li>
                 </ul>
               </div>
             </Col>
           </Row>
-          <div className="footer-bottom">
-            <p>&copy; {new Date().getFullYear()} FitManager Pro. All rights reserved.</p>
+          <div className="footer-bottom mt-4">
+            <p>&copy; {new Date().getFullYear()} Gymsoft. All rights reserved.</p>
           </div>
         </Container>
       </footer>

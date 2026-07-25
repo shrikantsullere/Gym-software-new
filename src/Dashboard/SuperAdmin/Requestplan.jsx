@@ -94,13 +94,20 @@ const RequestedPlans = () => {
             
             // Calculate expiry date based on billingDuration / selectedPlan
             let expiryD = null;
+            let displayBilling = item.billingDuration || "Monthly";
+
             if (startD) {
               let durationDays = 30; // default Monthly
-              if (item.selectedPlan && item.selectedPlan.toLowerCase().includes("trial")) {
+              
+              const planNameLower = item.selectedPlan ? item.selectedPlan.toLowerCase() : "";
+              
+              if (planNameLower.includes("trial") || planNameLower.includes("7 day") || planNameLower.includes("7-day")) {
                 durationDays = 7;
+                displayBilling = "7 Days";
               } else if (item.billingDuration && item.billingDuration.toLowerCase().includes("year")) {
                 durationDays = 365;
               }
+              
               expiryD = new Date(startD);
               expiryD.setDate(expiryD.getDate() + durationDays);
             }
@@ -114,7 +121,7 @@ const RequestedPlans = () => {
               email: item.email,
               plan: item.selectedPlan,
               amount: item.amount || 0,
-              billing: item.billingDuration,
+              billing: displayBilling,
               purchaseDate: new Date(item.purchaseDate).toLocaleDateString('en-GB'),
               startDate: startD ? startD.toLocaleDateString('en-GB') : "N/A",
               expiryDate: expiryD ? expiryD.toLocaleDateString('en-GB') : "N/A",

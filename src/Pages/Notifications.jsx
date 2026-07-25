@@ -85,20 +85,22 @@ const Notifications = () => {
                         <small className="text-muted fw-medium">{new Date(n.createdAt).toLocaleString()}</small>
                       </div>
                       <p className="mb-3 text-dark" style={{ whiteSpace: "pre-line", wordBreak: 'break-word', fontSize: "1rem", lineHeight: "1.5" }}>
-                        {n.message && n.message.includes("📎 Attachment:") ? (
-                          <>
-                            {n.message.split("📎 Attachment:")[0]}
-                            <br />
-                            <a 
-                              href={n.message.split("📎 Attachment:")[1]?.trim()} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="btn btn-sm btn-info text-white mt-2"
-                            >
-                              📎 View Attachment
-                            </a>
-                          </>
-                        ) : n.message}
+                        {n.message ? (
+                          n.message.includes("📎 Attachment:") ? (
+                            <>
+                              {n.message.split("📎 Attachment:")[0].replace(/You can now login at http:\/\/localhost:5173\/login\.?/g, '').replace(/\\n/g, '\n').trim()}
+                              <br />
+                              <a 
+                                href={n.message.split("📎 Attachment:")[1]?.trim()} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="btn btn-sm btn-info text-white mt-2"
+                              >
+                                📎 View Attachment
+                              </a>
+                            </>
+                          ) : n.message.replace(/You can now login at http:\/\/localhost:5173\/login\.?/g, '').replace(/\\n/g, '\n').trim()
+                        ) : ""}
                       </p>
                       <div className="text-end">
                         {n.status === 'UNREAD' ? (

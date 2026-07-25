@@ -786,92 +786,144 @@ const Payments = () => {
         </div>
       )}
 
-      {/* EDIT TRANSACTION MODAL - COMPACT SIZE */}
+      {/* EDIT TRANSACTION MODAL - STRUCTURED LIKE VIEW MODAL */}
       {showEditModal && selectedTransaction && (
         <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered modal-compact">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
-              <div className="modal-header py-2">
-                <h5 className="modal-title">Edit Transaction</h5>
+              <div className="modal-header py-3 bg-light">
+                <div>
+                  <h5 className="modal-title fw-bold text-dark mb-0">Edit Transaction Details</h5>
+                  <small className="text-muted">Modify payment information</small>
+                </div>
                 <button className="btn-close" onClick={() => setShowEditModal(false)}></button>
               </div>
               <form onSubmit={handleEditSubmit}>
-                <div className="modal-body py-3">
-                  <div className="row g-2">
-                    <div className="col-12">
-                      <label className="form-label fw-semibold small">Transaction ID</label>
-                      <input 
-                        type="text" 
-                        className="form-control form-control-sm" 
-                        value={editForm.id} 
-                        disabled
-                      />
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label fw-semibold small">Customer Name</label>
-                      <input 
-                        type="text" 
-                        className="form-control form-control-sm" 
-                        value={editForm.customer} 
-                        onChange={(e) => setEditForm({...editForm, customer: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label fw-semibold small">Payment Method</label>
-                      <select 
-                        className="form-select form-select-sm" 
-                        value={editForm.method} 
-                        onChange={(e) => setEditForm({...editForm, method: e.target.value})}
-                        required
-                      >
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="PayPal">PayPal</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Digital Wallet">Digital Wallet</option>
-                      </select>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label fw-semibold small">Amount</label>
-                      <input 
-                        type="text" 
-                        className="form-control form-control-sm" 
-                        value={editForm.amount} 
-                        onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label fw-semibold small">Status</label>
-                      <select 
-                        className="form-select form-select-sm" 
-                        value={editForm.status} 
-                        onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                        required
-                      >
-                        <option value="Success">Success</option>
-                        <option value="Failed">Failed</option>
-                        <option value="Pending">Pending</option>
-                      </select>
-                    </div>
-                    {editForm.status === "Failed" && (
-                      <div className="col-12">
-                        <label className="form-label fw-semibold small">Reason</label>
-                        <input 
-                          type="text" 
-                          className="form-control form-control-sm" 
-                          value={editForm.reason} 
-                          onChange={(e) => setEditForm({...editForm, reason: e.target.value})}
-                          placeholder="Enter reason for failure"
-                        />
+                <div className="modal-body py-4">
+                  {/* SECTION 1: CUSTOMER & GYM INFO */}
+                  <h6 className="fw-bold text-primary mb-2">Customer & Gym Information</h6>
+                  <div className="card border-0 bg-light mb-3">
+                    <div className="card-body p-3">
+                      <div className="row g-3">
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Gym / Customer Name</label>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm mt-1" 
+                            value={editForm.customer} 
+                            onChange={(e) => setEditForm({...editForm, customer: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Email Address</label>
+                          <p className="fw-bold mb-0 mt-1">{selectedTransaction.email || "N/A"}</p>
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Phone / Contact</label>
+                          <p className="fw-bold mb-0 mt-1">{selectedTransaction.phone || "N/A"}</p>
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">GSTIN</label>
+                          <p className="fw-bold mb-0 mt-1">{selectedTransaction.gstNumber || "N/A"}</p>
+                        </div>
                       </div>
-                    )}
+                    </div>
+                  </div>
+
+                  {/* SECTION 2: SUBSCRIPTION & PLAN INFO */}
+                  <h6 className="fw-bold text-primary mb-2">Subscription & Plan Details</h6>
+                  <div className="card border-0 bg-light mb-3">
+                    <div className="card-body p-3">
+                      <div className="row g-3">
+                        <div className="col-12 col-md-6">
+                          <label className="form-label text-muted small mb-0">Selected Plan</label>
+                          <p className="fw-bold mb-0 mt-1">{selectedTransaction.plan || "N/A"}</p>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <label className="form-label text-muted small mb-0">Billing Duration</label>
+                          <p className="fw-bold mb-0 mt-1">{selectedTransaction.billingDuration || "N/A"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION 3: PAYMENT & TRANSACTION INFO */}
+                  <h6 className="fw-bold text-primary mb-2">Payment Details</h6>
+                  <div className="card border-0 bg-light mb-2">
+                    <div className="card-body p-3">
+                      <div className="row g-3">
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Transaction ID</label>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm mt-1" 
+                            value={editForm.id} 
+                            disabled
+                          />
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Date</label>
+                          <p className="fw-bold mb-0 mt-1">{selectedTransaction.date}</p>
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Payment Method</label>
+                          <select 
+                            className="form-select form-select-sm mt-1" 
+                            value={editForm.method} 
+                            onChange={(e) => setEditForm({...editForm, method: e.target.value})}
+                            required
+                          >
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Digital Wallet">Digital Wallet</option>
+                            <option value="UPI">UPI</option>
+                          </select>
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Total Amount</label>
+                          <input 
+                            type="text" 
+                            className="form-control form-control-sm mt-1" 
+                            value={editForm.amount} 
+                            onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div className="col-12 col-md-4">
+                          <label className="form-label text-muted small mb-0">Status</label>
+                          <select 
+                            className="form-select form-select-sm mt-1" 
+                            value={editForm.status} 
+                            onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+                            required
+                          >
+                            <option value="Success">Success</option>
+                            <option value="Failed">Failed</option>
+                            <option value="Pending">Pending</option>
+                          </select>
+                        </div>
+                        {editForm.status === "Failed" && (
+                          <div className="col-12">
+                            <label className="form-label text-muted small mb-0">Reason</label>
+                            <input 
+                              type="text" 
+                              className="form-control form-control-sm mt-1 text-danger" 
+                              value={editForm.reason} 
+                              onChange={(e) => setEditForm({...editForm, reason: e.target.value})}
+                              placeholder="Enter reason for failure"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="modal-footer py-2">
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowEditModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-custom btn-sm">Save Changes</button>
+                <div className="modal-footer py-3 d-flex justify-content-end align-items-center bg-white border-top">
+                  <button type="button" className="btn btn-secondary me-2" onClick={() => setShowEditModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-custom px-4">Save Changes</button>
                 </div>
               </form>
             </div>

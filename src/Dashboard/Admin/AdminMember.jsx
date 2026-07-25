@@ -465,7 +465,7 @@ const AdminMember = () => {
           (s) => {
             const roleIdNum = Number(s.roleId);
             const roleStr = (s.roleName || "").toLowerCase();
-            return [3, 5, 6].includes(roleIdNum) || roleStr.includes("trainer") || roleStr.includes("pt") || roleStr.includes("gt");
+            return [5, 6].includes(roleIdNum) || roleStr.includes("trainer") || roleStr === "pt" || roleStr === "gt";
           }
         );
         setAllTrainers(trainers);

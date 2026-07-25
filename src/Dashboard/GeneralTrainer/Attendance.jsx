@@ -20,6 +20,7 @@ const Attendance = () => {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [renderError, setRenderError] = useState(null);
 
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -91,6 +92,24 @@ const Attendance = () => {
       setLoading(false);
     }
   };
+
+  // Safe mapping helper to catch render errors early
+  let safeFiltered = [];
+  try {
+    safeFiltered = attendance.filter((m) => {
+      return (
+        (activeFilters.memberId
+          ? String(m.member_id || "").includes(activeFilters.memberId)
+          : true) &&
+        (activeFilters.memberName
+          ? String(m.name || "").toLowerCase().includes(activeFilters.memberName.toLowerCase())
+          : true) &&
+        (search ? String(m.name || "").toLowerCase().includes(search.toLowerCase()) : true)
+      );
+    });
+  } catch (err) {
+    if (!renderError) setRenderError(err.message);
+  }
 
   // Delete member via API
   const handleDelete = async (id) => {
@@ -169,18 +188,7 @@ const Attendance = () => {
     }
   };
 
-  // Filtered attendance
-  const filteredAttendance = attendance.filter((m) => {
-    return (
-      (activeFilters.memberId
-        ? (m.member_id || "").toString().includes(activeFilters.memberId)
-        : true) &&
-      (activeFilters.memberName
-        ? m.name.toLowerCase().includes(activeFilters.memberName.toLowerCase())
-        : true) &&
-      (search ? m.name.toLowerCase().includes(search.toLowerCase()) : true)
-    );
-  });
+  const filteredAttendance = safeFiltered;
 
   const handleApplyFilter = () => {
     setActiveFilters({
@@ -224,9 +232,9 @@ const Attendance = () => {
       </p>
 
       {/* Error message */}
-      {error && (
+      {(error || renderError) && (
         <Alert variant="danger" className="mb-4">
-          {error}
+          {error || `Render Error: ${renderError}`}
         </Alert>
       )}
 

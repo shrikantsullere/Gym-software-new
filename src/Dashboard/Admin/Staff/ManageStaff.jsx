@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaEye, FaEdit, FaTrashAlt, FaPlus, FaSearch, FaFilter, FaCaretDown } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEdit, FaTrashAlt, FaPlus, FaSearch, FaFilter, FaCaretDown } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import GetAdminId from '../../../Api/GetAdminId';
 import axiosInstance from "../../../Api/axiosInstance";
@@ -23,11 +23,13 @@ const ManageStaff = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
-    password: '',
+    password: '123456',
     role: 'Receptionist',
     gender: 'Male',
     dateOfBirth: '',
@@ -246,7 +248,7 @@ const ManageStaff = () => {
       fullName: '',
       email: '',
       phone: '',
-      password: '',
+      password: '123456',
       role: 'Receptionist',
       gender: 'Male',
       dateOfBirth: '',
@@ -883,28 +885,45 @@ const ManageStaff = () => {
                 ) : (
                   <form onSubmit={(e) => { e.preventDefault(); handleFormSubmit(); }} autoComplete="off">
                     <div className="text-center mb-4">
-                      {profilePreview ? (
-                        <img
-                          src={profilePreview.startsWith('http') ? profilePreview : `${axiosInstance.defaults.baseURL}/${profilePreview}`}
-                          alt="Preview"
-                          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }}
-                        />
-                      ) : (
-                        <div
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto"
-                          style={{
-                            width: '100px',
-                            height: '100px',
-                            fontSize: '2rem',
-                            fontWeight: 'bold',
-                            backgroundColor: getInitialColor(getInitials(formData.fullName)),
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+                        title="Click to upload photo"
+                      >
+                        {profilePreview ? (
+                          <img
+                            src={profilePreview.startsWith('http') || profilePreview.startsWith('data:') || profilePreview.startsWith('blob:') 
+                                  ? profilePreview 
+                                  : `${axiosInstance.defaults.baseURL}/${profilePreview}`}
+                            alt="Preview"
+                            style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }}
+                          />
+                        ) : (
+                          <div
+                            className="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto"
+                            style={{
+                              width: '100px',
+                              height: '100px',
+                              fontSize: '2rem',
+                              fontWeight: 'bold',
+                              backgroundColor: getInitialColor(getInitials(formData.fullName)),
+                            }}
+                          >
+                            {getInitials(formData.fullName)}
+                          </div>
+                        )}
+                        <div 
+                          className="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                          style={{ 
+                            width: '32px', height: '32px', border: '1px solid #ddd',
+                            bottom: '0', right: '0', transform: 'translate(25%, 25%)'
                           }}
                         >
-                          {getInitials(formData.fullName)}
+                          <i className="fas fa-camera text-muted" style={{ fontSize: '14px' }}></i>
                         </div>
-                      )}
+                      </div>
                       {modalType === 'edit' && selectedStaff?.id && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           <span className="badge bg-secondary px-3 py-1">Staff ID: {selectedStaff.id}</span>
                         </div>
                       )}
@@ -948,16 +967,26 @@ const ManageStaff = () => {
                       </div>
                       <div className="col-12 col-md-6">
                         <label className="form-label">Password {modalType === 'add' && <span className="text-danger">*</span>}</label>
-                        <input
-                          type="password"
-                          className="form-control rounded-3"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder={modalType === 'edit' ? "Leave blank to keep current" : ""}
-                          autoComplete="new-password"
-                          required={modalType === 'add'}
-                        />
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className="form-control rounded-start-3"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            placeholder={modalType === 'edit' ? "Leave blank to keep current" : ""}
+                            autoComplete="new-password"
+                            required={modalType === 'add'}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary rounded-end-3 d-flex align-items-center justify-content-center"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{ borderLeft: 'none', padding: '0 12px' }}
+                          >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        </div>
                       </div>
                       <div className="col-12 col-md-6">
                         <label className="form-label">Gender <span className="text-danger">*</span></label>
@@ -981,7 +1010,7 @@ const ManageStaff = () => {
                           onChange={(val) => setFormData(prev => ({ ...prev, dateOfBirth: val }))}
                         />
                       </div>
-                      <div className="col-12">
+                      <div className="col-12" style={{ display: 'none' }}>
                         <label className="form-label">Profile Photo</label>
                         <input
                           type="file"

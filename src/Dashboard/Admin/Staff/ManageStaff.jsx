@@ -23,11 +23,13 @@ const ManageStaff = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
-    password: '',
+    password: '123456',
     role: 'Receptionist',
     gender: 'Male',
     dateOfBirth: '',
@@ -246,7 +248,7 @@ const ManageStaff = () => {
       fullName: '',
       email: '',
       phone: '',
-      password: '',
+      password: '123456',
       role: 'Receptionist',
       gender: 'Male',
       dateOfBirth: '',
@@ -890,7 +892,9 @@ const ManageStaff = () => {
                       >
                         {profilePreview ? (
                           <img
-                            src={profilePreview.startsWith('http') ? profilePreview : `${axiosInstance.defaults.baseURL}/${profilePreview}`}
+                            src={profilePreview.startsWith('http') || profilePreview.startsWith('data:') || profilePreview.startsWith('blob:') 
+                                  ? profilePreview 
+                                  : `${axiosInstance.defaults.baseURL}/${profilePreview}`}
                             alt="Preview"
                             style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }}
                           />
@@ -963,16 +967,26 @@ const ManageStaff = () => {
                       </div>
                       <div className="col-12 col-md-6">
                         <label className="form-label">Password {modalType === 'add' && <span className="text-danger">*</span>}</label>
-                        <input
-                          type="password"
-                          className="form-control rounded-3"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder={modalType === 'edit' ? "Leave blank to keep current" : ""}
-                          autoComplete="new-password"
-                          required={modalType === 'add'}
-                        />
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className="form-control rounded-start-3"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            placeholder={modalType === 'edit' ? "Leave blank to keep current" : ""}
+                            autoComplete="new-password"
+                            required={modalType === 'add'}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary rounded-end-3 d-flex align-items-center justify-content-center"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{ borderLeft: 'none', padding: '0 12px' }}
+                          >
+                            <i className={showPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                          </button>
+                        </div>
                       </div>
                       <div className="col-12 col-md-6">
                         <label className="form-label">Gender <span className="text-danger">*</span></label>

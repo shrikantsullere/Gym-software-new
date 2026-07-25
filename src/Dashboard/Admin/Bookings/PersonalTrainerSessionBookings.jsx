@@ -28,6 +28,8 @@ const SessionBookingPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddSessionModal, setShowAddSessionModal] = useState(false);
   const [showViewSessionModal, setShowViewSessionModal] = useState(false);
+  const [showEditSessionModal, setShowEditSessionModal] = useState(false);
+  const [editingSession, setEditingSession] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -345,6 +347,13 @@ const SessionBookingPage = () => {
               </>
             )}
             <button
+              className="btn btn-sm btn-outline-primary"
+              title="Edit"
+              onClick={() => handleEditClick(session)}
+            >
+              <FaEdit />
+            </button>
+            <button
               className="btn btn-outline-danger"
               title="Delete"
               onClick={() => openDeleteModal(session)}
@@ -497,6 +506,13 @@ const SessionBookingPage = () => {
                                   </button>
                                 </>
                               )}
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                title="Edit"
+                                onClick={() => handleEditClick(s)}
+                              >
+                                <FaEdit />
+                              </button>
                               <button
                                 className="btn btn-sm btn-outline-danger"
                                 title="Delete"
@@ -661,6 +677,149 @@ const SessionBookingPage = () => {
                     disabled={loading || trainers.length === 0 || !newSession.trainerId}
                   >
                     {loading ? "Creating..." : "Add Session"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div className="modal-backdrop fade show"></div>
+        </>
+      )}
+
+      {/* Edit Session Modal */}
+      {showEditSessionModal && editingSession && (
+        <>
+          <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header" style={{ backgroundColor: customColor, color: "white" }}>
+                  <h5 className="modal-title">Edit Session</h5>
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
+                    onClick={() => {
+                      setShowEditSessionModal(false);
+                      setEditingSession(null);
+                    }}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  {error && <div className="alert alert-danger">{error}</div>}
+                  <div className="row g-3">
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Session Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingSession.sessionName}
+                        onChange={(e) =>
+                          setEditingSession({ ...editingSession, sessionName: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Trainer *</label>
+                      <select
+                        className="form-select"
+                        value={editingSession.trainerId}
+                        onChange={(e) =>
+                          setEditingSession({ ...editingSession, trainerId: e.target.value })
+                        }
+                        required
+                      >
+                        <option value="">Select trainer</option>
+                        {trainers.map((t) => (
+                          <option key={t.trainerId} value={t.trainerId}>
+                            {t.name} ({getRoleName(t.roleId)})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Date *</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={editingSession.date}
+                        onChange={(e) => setEditingSession({ ...editingSession, date: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Time *</label>
+                      <select
+                        className="form-select"
+                        value={editingSession.time}
+                        onChange={(e) => setEditingSession({ ...editingSession, time: e.target.value })}
+                        required
+                      >
+                        <option value="">Select time</option>
+                        {timeOptions.map((time) => (
+                          <option key={time} value={time}>
+                            {formatTimeDisplay(time)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Duration (minutes)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-control"
+                        value={editingSession.duration}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingSession({ ...editingSession, duration: val === "" ? "" : Number(val) });
+                        }}
+                      />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Capacity (Max Members)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-control"
+                        value={editingSession.capacity}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingSession({ ...editingSession, capacity: val === "" ? "" : Number(val) });
+                        }}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Description *</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={editingSession.description}
+                        onChange={(e) =>
+                          setEditingSession({ ...editingSession, description: e.target.value })
+                        }
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowEditSessionModal(false);
+                      setEditingSession(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn text-white"
+                    style={{ backgroundColor: customColor }}
+                    onClick={handleEditSessionSubmit}
+                    disabled={loading}
+                  >
+                    {loading ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaEye, FaEdit, FaTrashAlt, FaPlus, FaSearch, FaFilter, FaCaretDown } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEdit, FaTrashAlt, FaPlus, FaSearch, FaFilter, FaCaretDown } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import GetAdminId from '../../../Api/GetAdminId';
 import axiosInstance from "../../../Api/axiosInstance";
@@ -984,7 +984,7 @@ const ManageStaff = () => {
                             onClick={() => setShowPassword(!showPassword)}
                             style={{ borderLeft: 'none', padding: '0 12px' }}
                           >
-                            <i className={showPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
                           </button>
                         </div>
                       </div>

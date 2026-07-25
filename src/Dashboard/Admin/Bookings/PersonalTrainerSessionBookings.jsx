@@ -682,7 +682,6 @@ const SessionBookingPage = () => {
               </div>
             </div>
           </div>
-          </div>
           <div className="modal-backdrop fade show"></div>
         </>
       )}

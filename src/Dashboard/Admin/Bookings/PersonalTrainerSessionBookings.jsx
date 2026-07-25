@@ -270,6 +270,78 @@ const SessionBookingPage = () => {
     setShowDeleteModal(true);
   };
 
+  const handleEditClick = (session) => {
+    // Pre-populate edit form with session data
+    const dateStr = session.date
+      ? typeof session.date === "string"
+        ? session.date.split("T")[0]
+        : new Date(session.date).toISOString().split("T")[0]
+      : "";
+    setEditingSession({
+      id: session.id,
+      sessionName: session.sessionName || "",
+      trainerId: String(session.trainerId || ""),
+      date: dateStr,
+      time: session.time || "",
+      duration: session.duration || 60,
+      capacity: session.capacity || 20,
+      description: session.description || "",
+      status: session.status || "Upcoming",
+    });
+    setError(null);
+    setShowEditSessionModal(true);
+  };
+
+  const handleEditSessionSubmit = async () => {
+    if (!editingSession) return;
+    const { id, sessionName, trainerId, date, time, duration, capacity, description, status } = editingSession;
+
+    if (!sessionName || !date || !time || !description) {
+      setError("Please fill all required fields");
+      return;
+    }
+    if (!trainerId || trainerId === "") {
+      setError("Please select a trainer");
+      return;
+    }
+    const numTrainerId = Number(trainerId);
+    if (isNaN(numTrainerId) || numTrainerId <= 0) {
+      setError("Invalid trainer selected");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const payload = {
+        sessionName: sessionName.trim(),
+        trainerId: numTrainerId,
+        date,
+        time,
+        duration: Number(duration),
+        capacity: Number(capacity) || 20,
+        description: description.trim(),
+        status,
+        adminId,
+      };
+
+      const res = await axiosInstance.put(`${BaseUrl}sessions/update/${id}`, payload);
+      if (res.data.success) {
+        await fetchSessions();
+        setShowEditSessionModal(false);
+        setEditingSession(null);
+        alert("✅ Session updated successfully!");
+      } else {
+        setError(res.data.message || "Failed to update session");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      setError(err.response?.data?.message || "Failed to update session");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const timeOptions = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {

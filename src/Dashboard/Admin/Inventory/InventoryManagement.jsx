@@ -74,9 +74,29 @@ const InventoryManagement = () => {
       setInventory(equipRes.data.equipment || []);
 
       if (useAdminRoutes) {
-        const branchesRes = await axios.get(`${BaseUrl}v1/branches/admin/${adminId}`, axiosConfig);
-        if (branchesRes.data && branchesRes.data.branches) {
-          setBranches(branchesRes.data.branches);
+        const branchesRes = await axios.get(`${BaseUrl}branches/by-admin/${adminId}`, axiosConfig);
+        let branchList = [];
+        if (Array.isArray(branchesRes.data)) {
+          branchList = branchesRes.data;
+        } else if (branchesRes.data?.branch) {
+          branchList = [branchesRes.data.branch];
+        } else if (branchesRes.data?.branches && Array.isArray(branchesRes.data.branches)) {
+          branchList = branchesRes.data.branches;
+        } else if (branchesRes.data) {
+          branchList = [branchesRes.data];
+        }
+        
+        const normalized = branchList.map(b => ({
+          id: b.id,
+          name: b.name || `Branch ${b.id}`,
+        }));
+        
+        setBranches(normalized);
+        if (normalized.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            branchId: prev.branchId || normalized[0].id
+          }));
         }
       }
     } catch (err) {
@@ -591,19 +611,7 @@ const InventoryManagement = () => {
                   </Form.Select>
                 </Form.Group>
               </div>
-              {isAdminOrManager && (
-                <div className="col-md-12 mt-2">
-                  <Form.Group>
-                    <Form.Label>Gym Branch <span className="text-danger">*</span></Form.Label>
-                    <Form.Select required value={formData.branchId || ''} onChange={e => setFormData({...formData, branchId: e.target.value})}>
-                      <option value="">Select Branch...</option>
-                      {branches.map(b => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </div>
-              )}
+
               <div className="col-md-4 mt-2">
                 <Form.Group>
                   <Form.Label>Quantity <span className="text-danger">*</span></Form.Label>
@@ -718,19 +726,7 @@ const InventoryManagement = () => {
                   </Form.Select>
                 </Form.Group>
               </div>
-              {isAdminOrManager && (
-                <div className="col-md-12 mt-2">
-                  <Form.Group>
-                    <Form.Label>Gym Branch <span className="text-danger">*</span></Form.Label>
-                    <Form.Select required value={editFormData.branchId || ''} onChange={e => setEditFormData({...editFormData, branchId: e.target.value})}>
-                      <option value="">Select Branch...</option>
-                      {branches.map(b => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </div>
-              )}
+
               <div className="col-md-4 mt-2">
                 <Form.Group>
                   <Form.Label>Quantity <span className="text-danger">*</span></Form.Label>

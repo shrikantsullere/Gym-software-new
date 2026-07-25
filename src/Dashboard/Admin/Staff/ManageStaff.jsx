@@ -883,28 +883,43 @@ const ManageStaff = () => {
                 ) : (
                   <form onSubmit={(e) => { e.preventDefault(); handleFormSubmit(); }} autoComplete="off">
                     <div className="text-center mb-4">
-                      {profilePreview ? (
-                        <img
-                          src={profilePreview.startsWith('http') ? profilePreview : `${axiosInstance.defaults.baseURL}/${profilePreview}`}
-                          alt="Preview"
-                          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }}
-                        />
-                      ) : (
-                        <div
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto"
-                          style={{
-                            width: '100px',
-                            height: '100px',
-                            fontSize: '2rem',
-                            fontWeight: 'bold',
-                            backgroundColor: getInitialColor(getInitials(formData.fullName)),
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}
+                        title="Click to upload photo"
+                      >
+                        {profilePreview ? (
+                          <img
+                            src={profilePreview.startsWith('http') ? profilePreview : `${axiosInstance.defaults.baseURL}/${profilePreview}`}
+                            alt="Preview"
+                            style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }}
+                          />
+                        ) : (
+                          <div
+                            className="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto"
+                            style={{
+                              width: '100px',
+                              height: '100px',
+                              fontSize: '2rem',
+                              fontWeight: 'bold',
+                              backgroundColor: getInitialColor(getInitials(formData.fullName)),
+                            }}
+                          >
+                            {getInitials(formData.fullName)}
+                          </div>
+                        )}
+                        <div 
+                          className="position-absolute bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                          style={{ 
+                            width: '32px', height: '32px', border: '1px solid #ddd',
+                            bottom: '0', right: '0', transform: 'translate(25%, 25%)'
                           }}
                         >
-                          {getInitials(formData.fullName)}
+                          <i className="fas fa-camera text-muted" style={{ fontSize: '14px' }}></i>
                         </div>
-                      )}
+                      </div>
                       {modalType === 'edit' && selectedStaff?.id && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           <span className="badge bg-secondary px-3 py-1">Staff ID: {selectedStaff.id}</span>
                         </div>
                       )}
@@ -981,7 +996,7 @@ const ManageStaff = () => {
                           onChange={(val) => setFormData(prev => ({ ...prev, dateOfBirth: val }))}
                         />
                       </div>
-                      <div className="col-12">
+                      <div className="col-12" style={{ display: 'none' }}>
                         <label className="form-label">Profile Photo</label>
                         <input
                           type="file"

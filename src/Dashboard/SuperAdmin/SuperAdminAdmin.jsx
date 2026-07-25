@@ -828,7 +828,7 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
   const [formData, setFormData] = useState({
     fullName: admin?.fullName || "",
     gymName: admin?.gymName || "",
-    address: admin?.address || "",
+    address: admin?.address || admin?.address_city || "",
     phone: admin?.phone || "",
     email: admin?.email || "",
     password: "",
@@ -840,7 +840,7 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
     planDescription: admin?.description || "",
     branchId: admin?.branchId || "",
     gstNumber: admin?.gstNumber || "",
-    gymAddress: admin?.gymAddress || "",
+    gymAddress: admin?.gymAddress || admin?.address_city || "",
     tax: admin?.tax || "18",
     subscriptionPlan: admin?.subscriptionPlan || "Basic",
     licenseExpiryDate: admin?.licenseExpiryDate
@@ -856,11 +856,21 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
 
   useEffect(() => {
     if (admin && plans.length > 0 && admin.planName) {
-      const matchedPlan = plans.find(
-        (p) => p.name === admin.planName && p.price.toString() === (admin.price || "").toString()
+      let matchedPlan = plans.find(
+        (p) => p.name.toLowerCase() === admin.planName.toLowerCase() && p.price.toString() === (admin.price || "").toString()
       );
+      if (!matchedPlan) {
+        matchedPlan = plans.find((p) => p.name.toLowerCase() === admin.planName.toLowerCase());
+      }
       if (matchedPlan) {
-        setFormData((prev) => ({ ...prev, selectedPlanId: matchedPlan.id }));
+        setFormData((prev) => ({ 
+          ...prev, 
+          selectedPlanId: matchedPlan.id,
+          planName: matchedPlan.name,
+          planPrice: matchedPlan.price.toString(),
+          planDuration: matchedPlan.duration,
+          planDescription: matchedPlan.description || prev.planDescription
+        }));
       }
     }
     if (admin?.profileImage) {

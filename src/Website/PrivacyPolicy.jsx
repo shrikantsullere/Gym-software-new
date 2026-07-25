@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
           </Link>
           <div className="d-flex align-items-center gap-2">
             <FaShieldAlt className="text-primary fs-4" />
-            <span className="fw-bold text-dark fs-5">Speed Fitness SaaS</span>
+            <span className="fw-bold text-dark fs-5">Gymsoft</span>
           </div>
         </div>
       </header>
@@ -46,7 +46,7 @@ const PrivacyPolicy = () => {
           <div className="col-lg-10 col-xl-8">
             <div className="bg-white rounded-4 p-4 p-md-5 shadow-sm border border-light">
               <p className="text-muted mb-4 lead">
-                Welcome to Speed Fitness SaaS Platform. Your privacy is of paramount importance to us. This Privacy Policy outlines how we collect, store, process, and protect your information when you subscribe to our services, use our Gym Management Dashboard, or receive notifications.
+                Welcome to Gymsoft SaaS Platform. Your privacy is of paramount importance to us. This Privacy Policy outlines how we collect, store, process, and protect your information when you subscribe to our services, use our Gym Management Dashboard, or receive notifications.
               </p>
 
               {/* Section 1 */}
@@ -125,7 +125,7 @@ const PrivacyPolicy = () => {
                   If you have any questions, concerns, or requests regarding this Privacy Policy or your data, please reach out to us:
                 </p>
                 <p className="text-primary fw-semibold mt-2">
-                  Email: support@speedfitness-saas.com
+                  Email: raj@gymsoftware.space
                 </p>
               </div>
             </div>
@@ -135,7 +135,7 @@ const PrivacyPolicy = () => {
 
       {/* Mini Footer */}
       <footer className="bg-white border-top py-4 text-center text-muted small">
-        <p className="mb-0">&copy; {new Date().getFullYear()} Speed Fitness SaaS. All rights reserved.</p>
+        <p className="mb-0">&copy; {new Date().getFullYear()} Gymsoft. All rights reserved.</p>
       </footer>
     </div>
   );

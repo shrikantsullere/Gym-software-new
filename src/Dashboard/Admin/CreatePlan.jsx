@@ -1187,6 +1187,11 @@ const CreatePlan = () => {
                 backgroundColor:
                   activeTab === "member" ? customColor : "transparent",
                 borderColor: customColor,
+                color: activeTab === "member" ? "white" : customColor,
+                width: "100%",
+                maxWidth: "300px",
+              }}
+            >
               MemberShip Plans
             </Button>
           </div>

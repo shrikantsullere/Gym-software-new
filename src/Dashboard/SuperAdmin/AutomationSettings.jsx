@@ -42,14 +42,19 @@ const AutomationSettings = () => {
         axiosInstance.get('/v1/credits/packages')
       ]);
       
-      if (settingsRes.data.success) {
-        setSettings(settingsRes.data.settings);
+      if (settingsRes.data?.success) {
+        setSettings(settingsRes.data.settings || {});
       }
-      if (templatesRes.data.success) {
-        setTemplates(templatesRes.data.templates);
+      if (templatesRes.data?.success) {
+        const normalizedTemplates = (templatesRes.data.templates || []).map(t => ({
+          ...t,
+          templateType: t.templateType || t.eventKey || t.name || '',
+          messageBody: t.messageBody || t.message || '',
+        }));
+        setTemplates(normalizedTemplates);
       }
-      if (pkgRes.data.success) {
-        setPackages(pkgRes.data.packages);
+      if (pkgRes.data?.success) {
+        setPackages(pkgRes.data.packages || []);
       }
     } catch (err) {
       console.error("Error fetching automation data:", err);
@@ -89,6 +94,7 @@ const AutomationSettings = () => {
     try {
       await axiosInstance.put(`/v1/automation/templates/${editingTemplate.id}`, {
         subject: editingTemplate.subject,
+        message: editingTemplate.messageBody,
         messageBody: editingTemplate.messageBody
       });
       setShowModal(false);
@@ -103,7 +109,7 @@ const AutomationSettings = () => {
     if (editingTemplate) {
       setEditingTemplate({
         ...editingTemplate,
-        messageBody: editingTemplate.messageBody + variable
+        messageBody: (editingTemplate.messageBody || '') + variable
       });
     }
   };
@@ -151,8 +157,8 @@ const AutomationSettings = () => {
     }
   };
 
-  const whatsappPackages = packages.filter(p => p.packageType === 'WHATSAPP' || !p.packageType);
-  const emailPackages = packages.filter(p => p.packageType === 'EMAIL');
+  const whatsappPackages = (packages || []).filter(p => p && (p.packageType === 'WHATSAPP' || !p.packageType));
+  const emailPackages = (packages || []).filter(p => p && p.packageType === 'EMAIL');
 
   if (loading) {
     return (
@@ -339,19 +345,19 @@ const AutomationSettings = () => {
             </div>
             <div className="card-body p-0">
               <div className="list-group list-group-flush">
-                {templates.map(t => (
-                  <div key={t.id} className="list-group-item p-4 border-bottom hover-bg-light" style={{transition: 'background 0.2s'}}>
+                {(templates || []).map((t, index) => (
+                  <div key={t.id || index} className="list-group-item p-4 border-bottom hover-bg-light" style={{transition: 'background 0.2s'}}>
                     <div className="d-flex justify-content-between align-items-start mb-2">
                       <div>
-                        <div className="fw-bold fs-5 text-dark mb-1">{t.templateType.replace(/_/g, ' ')}</div>
-                        <div className="text-muted small"><strong>Subject:</strong> {t.subject}</div>
+                        <div className="fw-bold fs-5 text-dark mb-1">{(t.templateType || '').replace(/_/g, ' ')}</div>
+                        <div className="text-muted small"><strong>Subject:</strong> {t.subject || 'No Subject'}</div>
                       </div>
                       <button className="btn btn-sm btn-light border shadow-sm rounded-pill px-3" onClick={() => openTemplateModal(t)}>
                         <FontAwesomeIcon icon={faEdit} className="me-2 text-primary" /> Edit
                       </button>
                     </div>
                     <div className="mt-3 bg-light p-3 rounded text-muted small" style={{ whiteSpace: 'pre-wrap', borderLeft: '3px solid #0d6efd' }}>
-                      {t.messageBody.length > 150 ? t.messageBody.substring(0, 150) + '...' : t.messageBody}
+                      {(t.messageBody || '').length > 150 ? (t.messageBody || '').substring(0, 150) + '...' : (t.messageBody || '')}
                     </div>
                   </div>
                 ))}

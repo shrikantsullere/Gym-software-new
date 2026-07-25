@@ -151,7 +151,11 @@ const InventoryManagement = () => {
     try {
       const fd = new FormData();
       // Use formData.branchId if set (for multi-branch admin), or user's branchId, or the admin's first branch
-      const targetBranch = formData.branchId || branchId || user.branchId || (branches.length > 0 ? branches[0].id : 1);
+      const targetBranch = formData.branchId || branchId || user.branchId || (branches.length > 0 ? branches[0].id : null);
+      if (!targetBranch) {
+        alert("No branch available. Please create a branch first before adding equipment.");
+        return;
+      }
       Object.entries({ ...formData, branchId: targetBranch }).forEach(([k, v]) => fd.append(k, v));
       if (equipmentImage) fd.append('image', equipmentImage);
       await axios.post(`${BaseUrl}v1/equipment/create`, fd, {

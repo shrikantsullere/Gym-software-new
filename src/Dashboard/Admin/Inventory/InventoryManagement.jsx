@@ -13,13 +13,14 @@ const InventoryManagement = () => {
   const [filterCategory, setFilterCategory] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [branches, setBranches] = useState([]);
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '', category: 'Cardio', quantity: 1, condition: 'Good',
-    purchaseDate: '', purchaseCost: '', location: '', notes: '', nextMaintenanceDate: ''
+    purchaseDate: '', purchaseCost: '', location: '', notes: '', nextMaintenanceDate: '', branchId: ''
   });
   const [equipmentImage, setEquipmentImage] = useState(null);
   const [equipmentImagePreview, setEquipmentImagePreview] = useState(null);
@@ -71,8 +72,15 @@ const InventoryManagement = () => {
         equipRes = await axios.get(`${BaseUrl}v1/equipment/branch/${effectiveBranch}?search=${searchTerm}&category=${filterCategory === 'All' ? '' : filterCategory}`, axiosConfig);
       }
       setInventory(equipRes.data.equipment || []);
+
+      if (useAdminRoutes) {
+        const branchesRes = await axios.get(`${BaseUrl}v1/branches/admin/${adminId}`, axiosConfig);
+        if (branchesRes.data && branchesRes.data.branches) {
+          setBranches(branchesRes.data.branches);
+        }
+      }
     } catch (err) {
-      console.error("Error fetching equipment list:", err.response?.data || err.message);
+      console.error("Error fetching equipment list or branches:", err.response?.data || err.message);
     }
 
     // Fetch stats
@@ -122,15 +130,15 @@ const InventoryManagement = () => {
     e.preventDefault();
     try {
       const fd = new FormData();
-      // Use formData.branchId if set (for multi-branch admin), or user's branchId
-      const targetBranch = formData.branchId || branchId || (user.branchId) || 1;
+      // Use formData.branchId if set (for multi-branch admin), or user's branchId, or the admin's first branch
+      const targetBranch = formData.branchId || branchId || user.branchId || (branches.length > 0 ? branches[0].id : 1);
       Object.entries({ ...formData, branchId: targetBranch }).forEach(([k, v]) => fd.append(k, v));
       if (equipmentImage) fd.append('image', equipmentImage);
       await axios.post(`${BaseUrl}v1/equipment/create`, fd, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       setShowAddModal(false);
-      setFormData({ name: '', category: 'Cardio', quantity: 1, condition: 'Good', purchaseDate: '', purchaseCost: '', location: '', notes: '', nextMaintenanceDate: '' });
+      setFormData({ name: '', category: 'Cardio', quantity: 1, condition: 'Good', purchaseDate: '', purchaseCost: '', location: '', notes: '', nextMaintenanceDate: '', branchId: '' });
       setEquipmentImage(null);
       setEquipmentImagePreview(null);
       fetchData();
@@ -150,7 +158,8 @@ const InventoryManagement = () => {
       purchaseCost: item.purchaseCost || '',
       location: item.location || '',
       notes: item.notes || '',
-      nextMaintenanceDate: item.nextMaintenanceDate ? new Date(item.nextMaintenanceDate).toISOString().split('T')[0] : ''
+      nextMaintenanceDate: item.nextMaintenanceDate ? new Date(item.nextMaintenanceDate).toISOString().split('T')[0] : '',
+      branchId: item.branchId || ''
     });
     setEditEquipmentImage(null);
     setEditEquipmentImagePreview(item.imageUrl || null);
@@ -582,7 +591,20 @@ const InventoryManagement = () => {
                   </Form.Select>
                 </Form.Group>
               </div>
-              <div className="col-md-4">
+              {isAdminOrManager && (
+                <div className="col-md-12 mt-2">
+                  <Form.Group>
+                    <Form.Label>Gym Branch <span className="text-danger">*</span></Form.Label>
+                    <Form.Select required value={formData.branchId || ''} onChange={e => setFormData({...formData, branchId: e.target.value})}>
+                      <option value="">Select Branch...</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </div>
+              )}
+              <div className="col-md-4 mt-2">
                 <Form.Group>
                   <Form.Label>Quantity <span className="text-danger">*</span></Form.Label>
                   <Form.Control type="number" min="1" required value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} />
@@ -696,7 +718,20 @@ const InventoryManagement = () => {
                   </Form.Select>
                 </Form.Group>
               </div>
-              <div className="col-md-4">
+              {isAdminOrManager && (
+                <div className="col-md-12 mt-2">
+                  <Form.Group>
+                    <Form.Label>Gym Branch <span className="text-danger">*</span></Form.Label>
+                    <Form.Select required value={editFormData.branchId || ''} onChange={e => setEditFormData({...editFormData, branchId: e.target.value})}>
+                      <option value="">Select Branch...</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </div>
+              )}
+              <div className="col-md-4 mt-2">
                 <Form.Group>
                   <Form.Label>Quantity <span className="text-danger">*</span></Form.Label>
                   <Form.Control type="number" min="1" required value={editFormData.quantity || 1} onChange={e => setEditFormData({...editFormData, quantity: e.target.value})} />

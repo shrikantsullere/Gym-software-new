@@ -61,8 +61,9 @@ const Attendance = () => {
           
           return {
             attendance_id: entry.id,
-            member_id: entry.memberId,
-            name: entry.fullName || `Member ID: ${entry.memberId}`,
+            member_id: entry.memberId || entry.staffId || "N/A",
+            staff_id: entry.staffId,
+            name: entry.fullName || (entry.memberId ? `Member ID: ${entry.memberId}` : `Staff ID: ${entry.staffId}`),
             rawCheckIn: entry.checkIn,
             rawCheckOut: entry.checkOut,
             status: entry.computedStatus === 'Active' ? 'Present' : 
@@ -172,7 +173,7 @@ const Attendance = () => {
   const filteredAttendance = attendance.filter((m) => {
     return (
       (activeFilters.memberId
-        ? m.member_id.toString().includes(activeFilters.memberId)
+        ? (m.member_id || "").toString().includes(activeFilters.memberId)
         : true) &&
       (activeFilters.memberName
         ? m.name.toLowerCase().includes(activeFilters.memberName.toLowerCase())

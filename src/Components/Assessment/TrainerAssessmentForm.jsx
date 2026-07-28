@@ -413,7 +413,7 @@ const TrainerAssessmentForm = () => {
 
                 <h5 className="mb-3 text-secondary border-bottom pb-2">Body Measurements</h5>
                 <div className="row g-3 mb-4">
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label fw-semibold">Weight {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
                       <input required={!isBodyBuilderGoal} type="number" step="0.1" name="weight_kg" value={formData.weight_kg} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
@@ -424,7 +424,7 @@ const TrainerAssessmentForm = () => {
                     </div>
                   </div>
 
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label fw-semibold">Height {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
                       <input required={!isBodyBuilderGoal} type="number" step="0.1" name="height_cm" value={formData.height_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
@@ -435,17 +435,6 @@ const TrainerAssessmentForm = () => {
                     </div>
                   </div>
 
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold">Resting Heart Rate</label>
-                    <div className="input-group">
-                      <input type="number" min="30" max="250" name="resting_hr" value={formData.resting_hr} onChange={handleChange} className="form-control shadow-none" placeholder="BPM" />
-                      <span className="input-group-text">bpm</span>
-                    </div>
-                  </div>
-                </div>
-
-                <h5 className="mb-3 text-secondary border-bottom pb-2">Muscle Group Circumferences</h5>
-                <div className="row g-3 mb-4 bg-light p-3 rounded-3">
                   <div className="col-md-3">
                     <label className="form-label fw-semibold">Neck {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
                     <div className="input-group">
@@ -454,6 +443,28 @@ const TrainerAssessmentForm = () => {
                         <option value="cm">cm</option>
                         <option value="in">in</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <div className="col-md-3">
+                    <label className="form-label fw-semibold">Waist {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
+                    <div className="input-group">
+                      <input required={!isBodyBuilderGoal} type="number" step="0.1" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
+                      <select name="waist" value={units.waist} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <h5 className="mb-3 text-secondary border-bottom pb-2">Muscle Group Circumferences</h5>
+                <div className="row g-3 mb-4 bg-light p-3 rounded-3">
+                  <div className="col-md-3">
+                    <label className="form-label fw-semibold">Resting Heart Rate</label>
+                    <div className="input-group">
+                      <input type="number" min="30" max="250" name="resting_hr" value={formData.resting_hr} onChange={handleChange} className="form-control shadow-none" placeholder="BPM" />
+                      <span className="input-group-text">bpm</span>
                     </div>
                   </div>
 
@@ -473,17 +484,6 @@ const TrainerAssessmentForm = () => {
                     <div className="input-group">
                       <input type="number" step="0.1" name="chest_cm" value={formData.chest_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
                       <select name="chest" value={units.chest} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
-                        <option value="cm">cm</option>
-                        <option value="in">in</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="col-md-3">
-                    <label className="form-label fw-semibold">Waist {!isBodyBuilderGoal && <span className="text-danger">*</span>}</label>
-                    <div className="input-group">
-                      <input required={!isBodyBuilderGoal} type="number" step="0.1" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className="form-control shadow-none" placeholder="0.0" />
-                      <select name="waist" value={units.waist} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
                         <option value="cm">cm</option>
                         <option value="in">in</option>
                       </select>

@@ -151,13 +151,14 @@ const ForgotPassword = () => {
     <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-4">
       <div className="card shadow-lg w-100" style={{ maxWidth: "500px", borderRadius: "2rem" }}>
         <div className="p-5 text-center">
-          <div className="d-flex justify-content-center align-items-center mb-4">
+          <div className="d-flex flex-column justify-content-center align-items-center mb-4">
             <img
-              src="https://i.postimg.cc/mZHz3k1Q/Whats-App-Image-2025-07-23-at-12-38-03-add5b5dd-removebg-preview-1.png"
-              alt="logo"
-              className="navbar-logo m-2"
-              style={{ height: "51px" }}
+              src="/logo.png"
+              alt="GymSoft Logo"
+              className="navbar-logo"
+              style={{ height: "60px", objectFit: "contain" }}
             />
+            <h1 className="h4 fw-bold mt-3" style={{ color: "#2f6a87" }}>GymSoft</h1>
           </div>
 
           {step === 1 && (

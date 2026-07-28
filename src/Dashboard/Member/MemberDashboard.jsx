@@ -74,8 +74,20 @@ const MemberDashboard = () => {
 
     chartInstance.current = echarts.init(workoutChartRef.current);
 
-    const checkInData = dashboardData.workoutProgress?.days?.map(day => day.checkIns || 0) || [];
-    const dayLabels = dashboardData.workoutProgress?.days?.map(day => day.dayLabel) || [];
+    const daysData = dashboardData.workoutProgress?.days || [];
+    const dayLabels = daysData.map(day => day.dayLabel);
+
+    const chartData = daysData.map(day => {
+      if (day.status === 'PRESENT') {
+        return { value: 1, name: 'Present', itemStyle: { color: '#10b981' }, status: day.status };
+      } else if (day.status === 'ABSENT') {
+        return { value: 1, name: 'Absent', itemStyle: { color: '#ef4444' }, status: day.status };
+      } else if (day.status === 'NON_APPLICABLE') {
+        return { value: 0.1, name: 'N/A', itemStyle: { color: '#9ca3af' }, status: day.status };
+      } else {
+        return { value: 0, name: 'Future', itemStyle: { color: '#e5e7eb' }, status: day.status };
+      }
+    });
 
     const option = {
       animation: true,
@@ -85,7 +97,14 @@ const MemberDashboard = () => {
         borderColor: '#eee',
         borderWidth: 1,
         textStyle: { color: '#1f2937' },
-        padding: [8, 12]
+        padding: [8, 12],
+        formatter: function (params) {
+          const item = params[0].data;
+          const label = params[0].axisValueLabel;
+          if (item.status === 'FUTURE') return `${label}: Future Date`;
+          if (item.status === 'NON_APPLICABLE') return `${label}: Not Applicable`;
+          return `${label}: <strong style="color:${item.itemStyle.color}">${item.name}</strong>`;
+        }
       },
       grid: {
         top: '10px',
@@ -102,21 +121,18 @@ const MemberDashboard = () => {
       },
       yAxis: {
         type: 'value',
-        splitLine: { lineStyle: { color: '#f3f4f6' } },
-        axisLabel: { color: '#1f2937', fontSize: 12 }
+        show: false, // Hide y-axis since it's just binary Present/Absent
+        max: 1 // Max value is 1
       },
       series: [
         {
-          name: 'Check-ins',
+          name: 'Status',
           type: 'bar',
           barWidth: '40%',
+          data: chartData,
           itemStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#57b5e7' },
-              { offset: 1, color: '#2f6a87' }
-            ])
-          },
-          data: checkInData
+            borderRadius: [4, 4, 0, 0] // Rounded tops for a premium look
+          }
         }
       ]
     };

@@ -293,6 +293,32 @@ const Navbar = ({ toggleSidebar }) => {
 
   return (
     <>
+      <style>
+        {`
+          .notif-dropdown-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            width: 360px;
+            max-width: calc(100vw - 20px);
+            z-index: 1050;
+            max-height: 480px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+          }
+          @media (max-width: 576px) {
+            .notif-dropdown-menu {
+              position: fixed;
+              top: 70px;
+              right: 10px;
+              left: 10px;
+              width: auto;
+              max-width: none;
+            }
+          }
+        `}
+      </style>
       <nav
         className="navbar navbar-expand px-2 px-md-3 py-2 d-flex justify-content-between align-items-center fixed-top"
         style={{
@@ -377,13 +403,7 @@ const Navbar = ({ toggleSidebar }) => {
             
             {showNotifDropdown && (
               <div 
-                className="dropdown-menu show shadow p-0"
-                style={{
-                  position: "absolute", right: 0, top: "110%",
-                  width: "min(360px, calc(100vw - 20px))", zIndex: 1050,
-                  maxHeight: "480px", overflowY: "auto",
-                  borderRadius: "12px", border: "1px solid #e0e0e0"
-                }}
+                className="dropdown-menu show shadow p-0 notif-dropdown-menu"
               >
                 {/* Header */}
                 <div 

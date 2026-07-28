@@ -7,6 +7,8 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
+
 const AttendanceAlerts = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,9 @@ const AttendanceAlerts = () => {
   const [msgTemplate, setMsgTemplate] = useState('template1');
   const [customMsg, setCustomMsg] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
-  const [notifChannels, setNotifChannels] = useState(['EMAIL', 'WHATSAPP', 'IN_APP']); // Multi-select array
+  const [notifChannels, setNotifChannels] = useState(['EMAIL', 'IN_APP']); // Multi-select array
+  const [showWaBulkList, setShowWaBulkList] = useState(false);
+  const [sentWaIds, setSentWaIds] = useState([]);
 
   const toggleChannel = (channelId) => {
     if (notifChannels.includes(channelId)) {
@@ -81,11 +85,7 @@ const AttendanceAlerts = () => {
     return true;
   });
 
-  const exportToExcel = () => {
-    if (filteredMembers.length === 0) {
-      alert("No members available to export.");
-      return;
-    }
+  const handleExportExcel = () => {
     const dataToExport = filteredMembers.map((m) => ({
       "Member Name": m.fullName || '—',
       "Phone": m.phone || '—',
@@ -94,21 +94,12 @@ const AttendanceAlerts = () => {
       "Attendance %": `${m.attendancePercentage}%`,
       "Risk Badge": m.badge || '—',
     }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "At-Risk Members");
-    XLSX.writeFile(workbook, `At_Risk_Members_${new Date().toISOString().split('T')[0]}.xlsx`);
+    exportToExcel(dataToExport, "At-Risk Members", "At_Risk_Members");
   };
 
-  const exportToPDF = () => {
-    if (filteredMembers.length === 0) {
-      alert("No members available to export.");
-      return;
-    }
-    const doc = new jsPDF();
-    doc.text("At-Risk Members Attendance Report", 14, 15);
-    const tableColumn = ["Member Name", "Phone", "Email", "Days Absent", "Attendance %", "Risk Badge"];
-    const tableRows = filteredMembers.map((m) => [
+  const handleExportPDF = () => {
+    const columns = ["Member Name", "Phone", "Email", "Days Absent", "Attendance %", "Risk Badge"];
+    const rows = filteredMembers.map((m) => [
       m.fullName || '—',
       m.phone || '—',
       m.email || '—',
@@ -116,12 +107,7 @@ const AttendanceAlerts = () => {
       `${m.attendancePercentage}%`,
       m.badge || '—',
     ]);
-    autoTable(doc, {
-      startY: 20,
-      head: [tableColumn],
-      body: tableRows,
-    });
-    doc.save(`At_Risk_Members_${new Date().toISOString().split('T')[0]}.pdf`);
+    exportToPDF(rows, columns, "At-Risk Members Attendance Report", "At_Risk_Members");
   };
 
   const handleTemplateChange = (e) => {
@@ -212,7 +198,7 @@ const AttendanceAlerts = () => {
             to: toValue,
             message: customMsg,
             memberId: selectedMember.id,
-            subject: "Speed Fitness — We Miss You! 💪",
+            subject: "GymSoft — We Miss You! 💪",
           }, axiosConfig).catch(e => console.error(e));
         }
 
@@ -252,7 +238,7 @@ const AttendanceAlerts = () => {
               to: toValue,
               message: personalizedMsg,
               memberId: m.id,
-              subject: "Speed Fitness — We Miss You! 💪",
+              subject: "GymSoft — We Miss You! 💪",
             }, axiosConfig).catch(e => console.error(e));
           }
           successCount++;
@@ -359,12 +345,12 @@ const AttendanceAlerts = () => {
             </button>
             <ul className="dropdown-menu dropdown-menu-end shadow border-0">
               <li>
-                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={handleExportExcel}>
                   <strong className="text-success">XLSX</strong> Export to Excel
                 </button>
               </li>
               <li>
-                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportToPDF}>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={handleExportPDF}>
                   <strong className="text-danger">PDF</strong> Export to PDF
                 </button>
               </li>
@@ -448,11 +434,16 @@ const AttendanceAlerts = () => {
                         {member.daysAbsent === null ? 'Never Attended' : `${member.daysAbsent} Days`}
                       </td>
                       <td className="py-3">
-                        <div className="d-flex align-items-center">
-                          <span className="me-2">{member.attendancePercentage}%</span>
-                          <div className="progress w-100" style={{ height: '6px' }}>
-                            <div className={`progress-bar ${member.badge === 'Red' ? 'bg-danger' : member.badge === 'Yellow' ? 'bg-warning' : 'bg-info'}`} role="progressbar" style={{ width: `${member.attendancePercentage}%` }}></div>
+                        <div className="d-flex flex-column">
+                          <div className="d-flex align-items-center mb-1">
+                            <span className="me-2 fw-bold">{member.attendancePercentage}%</span>
+                            <div className="progress w-100" style={{ height: '6px' }}>
+                              <div className={`progress-bar ${member.badge === 'Red' ? 'bg-danger' : member.badge === 'Yellow' ? 'bg-warning' : 'bg-info'}`} role="progressbar" style={{ width: `${member.attendancePercentage}%` }}></div>
+                            </div>
                           </div>
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                            Present: {member.presentDays ?? 0} / Absent: {member.absentDays ?? 0} / App: {member.totalApplicableDays ?? 0}
+                          </small>
                         </div>
                       </td>
                       <td className="py-3">
@@ -464,7 +455,7 @@ const AttendanceAlerts = () => {
                         <button className="btn btn-sm btn-light me-2 text-primary border shadow-sm" title="Send Message" onClick={() => handleMessageClick(member)}>
                           <FontAwesomeIcon icon={faEnvelope} />
                         </button>
-                        <a href={`tel:${member.phone}`} className="btn btn-sm btn-light me-2 text-success border shadow-sm" title="Call/WhatsApp">
+                        <a href={`tel:${member.phone}`} className="btn btn-sm btn-light me-2 text-success border shadow-sm" title="Call">
                           <FontAwesomeIcon icon={faPhone} />
                         </a>
                       </td>
@@ -548,7 +539,6 @@ const AttendanceAlerts = () => {
                       <div className="d-flex flex-wrap gap-2">
                         {[
                           { id: 'EMAIL', label: '📧 Email' },
-                          { id: 'WHATSAPP', label: '💬 WhatsApp' },
                           { id: 'IN_APP', label: '🔔 In-App' },
                         ].map((ch) => {
                           const isSelected = notifChannels.includes(ch.id);

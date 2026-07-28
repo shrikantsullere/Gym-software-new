@@ -307,17 +307,13 @@ const BodybuilderAssessmentForm = () => {
     }
 
     const stdNeck = getStandardValue(formData.neck_cm, units.neck, 'length');
-    if (!isBodyBuilderGoal || formData.neck_cm !== "") {
-      if (stdNeck === null || stdNeck < 20.0 || stdNeck > 60.0) {
-        errors.neck = "Neck must be between 20.0 cm and 60.0 cm (7.87 in - 23.62 in).";
-      }
+    if (stdNeck === null || stdNeck < 20.0 || stdNeck > 60.0) {
+      errors.neck = "Neck is strictly required. Must be between 20.0 cm and 60.0 cm (7.87 in - 23.62 in).";
     }
 
     const stdWaist = getStandardValue(formData.waist_cm, units.waist, 'length');
-    if (!isBodyBuilderGoal || formData.waist_cm !== "") {
-      if (stdWaist === null || stdWaist < 40.0 || stdWaist > 180.0) {
-        errors.waist = "Waist must be between 40.0 cm and 180.0 cm (15.75 in - 70.87 in).";
-      }
+    if (stdWaist === null || stdWaist < 40.0 || stdWaist > 180.0) {
+      errors.waist = "Waist is strictly required. Must be between 40.0 cm and 180.0 cm (15.75 in - 70.87 in).";
     }
 
     const stdHip = getStandardValue(formData.hip_cm, units.hip, 'length');
@@ -485,25 +481,37 @@ const BodybuilderAssessmentForm = () => {
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label fw-semibold">Resting Heart Rate</label>
+                    <label className="form-label fw-semibold">Neck <span className="text-danger">*</span></label>
                     <div className="input-group">
-                      <input type="text" name="resting_hr" value={formData.resting_hr} onChange={handleChange} className="form-control shadow-none" placeholder="BPM" />
-                      <span className="input-group-text">bpm</span>
-                    </div>
-                  </div>
-                </div>
-
-                <h5 className="mb-3 text-secondary border-bottom pb-2">Muscle Group Circumferences</h5>
-                <div className="row g-3 mb-4 bg-light p-3 rounded-3">
-                  <div className="col-md-3">
-                    <label className="form-label fw-semibold">Neck {formData.fitness_goal !== 'Body Builder' && <span className="text-danger">*</span>}</label>
-                    <div className="input-group">
-                      <input required={formData.fitness_goal !== 'Body Builder'} type="text" name="neck_cm" value={formData.neck_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.neck ? 'is-invalid' : ''}`} placeholder="0.0" />
+                      <input required type="text" name="neck_cm" value={formData.neck_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.neck ? 'is-invalid' : ''}`} placeholder="0.0" />
                       <select name="neck" value={units.neck} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
                         <option value="cm">cm</option>
                         <option value="in">in</option>
                       </select>
                       {validationErrors.neck && <div className="invalid-feedback d-block">{validationErrors.neck}</div>}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 mt-4 mt-md-0">
+                    <label className="form-label fw-semibold">Waist <span className="text-danger">*</span></label>
+                    <div className="input-group">
+                      <input required type="text" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.waist ? 'is-invalid' : ''}`} placeholder="0.0" />
+                      <select name="waist" value={units.waist} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                      {validationErrors.waist && <div className="invalid-feedback d-block">{validationErrors.waist}</div>}
+                    </div>
+                  </div>
+                </div>
+
+                <h5 className="mb-3 text-secondary border-bottom pb-2">Vitals & Muscle Group Circumferences</h5>
+                <div className="row g-3 mb-4 bg-light p-3 rounded-3">
+                  <div className="col-md-3">
+                    <label className="form-label fw-semibold">Resting Heart Rate</label>
+                    <div className="input-group">
+                      <input type="text" name="resting_hr" value={formData.resting_hr} onChange={handleChange} className="form-control shadow-none" placeholder="BPM" />
+                      <span className="input-group-text">bpm</span>
                     </div>
                   </div>
 
@@ -523,17 +531,7 @@ const BodybuilderAssessmentForm = () => {
                     </div>
                   </div>
 
-                  <div className="col-md-3">
-                    <label className="form-label fw-semibold">Waist {formData.fitness_goal !== 'Body Builder' && <span className="text-danger">*</span>}</label>
-                    <div className="input-group">
-                      <input required={formData.fitness_goal !== 'Body Builder'} type="text" name="waist_cm" value={formData.waist_cm} onChange={handleChange} className={`form-control shadow-none ${validationErrors.waist ? 'is-invalid' : ''}`} placeholder="0.0" />
-                      <select name="waist" value={units.waist} onChange={handleUnitChange} className="form-select" style={{ maxWidth: '75px' }}>
-                        <option value="cm">cm</option>
-                        <option value="in">in</option>
-                      </select>
-                      {validationErrors.waist && <div className="invalid-feedback d-block">{validationErrors.waist}</div>}
-                    </div>
-                  </div>
+
 
                   <div className="col-md-3 mt-4">
                     <label className="form-label fw-semibold">Biceps / Arms</label>

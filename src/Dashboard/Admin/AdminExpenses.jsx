@@ -13,6 +13,8 @@ import {
   faFilter,
 } from "@fortawesome/free-solid-svg-icons";
 import CustomDatePicker from "../../Components/CustomDatePicker";
+import { exportToPDF } from '../../utils/exportUtils';
+import { FaDownload } from 'react-icons/fa';
 
 const AdminExpenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -176,6 +178,24 @@ const AdminExpenses = () => {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = () => {
+    const header = ['Expense Category', 'Description / Title', 'Source Type', 'Payment Mode', 'Date', 'Amount'];
+    const rows = expenses.map(expense => [
+      expense.expenseType || '',
+      expense.name || '',
+      expense.category || '',
+      expense.paymentMode || '',
+      expense.date ? new Date(expense.date).toLocaleDateString() : '',
+      expense.amount || 0
+    ]);
+    exportToPDF(
+      rows,
+      header,
+      `Expenses Report — ${selectedMonth}`,
+      `expenses_${selectedMonth}`
+    );
+  };
+
   return (
     <div className="container-fluid p-3 p-md-4" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       {/* Header */}
@@ -206,13 +226,29 @@ const AdminExpenses = () => {
           >
             <FontAwesomeIcon icon={faSync} />
           </button>
-          <button
-            className="btn btn-success shadow-sm fw-semibold"
-            onClick={handleExport}
-            title="Export CSV"
-          >
-            <i className="bi bi-file-earmark-excel me-2"></i> Export
-          </button>
+          <div className="dropdown">
+            <button
+              className="btn btn-success dropdown-toggle shadow-sm fw-semibold"
+              type="button"
+              id="exportExpensesDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaDownload className="me-2" /> Export
+            </button>
+            <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportExpensesDropdown">
+              <li>
+                <button className="dropdown-item text-success fw-medium" onClick={handleExport}>
+                  <strong>CSV</strong> Export to CSV
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item text-danger fw-medium" onClick={handleExportPDF}>
+                  <strong>PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
           <button
             className="btn btn-primary shadow-sm fw-semibold"
             onClick={() => setShowModal(true)}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../Api/axiosInstance";
 import * as XLSX from "xlsx";
+import { exportToPDF } from "../../utils/exportUtils";
+import { FaDownload } from "react-icons/fa";
 
 const MemberHealthLog = () => {
   const [logs, setLogs] = useState([]);
@@ -51,6 +53,30 @@ const MemberHealthLog = () => {
     XLSX.writeFile(workbook, `My_Health_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  const exportPDF = () => {
+    if (logs.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    
+    const header = ["Date", "Weight (kg)", "Height (cm)", "BMI", "Status", "Diet Chart", "Trainer Notes / Notes"];
+    const rows = logs.map(log => [
+      new Date(log.recordedAt || log.createdAt || new Date()).toLocaleDateString(),
+      log.weight ? `${log.weight} kg` : '-',
+      log.height ? `${log.height} cm` : '-',
+      log.bmi || '-',
+      log.bmiStatus || '-',
+      log.dietChart || 'None',
+      log.notes || 'None'
+    ]);
+    exportToPDF(
+      rows,
+      header,
+      "My Health & BMI Report",
+      `My_Health_Report_${new Date().toISOString().split('T')[0]}`
+    );
+  };
+
   useEffect(() => {
     fetchLogs();
   }, []);
@@ -85,16 +111,30 @@ const MemberHealthLog = () => {
         <div className="card-header bg-white border-0 pt-4 pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
           <h5 className="mb-0" style={{ fontWeight: "600", color: "#2f6a87" }}>Health & Assessment History</h5>
           <div className="d-flex align-items-center gap-2">
-            <button 
-              className="btn btn-sm btn-success d-flex align-items-center gap-2 rounded-pill px-3 py-1.5 fw-semibold shadow-sm"
-              onClick={exportToExcel}
-              disabled={logs.length === 0}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="bi bi-file-earmark-excel-fill" viewBox="0 0 16 16">
-                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L9.293 0zM9.5 3.5v-2l3 3h-2a.5.5 0 0 1-.5-.5zM5.884 6.68 8 9.219l2.116-2.538a.5.5 0 1 1 .768.64L8.783 9.896l2.096 2.513a.5.5 0 1 1-.768.64L8 10.518l-2.11 2.531a.5.5 0 1 1-.768-.64l2.096-2.513-2.096-2.513a.5.5 0 1 1 .768-.64z"/>
-              </svg>
-              Export Excel
-            </button>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-outline-success dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1.5 fw-semibold shadow-sm"
+                type="button"
+                id="exportHealthDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                disabled={logs.length === 0}
+              >
+                <FaDownload /> Export Data
+              </button>
+              <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportHealthDropdown">
+                <li>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportToExcel}>
+                    <strong>CSV</strong> Export to CSV
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportPDF}>
+                    <strong>PDF</strong> Export to PDF
+                  </button>
+                </li>
+              </ul>
+            </div>
             <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '12px' }}>
               {logs.length} Log{logs.length !== 1 ? 's' : ''} Recorded
             </span>

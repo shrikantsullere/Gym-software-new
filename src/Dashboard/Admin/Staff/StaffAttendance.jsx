@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrashAlt, FaEdit, FaEye, FaSearch, FaFileExport, FaExclamationTriangle, FaFilter } from 'react-icons/fa';
+import { FaPlus, FaTrashAlt, FaEdit, FaEye, FaSearch, FaFileExport, FaExclamationTriangle, FaFilter, FaDownload } from 'react-icons/fa';
 import GetAdminId from '../../../Api/GetAdminId';
 import axiosInstance from '../../../Api/axiosInstance';
 import BaseUrl from '../../../Api/BaseUrl';
+import { exportToPDF } from '../../../utils/exportUtils';
 
 const StaffAttendance = () => {
   const adminId = GetAdminId();
@@ -532,6 +533,27 @@ const StaffAttendance = () => {
     URL.revokeObjectURL(url);
   };
 
+  const exportPDF = () => {
+    const header = ["Date", "Staff Name", "Role", "Check-in", "Check-out", "Mode", "Shift", "Status", "Notes"];
+    const rows = filteredRecords.map(record => [
+      record.date,
+      record.staff_name || '',
+      record.role || '',
+      formatTime(record.checkin_time),
+      formatTime(record.checkout_time),
+      record.mode || '',
+      record.shift_name || '',
+      record.status || '',
+      record.notes || ''
+    ]);
+    exportToPDF(
+      rows,
+      header,
+      `${attendanceCategory === 'staff' ? 'Staff' : 'Trainer'} Attendance Report`,
+      `${attendanceCategory}_attendance_${new Date().toISOString().split('T')[0]}`
+    );
+  };
+
   const clearFilters = () => {
     setRoleFilter('All');
     setStatusFilter('All');
@@ -591,22 +613,6 @@ const StaffAttendance = () => {
           </div>
         )}
         <div className="d-flex justify-content-end gap-1">
-          {/* <button
-            className="btn btn-sm action-btn"
-            title="View"
-            onClick={() => handleView(record)}
-            style={{ borderColor: customColor, color: customColor }}
-          >
-            <FaEye size={12} />
-          </button> */}
-          {/* <button
-            className="btn btn-sm action-btn"
-            title="Edit"
-            onClick={() => handleEdit(record)}
-            style={{ borderColor: customColor, color: customColor }}
-          >
-            <FaEdit size={12} />
-          </button> */}
           <button
             className="btn btn-sm btn-outline-danger action-btn"
             title="Delete"
@@ -638,16 +644,29 @@ const StaffAttendance = () => {
               : 'Track gym member check-ins and daily attendance records.'}
           </p>
         </div>
-        <div className="col-12 col-md-4">
-          <div className="d-flex flex-column flex-md-row gap-2">
-            <button 
-              className="btn flex-fill" 
-              style={{ backgroundColor: 'transparent', border: '1px solid #dee2e6', color: '#6c757d', fontSize: '0.875rem' }}
-              onClick={exportCSV}
+        <div className="col-12 col-md-auto ms-auto d-flex gap-2">
+          <div className="dropdown w-100">
+            <button
+              className="btn btn-outline-secondary w-100 dropdown-toggle d-flex align-items-center justify-content-center"
+              type="button"
+              id="exportDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
             >
-              <FaFileExport className="me-1" /> 
-              <span className="d-none d-sm-inline">Export</span>
+              <FaDownload className="me-2" /> Export
             </button>
+            <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportDropdown">
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportCSV}>
+                  <strong>CSV</strong> Export to CSV
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportPDF}>
+                  <strong>PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

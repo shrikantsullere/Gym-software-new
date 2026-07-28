@@ -38,10 +38,19 @@ export const exportToPDF = (data, columns, title = "Report", filename = "Export"
   const doc = new jsPDF();
   doc.text(title, 14, 15);
   
+  // If data is array of objects, map to array of arrays using Object.values
+  // (Assuming caller mapped the object correctly before passing)
+  let finalData = data;
+  if (data.length > 0 && !Array.isArray(data[0]) && typeof data[0] === 'object') {
+    finalData = data.map(obj => Object.values(obj));
+  }
+
   autoTable(doc, {
     startY: 20,
     head: [columns],
-    body: data,
+    body: finalData,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [99, 102, 241] }
   });
   
   doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);

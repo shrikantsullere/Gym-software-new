@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaEdit, FaTrashAlt, FaPlus, FaSearch, FaFilter, FaFileExport, FaExclamationTriangle, FaCheck, FaClock } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrashAlt, FaPlus, FaSearch, FaFilter, FaFileExport, FaExclamationTriangle, FaCheck, FaClock, FaDownload } from 'react-icons/fa';
+import { exportToPDF } from '../../../utils/exportUtils';
 
 const DutyRoster = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -335,6 +336,26 @@ const DutyRoster = () => {
     URL.revokeObjectURL(url);
   };
 
+  const exportPDF = () => {
+    const header = ["Date", "Staff Name", "Role", "Shift Type", "Start Time", "End Time", "Approved By", "Status"];
+    const rows = filteredRecords.map(record => [
+      record.date,
+      record.staff_name,
+      record.role,
+      record.shift_type,
+      formatTime(record.start_time),
+      formatTime(record.end_time),
+      record.approved_by_name || "-",
+      record.status
+    ]);
+    exportToPDF(
+      rows,
+      header,
+      "Duty Roster Report",
+      `duty_roster_${new Date().toISOString().split('T')[0]}`
+    );
+  };
+
   return (
     <div className="container-fluid p-4">
       {/* Header */}
@@ -389,10 +410,30 @@ const DutyRoster = () => {
             <FaFilter className="me-1" /> Filter
           </button>
         </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <button className="btn btn-outline-secondary w-100" onClick={exportCSV}>
-            <FaFileExport className="me-1" /> Export
-          </button>
+        <div className="col-12 col-md-auto ms-auto d-flex gap-2">
+          <div className="dropdown">
+            <button
+              className="btn btn-outline-secondary w-100 dropdown-toggle d-flex align-items-center"
+              type="button"
+              id="exportDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaDownload className="me-2" /> Export
+            </button>
+            <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportDropdown">
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={exportCSV}>
+                  <strong>CSV</strong> Export to CSV
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={exportPDF}>
+                  <strong>PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 

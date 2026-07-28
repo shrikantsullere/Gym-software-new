@@ -4,7 +4,8 @@ import {
 } from 'react-bootstrap-icons';
 import axiosInstance from '../../Api/axiosInstance';
 import GetAdminId from '../../Api/GetAdminId';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaDownload } from 'react-icons/fa';
+import { exportToPDF } from '../../utils/exportUtils';
 
 const AdminTaskManagement = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -294,6 +295,39 @@ const AdminTaskManagement = () => {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = () => {
+    if (tasks.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    const header = ["Assigned To", "Task", "Description", "Due Date", "Priority", "Status"];
+    const rows = tasks.map(task => {
+      let assignedToLabel = 'Unknown';
+      if (task.roleId && task.role) {
+        assignedToLabel = `${task.role.name || task.role} Department`;
+      } else {
+        const staff = staffMembers.find(s => s.staffId === task.assignedTo);
+        assignedToLabel = staff ? staff.fullName : 'Unknown';
+      }
+      return [
+        assignedToLabel,
+        task.title || '',
+        task.description || '',
+        task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '',
+        task.priority || '',
+        task.status || ''
+      ];
+    });
+
+    exportToPDF(
+      rows,
+      header,
+      "Task Management Report",
+      `Tasks_Report_${new Date().toISOString().split('T')[0]}`
+    );
+  };
+
   const renderTaskModal = () => {
     if (!showTaskModal) return null;
 
@@ -448,12 +482,29 @@ const AdminTaskManagement = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">Task Management</h2>
         <div className="d-flex gap-2">
-          <button
-            className="btn btn-outline-success d-flex align-items-center"
-            onClick={handleExport}
-          >
-            Export CSV
-          </button>
+          <div className="dropdown">
+            <button
+              className="btn btn-outline-success dropdown-toggle d-flex align-items-center"
+              type="button"
+              id="exportTaskDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaDownload className="me-2" /> Export
+            </button>
+            <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportTaskDropdown">
+              <li>
+                <button className="dropdown-item text-success fw-medium" onClick={handleExport}>
+                  <strong>CSV</strong> Export to CSV
+                </button>
+              </li>
+              <li>
+                <button className="dropdown-item text-danger fw-medium" onClick={handleExportPDF}>
+                  <strong>PDF</strong> Export to PDF
+                </button>
+              </li>
+            </ul>
+          </div>
           {isAdmin && (
             <button
               className="btn btn-primary d-flex align-items-center"

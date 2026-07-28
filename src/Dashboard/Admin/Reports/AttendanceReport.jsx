@@ -9,6 +9,7 @@ import {
 import { FaDownload, FaCalendarAlt, FaFilter, FaUserCog } from "react-icons/fa";
 import axiosInstance from "../../../Api/axiosInstance";
 import GetAdminId from "../../../Api/GetAdminId";
+import { exportToPDF } from "../../../utils/exportUtils";
 
 // Super Admin → Reports → Attendance (Role-Based Only)
 export default function AttendanceReport() {
@@ -268,6 +269,52 @@ export default function AttendanceReport() {
       ? Math.round((totalPresent / totalScheduled) * 100)
       : 0;
   }, [staffFiltered, isStaff, apiData]);
+
+  // -------------------- EXPORT PDF --------------------
+  const exportPDF = (type) => {
+    if (!selectedRole) return alert("Please select a role first!");
+
+    if (type === "staff") {
+      const header = [
+        "Name",
+        "Role",
+        "Shift",
+        "Scheduled Hrs",
+        "Present Hrs",
+        "OT",
+        "Compliance %",
+      ];
+      const rows = staffFiltered.map((r) => [
+        r.name,
+        r.role,
+        r.shift || "-",
+        r.scheduled,
+        r.present,
+        Math.max(0, r.present - r.scheduled),
+        pct(r.present, r.scheduled),
+      ]);
+      exportToPDF(
+        rows,
+        header,
+        "Staff Attendance Report",
+        `attendance_staff_${dateFrom}_${dateTo}`
+      );
+    } else if (type === "member") {
+      const header = ["Name", "Check-ins", "No-shows", "Avg Session (min)"];
+      const rows = memberFiltered.map((r) => [
+        r.name,
+        r.checkins,
+        r.noShows,
+        r.avgSession,
+      ]);
+      exportToPDF(
+        rows,
+        header,
+        "Member Attendance Report",
+        `attendance_member_${dateFrom}_${dateTo}`
+      );
+    }
+  };
 
   // -------------------- EXPORT CSV --------------------
   const exportCSV = (type) => {
@@ -598,13 +645,29 @@ export default function AttendanceReport() {
                     <div className="card border-0 shadow-sm h-100">
                       <div className="card-header bg-white border-0 d-flex align-items-center justify-content-between">
                         <div className="fw-semibold">Staff Attendance</div>
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={() => exportCSV("staff")}
-                          disabled={staffFiltered.length === 0}
-                        >
-                          <FaDownload className="me-2" /> Export
-                        </button>
+                        <div className="dropdown">
+                          <button
+                            className="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center"
+                            type="button"
+                            id="exportStaffDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <FaDownload className="me-2" /> Export
+                          </button>
+                          <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportStaffDropdown">
+                            <li>
+                              <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={() => exportCSV("staff")}>
+                                <strong>CSV</strong> Export to CSV
+                              </button>
+                            </li>
+                            <li>
+                              <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={() => exportPDF("staff")}>
+                                <strong>PDF</strong> Export to PDF
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
                       <div className="table-responsive">
                         <table className="table table-hover align-middle mb-0">
@@ -657,13 +720,29 @@ export default function AttendanceReport() {
                     <div className="card border-0 shadow-sm h-100">
                       <div className="card-header bg-white border-0 d-flex align-items-center justify-content-between">
                         <div className="fw-semibold">Member Attendance</div>
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={() => exportCSV("member")}
-                          disabled={memberFiltered.length === 0}
-                        >
-                          <FaDownload className="me-2" /> Export
-                        </button>
+                        <div className="dropdown">
+                          <button
+                            className="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center"
+                            type="button"
+                            id="exportMemberDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <FaDownload className="me-2" /> Export
+                          </button>
+                          <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportMemberDropdown">
+                            <li>
+                              <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={() => exportCSV("member")}>
+                                <strong>CSV</strong> Export to CSV
+                              </button>
+                            </li>
+                            <li>
+                              <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={() => exportPDF("member")}>
+                                <strong>PDF</strong> Export to PDF
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
                       <div className="table-responsive">
                         <table className="table table-hover align-middle mb-0">
@@ -731,6 +810,8 @@ function pct(present, scheduled) {
   if (!scheduled) return "0%";
   return Math.round((present / scheduled) * 100) + "%";
 }
+
+
 
 function downloadCSV(rows, filename) {
   const csv = rows.map((r) => r.join(",")).join("\n");

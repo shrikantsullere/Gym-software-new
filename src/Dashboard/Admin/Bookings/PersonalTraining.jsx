@@ -3,6 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import axiosInstance from '../../../Api/axiosInstance';
 import GetAdminId from '../../../Api/GetAdminId';
+import { exportToPDF } from '../../../utils/exportUtils';
+import { FaDownload } from 'react-icons/fa';
 
 const PersonalTraining = () => {
   const adminId = GetAdminId();
@@ -287,6 +289,27 @@ const PersonalTraining = () => {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = () => {
+    const header = ['ID', 'Member Name', 'Trainer', 'Type', 'Date', 'Time', 'Price', 'Payment Status', 'Booking Status'];
+    const rows = filteredData.map(row => [
+      row.id,
+      row.memberName || '',
+      row.trainerName || '',
+      row.type || '',
+      row.date || '',
+      row.time || '',
+      (row.price || '').replace('₹', ''),
+      row.paymentStatus || '',
+      row.bookingStatus || ''
+    ]);
+    exportToPDF(
+      rows,
+      header,
+      "Personal Training Details Report",
+      "personal_training_details"
+    );
+  };
+
   return (
     <div className="container-fluid p-2 p-md-4">
       <div className="d-flex justify-content-between align-items-center mb-3 mb-md-4">
@@ -368,9 +391,29 @@ const PersonalTraining = () => {
             </select>
           </div>
           <div className="col-md-3 text-md-end">
-            <button className="btn btn-success" onClick={handleExport}>
-              <i className="bi bi-file-earmark-excel me-2"></i> Export CSV
-            </button>
+            <div className="dropdown">
+              <button
+                className="btn btn-success dropdown-toggle"
+                type="button"
+                id="exportPTDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <FaDownload className="me-2" /> Export
+              </button>
+              <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportPTDropdown">
+                <li>
+                  <button className="dropdown-item text-success fw-medium" onClick={handleExport}>
+                    <strong>CSV</strong> Export to CSV
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item text-danger fw-medium" onClick={handleExportPDF}>
+                    <strong>PDF</strong> Export to PDF
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       )}

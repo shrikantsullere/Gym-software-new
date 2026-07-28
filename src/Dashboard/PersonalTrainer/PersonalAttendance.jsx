@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
-import { FaEye, FaTrash, FaTimesCircle } from "react-icons/fa";
+import { Form, Button, Table, Modal, Row, Col, Card, Spinner, Alert, Dropdown } from "react-bootstrap";
+import { FaEye, FaTrash, FaTimesCircle, FaDownload } from "react-icons/fa";
 import BaseUrl from '../../Api/BaseUrl';
 import * as XLSX from "xlsx";
+import { exportToPDF } from '../../utils/exportUtils';
 
 const PersonalAttendance = () => {
   const [search, setSearch] = useState("");
@@ -218,6 +219,30 @@ const PersonalAttendance = () => {
     XLSX.writeFile(workbook, `Attendance_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  const handleExportPDF = () => {
+    if (filteredAttendance.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    
+    const header = ["Attendance ID", "Check-In", "Check-Out", "Work Hours", "Mode", "Notes"];
+    const rows = filteredAttendance.map(item => [
+      item.attendance_id,
+      item.checkin_time || "--",
+      item.checkout_time || "--",
+      item.workHours || "--",
+      item.mode || "Manual",
+      item.notes || ""
+    ]);
+
+    exportToPDF(
+      rows,
+      header,
+      "PT Attendance Report",
+      `Attendance_Report_${new Date().toISOString().split('T')[0]}`
+    );
+  };
+
   return (
     <div className="p-3 p-md-4 bg-white rounded shadow">
       <h2 className="mb-2 mb-md-3 fw-bold">Attendance Management</h2>
@@ -262,7 +287,19 @@ const PersonalAttendance = () => {
               />
             </Col>
             <Col xs={12} sm={12} md={2} className="d-flex justify-content-start justify-content-md-end">
-              <Button variant="outline-secondary" onClick={handleExport} className="w-100 w-md-auto">Export</Button>
+              <Dropdown className="w-100 w-md-auto">
+                <Dropdown.Toggle variant="outline-secondary" className="w-100 d-flex align-items-center justify-content-center gap-2">
+                  <FaDownload /> Export
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="shadow-sm border-0">
+                  <Dropdown.Item onClick={handleExport} className="text-success fw-medium">
+                    <strong>CSV</strong> Export to CSV
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={handleExportPDF} className="text-danger fw-medium">
+                    <strong>PDF</strong> Export to PDF
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             </Col>
           </Row>
 

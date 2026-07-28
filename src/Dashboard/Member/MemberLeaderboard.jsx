@@ -10,9 +10,11 @@ import {
   faTrophy, 
   faRedo, 
   faFileExcel,
-  faCalendarAlt
+  faCalendarAlt,
+  faDownload
 } from '@fortawesome/free-solid-svg-icons';
 import * as XLSX from 'xlsx';
+import { exportToPDF } from '../../utils/exportUtils';
 import './MemberLeaderboard.css';
 import CustomDatePicker from '../../Components/CustomDatePicker';
 
@@ -188,6 +190,29 @@ const MemberLeaderboard = () => {
     const monthFileStr = (selectedMonth || 'current').replace('-', '_');
     const fileName = `leaderboard_${activeTab}_${monthFileStr}.xlsx`;
     XLSX.writeFile(workbook, fileName);
+  };
+
+  const handleExportPDF = () => {
+    if (!leaderboardData || leaderboardData.length === 0) return;
+
+    const exportData = leaderboardData.map(item => {
+      const commonData = {
+        "Rank": item.rank,
+        "Member Name": item.fullName || item.member_name,
+        "Weight Change": item.weight_change_str || "-",
+        "Score": item.score !== undefined ? item.score : "-"
+      };
+      return commonData;
+    });
+
+    const header = Object.keys(exportData[0]);
+    const rows = exportData.map(obj => Object.values(obj));
+    exportToPDF(
+      rows,
+      header,
+      getLeaderboardTitle(),
+      `leaderboard_${activeTab}_${selectedMonth || 'current'}`
+    );
   };
 
   const renderPodium = () => {
@@ -556,13 +581,30 @@ const MemberLeaderboard = () => {
           </div>
         </div>
 
-        <button
-          className="btn btn-success rounded-pill px-4 py-2 fw-semibold shadow-sm text-nowrap"
-          onClick={handleExportExcel}
-          disabled={leaderboardData.length === 0}
-        >
-          <FontAwesomeIcon icon={faFileExcel} className="me-2" /> Export Excel
-        </button>
+        <div className="dropdown">
+          <button
+            className="btn btn-success dropdown-toggle d-flex align-items-center rounded-pill px-4 py-2 fw-semibold shadow-sm text-nowrap"
+            type="button"
+            id="exportLeaderboardDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            disabled={leaderboardData.length === 0}
+          >
+            <FontAwesomeIcon icon={faDownload} className="me-2" /> Export Data
+          </button>
+          <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportLeaderboardDropdown">
+            <li>
+              <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={handleExportExcel}>
+                <strong>CSV</strong> Export to CSV
+              </button>
+            </li>
+            <li>
+              <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={handleExportPDF}>
+                <strong>PDF</strong> Export to PDF
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
 
       {/* Main Content Area */}

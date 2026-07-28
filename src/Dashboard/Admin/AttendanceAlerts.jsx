@@ -25,7 +25,7 @@ const AttendanceAlerts = () => {
   const [msgTemplate, setMsgTemplate] = useState('template1');
   const [customMsg, setCustomMsg] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
-  const [notifChannels, setNotifChannels] = useState(['EMAIL', 'IN_APP']); // Multi-select array
+  const [notifChannels, setNotifChannels] = useState(['IN_APP']); // Default: IN_APP (always works)
   const [showWaBulkList, setShowWaBulkList] = useState(false);
   const [sentWaIds, setSentWaIds] = useState([]);
 
@@ -188,29 +188,55 @@ const AttendanceAlerts = () => {
       // ── Single Member Send ──
       setSendingMsg(true);
       const apiChannels = notifChannels.filter(c => c !== "WHATSAPP");
+      const results = [];
+
       try {
         for (const channel of apiChannels) {
-          let toValue = channel === "IN_APP" ? String(selectedMember.userId || selectedMember.id) : selectedMember.email;
-          if (!toValue) continue;
+          // Personalize message for single member too
+          const personalizedMsg = customMsg
+            .replace(/{name}/g, selectedMember.fullName || 'Member')
+            .replace(/{daysAbsent}/g, selectedMember.daysAbsent || 'several');
 
-          await axios.post(`${BaseUrl}notif/send`, {
-            type: channel,
-            to: toValue,
-            message: customMsg,
-            memberId: selectedMember.id,
-            subject: "GymSoft — We Miss You! 💪",
-          }, axiosConfig).catch(e => console.error(e));
+          let toValue = channel === "IN_APP" ? String(selectedMember.userId || selectedMember.id) : selectedMember.email;
+          if (!toValue) {
+            results.push(`${channel}: skipped (no target address)`);
+            continue;
+          }
+
+          try {
+            const res = await axios.post(`${BaseUrl}notif/send`, {
+              type: channel,
+              to: toValue,
+              message: personalizedMsg,
+              memberId: selectedMember.id,
+              subject: "GymSoft — We Miss You! 💪",
+            }, axiosConfig);
+
+            if (res.data?.skipped) {
+              results.push(`${channel}: skipped (${res.data.message || 'SMTP not configured'})`);
+            } else if (res.data?.success) {
+              results.push(`${channel}: ✅ sent`);
+            } else {
+              results.push(`${channel}: ⚠️ ${res.data?.message || 'unknown result'}`);
+            }
+          } catch (e) {
+            results.push(`${channel}: ❌ failed`);
+            console.error(`${channel} send error:`, e);
+          }
         }
 
         if (includesWa) {
           handleSendWaDirect(selectedMember);
+          results.push(`WHATSAPP: 💬 opened`);
         }
 
-        alert(`✅ Message dispatched to ${selectedMember.fullName}!`);
+        const inAppSent = results.some(r => r.startsWith('IN_APP') && r.includes('✅'));
+        const summary = results.join('\n');
+        alert(`Message to ${selectedMember.fullName}:\n${summary}${inAppSent ? '\n\n🔔 In-App notification delivered to member dashboard.' : ''}`);
         setShowMsgModal(false);
       } catch (err) {
         console.error("Error sending single message", err);
-        alert("Message dispatched.");
+        alert("Notification attempted. Check console for details.");
         setShowMsgModal(false);
       } finally {
         setSendingMsg(false);
@@ -221,6 +247,7 @@ const AttendanceAlerts = () => {
       const targetMembers = members.filter((m) => selectedIds.includes(m.id));
       setSendingMsg(true);
       let successCount = 0;
+      let skippedEmailCount = 0;
 
       try {
         const apiChannels = notifChannels.filter(c => c !== "WHATSAPP");
@@ -233,13 +260,18 @@ const AttendanceAlerts = () => {
             let toValue = channel === "IN_APP" ? String(m.userId || m.id) : m.email;
             if (!toValue) continue;
 
-            await axios.post(`${BaseUrl}notif/send`, {
-              type: channel,
-              to: toValue,
-              message: personalizedMsg,
-              memberId: m.id,
-              subject: "GymSoft — We Miss You! 💪",
-            }, axiosConfig).catch(e => console.error(e));
+            try {
+              const res = await axios.post(`${BaseUrl}notif/send`, {
+                type: channel,
+                to: toValue,
+                message: personalizedMsg,
+                memberId: m.id,
+                subject: "GymSoft — We Miss You! 💪",
+              }, axiosConfig);
+              if (res.data?.skipped && channel === 'EMAIL') skippedEmailCount++;
+            } catch (e) {
+              console.error(`Bulk ${channel} to ${m.fullName} failed:`, e);
+            }
           }
           successCount++;
         }
@@ -249,7 +281,8 @@ const AttendanceAlerts = () => {
           setSendingMsg(false);
           handleLaunchAllWa(targetMembers);
         } else {
-          alert(`✅ Bulk messages dispatched to ${successCount}/${targetMembers.length} members!`);
+          const emailNote = skippedEmailCount > 0 ? `\n(${skippedEmailCount} email(s) skipped — SMTP not configured on server)` : '';
+          alert(`✅ Bulk messages dispatched to ${successCount}/${targetMembers.length} members!${emailNote}`);
           setShowMsgModal(false);
           setSelectedIds([]);
         }
@@ -262,7 +295,6 @@ const AttendanceAlerts = () => {
       }
     }
   };
-
 
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
@@ -538,8 +570,8 @@ const AttendanceAlerts = () => {
                       </label>
                       <div className="d-flex flex-wrap gap-2">
                         {[
-                          { id: 'EMAIL', label: '📧 Email' },
-                          { id: 'IN_APP', label: '🔔 In-App' },
+                          { id: 'IN_APP', label: '🔔 In-App (Notification Bell)' },
+                          { id: 'EMAIL', label: '📧 Email (requires SMTP config)' },
                         ].map((ch) => {
                           const isSelected = notifChannels.includes(ch.id);
                           return (
@@ -565,6 +597,11 @@ const AttendanceAlerts = () => {
                           );
                         })}
                       </div>
+                      {notifChannels.includes('EMAIL') && (
+                        <div className="alert alert-warning py-2 mt-2 small mb-0">
+                          ⚠️ <strong>Email</strong> requires SMTP credentials to be set on the server. If not configured, email will be skipped but In-App will still be sent.
+                        </div>
+                      )}
                     </div>
 
                     <div className="mb-3">

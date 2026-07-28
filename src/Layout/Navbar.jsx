@@ -91,7 +91,13 @@ const Navbar = ({ toggleSidebar }) => {
     try {
       const u = getUserFromLocalStorage();
       if (u && u.id) {
-        const res = await axiosInstance.get(`/app-notifications?limit=50`);
+        let res;
+        const role = u.roleName;
+        if (role === 'Member') {
+          res = await axiosInstance.get(`/app-notifications?limit=50`);
+        } else {
+          res = await axiosInstance.get(`/app-notifications?limit=50`);
+        }
         if (res.data && res.data.notifications) {
           setNotifications(res.data.notifications);
         }

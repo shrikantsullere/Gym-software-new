@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../Api/axiosInstance';
 import { FaDownload, FaCalendarAlt, FaClock, FaUser, FaPhone } from 'react-icons/fa';
 import { useSocket } from '../../../Context/SocketContext';
+import { exportToPDF } from '../../../utils/exportUtils';
 
 const BookingDetailsList = ({ type }) => {
   const [activeTab, setActiveTab] = useState(type || 'classes');
@@ -104,6 +105,29 @@ const BookingDetailsList = ({ type }) => {
     document.body.removeChild(a);
   };
 
+  const exportToPDFFn = () => {
+    if (bookings.length === 0) return;
+    
+    const header = ['Name', 'Phone', 'Email', activeTab === 'classes' ? 'Class Name' : 'Session Name', 'Date', 'Start Time', 'End Time', 'Status', 'Booking Date'];
+    const rows = bookings.map(row => [
+      row.memberName || '',
+      row.memberPhone || '',
+      row.memberEmail || '',
+      activeTab === 'classes' ? row.class_name || '' : row.sessionName || '',
+      new Date(row.date).toLocaleDateString(),
+      row.startTime || '',
+      row.endTime || '',
+      row.bookingStatus || '',
+      new Date(row.createdAt).toLocaleDateString()
+    ]);
+    exportToPDF(
+      rows,
+      header,
+      `${activeTab === 'classes' ? 'Class' : 'Session'} Bookings Report`,
+      `${activeTab}_bookings_${new Date().toLocaleDateString()}`
+    );
+  };
+
   return (
     <div className="mt-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
@@ -111,14 +135,31 @@ const BookingDetailsList = ({ type }) => {
           <h4 className="fw-bold mb-0 text-dark">Booking Details</h4>
           <p className="text-muted mb-0">Manage and view all members joined for classes and sessions</p>
         </div>
-        <button 
-          className="btn btn-primary d-flex align-items-center gap-2"
-          onClick={exportToCSV}
-          disabled={bookings.length === 0}
-          style={{ backgroundColor: '#2f6a87', border: 'none', borderRadius: '8px', height: '40px' }}
-        >
-          <FaDownload /> Export CSV
-        </button>
+        <div className="dropdown">
+          <button
+            className="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
+            type="button"
+            id="exportBookingDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            disabled={bookings.length === 0}
+            style={{ backgroundColor: '#2f6a87', border: 'none', borderRadius: '8px', height: '40px' }}
+          >
+            <FaDownload /> Export
+          </button>
+          <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportBookingDropdown">
+            <li>
+              <button className="dropdown-item text-success fw-medium" onClick={exportToCSV}>
+                <strong>CSV</strong> Export to CSV
+              </button>
+            </li>
+            <li>
+              <button className="dropdown-item text-danger fw-medium" onClick={exportToPDFFn}>
+                <strong>PDF</strong> Export to PDF
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
 
       {!type && (

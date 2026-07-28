@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../Api/axiosInstance';
 import AssessmentHistory from './AssessmentHistory';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { FaDownload } from 'react-icons/fa';
 
 const MemberAssessmentDashboard = ({ memberId }) => {
   const navigate = useNavigate();
@@ -313,6 +316,47 @@ const MemberAssessmentDashboard = ({ memberId }) => {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = () => {
+    if (!history || history.length === 0) {
+      alert("No assessment history available to export.");
+      return;
+    }
+
+    const memberName = memberInfo?.fullName || memberInfo?.name || `Member_${memberId}`;
+    const selectedMonthLabel = new Date(`${selectedMonth}-01`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const prevMonthLabel = new Date(`${prevMonthStr}-01`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const doc = new jsPDF();
+    doc.text(`Assessment Report: ${memberName}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Report Month: ${selectedMonthLabel}`, 14, 22);
+
+    autoTable(doc, {
+      startY: 28,
+      head: [['Metric', `Prev (${prevMonthLabel})`, `Curr (${selectedMonthLabel})`, 'Change', 'Status']],
+      body: comparisonRows.map(r => [r.metric, r.prevStr, r.currStr, r.diffStr, r.status]),
+      headStyles: { fillColor: [99, 102, 241] }
+    });
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 10,
+      head: [['Date', 'Goal', 'Weight (kg)', 'Height (cm)', 'BMI', 'Body Fat %', 'Lean Mass (kg)']],
+      body: history.map(item => [
+        item.assessment_date ? new Date(item.assessment_date).toLocaleDateString() : 'N/A',
+        (item.inputs?.fitness_goal || item.fitness_goal || '-').replace(/_/g, ' '),
+        item.inputs?.weight_kg ?? item.weight_kg ?? '-',
+        item.inputs?.height_cm ?? item.height_cm ?? '-',
+        item.metrics?.bmi ?? item.bmi ?? '-',
+        item.metrics?.body_fat_percentage ?? item.body_fat_percentage ?? '-',
+        item.metrics?.lean_body_mass ?? item.lean_body_mass ?? '-'
+      ]),
+      headStyles: { fillColor: [99, 102, 241] },
+      styles: { fontSize: 8 }
+    });
+
+    doc.save(`${memberName.replace(/\s+/g, '_')}_Progress_Report_${selectedMonth}.pdf`);
+  };
+
   const selectedMonthObj = new Date(`${selectedMonth}-01`);
   const selectedMonthText = isNaN(selectedMonthObj) ? selectedMonth : selectedMonthObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
@@ -353,15 +397,30 @@ const MemberAssessmentDashboard = ({ memberId }) => {
                   />
                 </div>
 
-                {/* Export CSV Button */}
-                <button 
-                  onClick={handleExportCSV}
-                  className="btn btn-outline-success btn-sm px-3 py-2 fw-semibold d-flex align-items-center gap-2 shadow-none"
-                  title="Download CSV Progress Report"
-                >
-                  <i className="bi bi-file-earmark-spreadsheet-fill"></i>
-                  <span className="text-nowrap">Export CSV</span>
-                </button>
+                {/* Export Data Dropdown */}
+                <div className="dropdown">
+                  <button
+                    className="btn btn-outline-success dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-semibold shadow-sm w-100 justify-content-center"
+                    type="button"
+                    id="exportAssessmentDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <FaDownload /> Export Data
+                  </button>
+                  <ul className="dropdown-menu shadow-sm border-0" aria-labelledby="exportAssessmentDropdown">
+                    <li>
+                      <button className="dropdown-item d-flex align-items-center gap-2 text-success fw-medium" onClick={handleExportCSV}>
+                        <strong>CSV</strong> Export to CSV
+                      </button>
+                    </li>
+                    <li>
+                      <button className="dropdown-item d-flex align-items-center gap-2 text-danger fw-medium" onClick={handleExportPDF}>
+                        <strong>PDF</strong> Export to PDF
+                      </button>
+                    </li>
+                  </ul>
+                </div>
 
                 {/* Log New Assessment Button */}
                 <button 

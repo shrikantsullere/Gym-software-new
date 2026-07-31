@@ -1536,7 +1536,7 @@ const LendingPage = () => {
                         if (isTrial) {
                           handlePurchaseSubmit(false); // Direct signup for trials
                         } else {
-                          setPurchaseStep('payment'); // Open payment step for paid plans
+                          handlePurchaseSubmit(false); // Direct signup for paid plans (triggers Razorpay)
                         }
                       }}
                       className="btn w-100 py-3 fw-semibold mt-2"
@@ -1550,159 +1550,9 @@ const LendingPage = () => {
                         boxShadow: '0 2px 8px rgba(96, 165, 250, 0.25)'
                       }}
                     >
-                      {purchaseFormData.selectedPlan.toLowerCase().includes('trial') ? 'Activate Free Trial' : 'Proceed to Payment'}
+                      {purchaseFormData.selectedPlan.toLowerCase().includes('trial') ? 'Activate Free Trial' : 'Proceed to Payment (Razorpay)'}
                     </button>
                   </>
-                )}
-
-                {/* Simulated Payment Step */}
-                {purchaseStep === 'payment' && (
-                  <div className="px-1">
-                    <div className="bg-light rounded-3 p-3 mb-4 border" style={{ fontSize: '0.9rem' }}>
-                      <h6 className="fw-bold text-dark mb-2">Order Summary</h6>
-                      <div className="d-flex justify-content-between mb-1">
-                        <span className="text-muted">Plan Selected:</span>
-                        <span className="fw-semibold text-dark">{purchaseFormData.selectedPlan}</span>
-                      </div>
-
-                      <div className="d-flex justify-content-between border-top pt-2 mt-2" style={{ fontSize: '1.05rem' }}>
-                        <span className="fw-bold text-dark">Amount to Pay:</span>
-                        <span className="fw-bold text-primary">
-                          {(() => {
-                            const matched = plans.find(p => p.name === purchaseFormData.selectedPlan);
-                            const price = matched ? matched.price : 0;
-                            const discount = matched?.discountPercent || 0;
-                            const isYearly = matched?.duration === 'Yearly';
-                            if (isYearly && discount > 0) {
-                              const discounted = Math.round(price - (price * discount / 100));
-                              return (
-                                <span>
-                                  <span className="text-muted me-2" style={{ textDecoration: 'line-through', fontSize: '0.9rem' }}>
-                                    ₹{price.toLocaleString('en-IN')}
-                                  </span>
-                                  ₹{discounted.toLocaleString('en-IN')}
-                                  <span className="badge bg-success ms-2" style={{ fontSize: '0.7rem' }}>Save {discount}%</span>
-                                </span>
-                              );
-                            }
-                            if (matched) return `₹${price.toLocaleString('en-IN')}`;
-                            if (purchaseFormData.selectedPlan.toLowerCase().includes('gold')) return '₹4,998';
-                            if (purchaseFormData.selectedPlan.toLowerCase().includes('basic')) return '₹8,999';
-                            if (purchaseFormData.selectedPlan.toLowerCase().includes('pro')) return '₹11,999';
-                            return '₹0';
-                          })()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="form-label small fw-semibold text-muted mb-2 d-block">Choose Payment Option</label>
-                      <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className={`btn flex-fill py-3 fw-bold rounded-3 ${purchasePaymentMethod === 'upi' ? 'btn-primary text-white' : 'btn-outline-primary'}`}
-                          onClick={() => setPurchasePaymentMethod('upi')}
-                          style={{ fontSize: '0.9rem' }}
-                        >
-                          📱 UPI (Paytm/GPay)
-                        </button>
-                        <button
-                          type="button"
-                          className={`btn flex-fill py-3 fw-bold rounded-3 ${purchasePaymentMethod === 'card' ? 'btn-primary text-white' : 'btn-outline-primary'}`}
-                          onClick={() => setPurchasePaymentMethod('card')}
-                          style={{ fontSize: '0.9rem' }}
-                        >
-                          💳 Card (Credit/Debit)
-                        </button>
-                      </div>
-                    </div>
-
-                    {purchasePaymentMethod === 'upi' ? (
-                      <div className="mb-4">
-                        <label className="form-label small fw-semibold text-muted">Enter UPI ID</label>
-                        <input
-                          type="text"
-                          className="form-control border-1 p-2 rounded-3"
-                          placeholder="username@upi"
-                          value={purchaseUpiId}
-                          onChange={(e) => setPurchaseUpiId(e.target.value)}
-                          style={{ fontSize: '0.95rem' }}
-                        />
-                        <small className="text-muted mt-1 d-block" style={{ fontSize: '11px' }}>Example: gymowner@gpay</small>
-                      </div>
-                    ) : (
-                      <div className="row g-2 mb-4">
-                        <div className="col-12">
-                          <label className="form-label small fw-semibold text-muted mb-1">Card Number</label>
-                          <input
-                            type="text"
-                            className="form-control border-1 p-2 rounded-3"
-                            placeholder="4111 2222 3333 4444"
-                            maxLength="19"
-                            value={purchaseCardNumber}
-                            onChange={(e) => setPurchaseCardNumber(e.target.value)}
-                            style={{ fontSize: '0.95rem' }}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label small fw-semibold text-muted mb-1">Expiry Date</label>
-                          <input
-                            type="text"
-                            className="form-control border-1 p-2 rounded-3"
-                            placeholder="MM/YY"
-                            maxLength="5"
-                            value={purchaseCardExpiry}
-                            onChange={(e) => setPurchaseCardExpiry(e.target.value)}
-                            style={{ fontSize: '0.95rem' }}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label small fw-semibold text-muted mb-1">CVV</label>
-                          <input
-                            type="password"
-                            className="form-control border-1 p-2 rounded-3"
-                            placeholder="123"
-                            maxLength="3"
-                            value={purchaseCardCvv}
-                            onChange={(e) => setPurchaseCardCvv(e.target.value)}
-                            style={{ fontSize: '0.95rem' }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-                      <button
-                        type="button"
-                        className="btn btn-light rounded-pill px-4"
-                        onClick={() => setPurchaseStep('register')}
-                      >
-                        Back
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-success rounded-pill px-5 fw-bold"
-                        onClick={() => {
-                          if (purchasePaymentMethod === 'upi') {
-                            if (!purchaseUpiId.trim()) {
-                              alert("Please enter a valid UPI ID");
-                              return;
-                            }
-                            handlePurchaseSubmit(true, 'UPI', purchaseUpiId);
-                          } else {
-                            if (!purchaseCardNumber.trim() || !purchaseCardExpiry.trim() || !purchaseCardCvv.trim()) {
-                              alert("Please fill all card details");
-                              return;
-                            }
-                            const maskedCard = `Card (**** ${purchaseCardNumber.slice(-4)})`;
-                            handlePurchaseSubmit(true, 'Card', maskedCard);
-                          }
-                        }}
-                      >
-                        Pay & Activate License
-                      </button>
-                    </div>
-                  </div>
                 )}
 
                 {/* Simulated Processing Step */}
@@ -1711,8 +1561,8 @@ const LendingPage = () => {
                     <div className="spinner-border text-primary mb-4" role="status" style={{ width: '4rem', height: '4rem' }}>
                       <span className="visually-hidden">Loading...</span>
                     </div>
-                    <h4 className="fw-bold">Processing Your Payment</h4>
-                    <p className="text-muted">Do not close this window. Verifying transaction with Razorpay Demo Servers...</p>
+                    <h4 className="fw-bold">Processing Your Request</h4>
+                    <p className="text-muted">Please wait...</p>
                   </div>
                 )}
 

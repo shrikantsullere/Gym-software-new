@@ -141,6 +141,35 @@ const ForgotPassword = () => {
     }
   };
 
+  const handleLoginWithOtp = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axiosInstance.post("/auth/login-with-reset-token", { 
+        email, 
+        resetToken 
+      });
+
+      if (res.data.success) {
+        toast.success("Login successful!");
+        localStorage.setItem("token", res.data.token);
+        if (res.data.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+          navigate(`/${res.data.user.roleName.toLowerCase()}-dashboard`);
+        } else if (res.data.member) {
+          localStorage.setItem("user", JSON.stringify({ ...res.data.member, roleName: "Member" }));
+          navigate("/member-dashboard");
+        }
+        window.location.reload();
+      } else {
+        toast.error(res.data.message || "Failed to login with OTP.");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to login with OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -278,6 +307,18 @@ const ForgotPassword = () => {
                 <button type="submit" className="btn btn-warning w-100 text-white fw-semibold mb-3" disabled={isLoading}>
                   {isLoading ? <span className="spinner-border spinner-border-sm me-2" role="status"></span> : null}
                   Update Password
+                </button>
+                
+                <div className="text-center text-muted mb-3">OR</div>
+                
+                <button 
+                  type="button" 
+                  className="btn btn-outline-dark w-100 fw-semibold mb-3" 
+                  disabled={isLoading}
+                  onClick={handleLoginWithOtp}
+                >
+                  {isLoading ? <span className="spinner-border spinner-border-sm me-2" role="status"></span> : null}
+                  Login with OTP (Don't Reset Password)
                 </button>
               </form>
             </>

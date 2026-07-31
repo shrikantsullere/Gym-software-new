@@ -73,6 +73,12 @@ const LendingPage = () => {
 
     fetchPlans();
     fetchAutomationSettings();
+
+    // Load Razorpay Script for real checkout
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
   }, []);
   const navigate = useNavigate();
 
@@ -248,21 +254,129 @@ const LendingPage = () => {
         formData.append("profileImage", profileImageFile);
       }
 
-      // 发送API请求
+      if (!demoPaid) {
+        // Real Razorpay Flow
+        const cleanUrl = BaseUrl.endsWith('/') ? BaseUrl.slice(0, -1) : BaseUrl;
+        
+        // 1. Create Razorpay Order
+        const orderRes = await fetch(`${cleanUrl}/purchases/create-razorpay-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: getSelectedPlanPrice() })
+        });
+        
+        if (!orderRes.ok) {
+          const errData = await orderRes.json();
+          throw new Error(errData.message || 'Failed to initialize payment');
+        }
+        
+        const { order, key, isMock } = await orderRes.json();
+        
+        if (isMock) {
+          // If fallback to mock, just proceed with normal /purchases submit but wait, we can just call verify directly
+          formData.append('razorpay_order_id', order.id);
+          formData.append('razorpay_payment_id', 'pay_mock_' + Date.now());
+          formData.append('razorpay_signature', 'mock_signature');
+          formData.append('isMock', 'true');
+          
+          const verifyRes = await fetch(`${cleanUrl}/purchases/verify-razorpay-payment`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!verifyRes.ok) {
+             const vErr = await verifyRes.json();
+             throw new Error(vErr.message || 'Verification failed');
+          }
+          
+          const resData = await verifyRes.json();
+          
+          // Capture generated transaction ID
+          const finalTxnId = resData.data?.transactionId || `PAY-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(resData.data?.id || 0).padStart(4, '0')}`;
+          setPurchaseTxnId(finalTxnId);
+          setPurchaseStep('success');
+          
+          setTimeout(() => {
+            setShowPurchaseModal(false);
+            setPurchaseStep('register');
+            setPurchaseTxnId('');
+          }, 4500);
+          
+          setLastPurchase({ ...purchaseFormData });
+          return;
+        }
+
+        // 2. Open Real Razorpay Checkout
+        return new Promise((resolve, reject) => {
+          const options = {
+            key: key,
+            amount: order.amount,
+            currency: order.currency,
+            name: "Gym SaaS Software",
+            description: `Purchase ${purchaseFormData.selectedPlan}`,
+            order_id: order.id,
+            handler: async function (response) {
+              try {
+                formData.append('razorpay_order_id', response.razorpay_order_id);
+                formData.append('razorpay_payment_id', response.razorpay_payment_id);
+                formData.append('razorpay_signature', response.razorpay_signature);
+
+                const verifyRes = await fetch(`${cleanUrl}/purchases/verify-razorpay-payment`, {
+                  method: 'POST',
+                  body: formData
+                });
+                
+                if (!verifyRes.ok) {
+                  const vErr = await verifyRes.json();
+                  throw new Error(vErr.message || 'Payment verification failed');
+                }
+                
+                const resData = await verifyRes.json();
+                
+                // Success logic
+                const finalTxnId = resData.data?.transactionId || `PAY-${Date.now()}`;
+                setPurchaseTxnId(finalTxnId);
+                setPurchaseStep('success');
+                
+                setTimeout(() => {
+                  setShowPurchaseModal(false);
+                  setPurchaseStep('register');
+                  setPurchaseTxnId('');
+                }, 4500);
+                
+                setLastPurchase({ ...purchaseFormData });
+                resolve();
+              } catch (vErr) {
+                console.error("Verification error:", vErr);
+                alert("Error verifying payment.");
+                reject(vErr);
+              }
+            },
+            modal: {
+              ondismiss: function() {
+                setPurchaseStep('register');
+                reject(new Error("Payment cancelled"));
+              }
+            },
+            theme: { color: "#6EB2CC" }
+          };
+          const rzp1 = new window.Razorpay(options);
+          rzp1.open();
+        });
+      }
+
+      // If demoPaid is true, process mock payment validation directly (Admin demo tests)
       const cleanUrl = BaseUrl.endsWith('/') ? BaseUrl.slice(0, -1) : BaseUrl;
       const response = await fetch(`${cleanUrl}/purchases`, {
         method: 'POST',
-        // Do NOT set Content-Type header so the browser sets it automatically with the boundary!
         body: formData
       });
 
-      // 检查响应状态
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to process purchase');
       }
 
-      // 解析成功响应
       const resData = await response.json();
 
       // Submit lead details to SaaS Leads database as well

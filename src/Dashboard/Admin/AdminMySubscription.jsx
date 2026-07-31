@@ -42,6 +42,12 @@ const AdminMySubscription = () => {
     }
     fetchPlans();
     fetchAutomationSettings();
+
+    // Load Razorpay Script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
   }, []);
 
   const fetchAutomationSettings = async () => {
@@ -150,6 +156,8 @@ const AdminMySubscription = () => {
     setShowModal(true);
   };
 
+  const [mockPurchaseData, setMockPurchaseData] = useState(null);
+
   const handleSubmitRequest = async (demoPaid = false) => {
     const selectedPlanData = plans.find(p => p.id === selectedPlanId);
     if (!selectedPlanData) return;
@@ -158,7 +166,7 @@ const AdminMySubscription = () => {
     try {
       const payload = {
         selectedPlan: selectedPlanData.name,
-        companyName: user.fullName || "Gym Owner", // Fallback to fullName since companyName might not exist in token
+        companyName: user.fullName || "Gym Owner", 
         email: user.email || "",
         phone: user.phone || "",
         adminName: user.fullName || "",
@@ -172,38 +180,96 @@ const AdminMySubscription = () => {
         paymentDetails: demoPaid ? (paymentMethod === 'upi' ? upiId : `Card (**** ${cardNumber.slice(-4)})`) : null
       };
 
-      const response = await axiosInstance.post("/purchases", payload);
-      if (response.data && response.data.success) {
-        const txnId = response.data.data?.transactionId || `PAY-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${String(response.data.data?.id || 0).padStart(4,'0')}`;
+      if (!demoPaid) {
+        // Step 1: Create Razorpay Order
+        const res = await axiosInstance.post("/purchases/create-razorpay-order", { amount: payload.amount });
+        if (!res.data.success) throw new Error(res.data.message);
+
+        const { order, key, isMock } = res.data;
+
+        if (isMock) {
+          // Trigger Mock UI
+          setMockPurchaseData({ orderId: order.id, payload });
+          setShowModal(true);
+          setPaymentStep('gateway');
+          setSubmitting(false);
+          return;
+        }
+
+        // Step 2: Open Real Razorpay Checkout
+        const options = {
+          key: key,
+          amount: order.amount,
+          currency: order.currency,
+          name: "Gym SaaS Subscription",
+          description: `Purchase ${selectedPlanData.name}`,
+          order_id: order.id,
+          handler: async function (response) {
+            try {
+              // Step 3: Verify Payment
+              const verifyRes = await axiosInstance.post('/purchases/verify-razorpay-payment', {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                purchaseData: payload
+              });
+              
+              if (verifyRes.data.success) {
+                toast.success("Payment Successful! Plan activated.");
+                fetchRequestHistory(user.email);
+                window.dispatchEvent(new Event("userUpgrade"));
+              } else {
+                toast.error("Payment verification failed.");
+              }
+            } catch (vErr) {
+              console.error("Verification error:", vErr);
+              toast.error("Error verifying payment.");
+            }
+          },
+          theme: { color: "#6EB2CC" }
+        };
+
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
+        setSubmitting(false);
+        return;
+      }
+
+      // Process Mock Payment Validation
+      if (demoPaid && mockPurchaseData) {
+        const verifyRes = await axiosInstance.post('/purchases/verify-razorpay-payment', {
+          razorpay_order_id: mockPurchaseData.orderId,
+          razorpay_payment_id: 'pay_mock_' + Date.now(),
+          razorpay_signature: 'mock_signature',
+          isMock: true,
+          purchaseData: mockPurchaseData.payload
+        });
         
-        if (demoPaid) {
+        if (verifyRes.data.success) {
+          const txnId = `PAY-MOCK-${Date.now()}`;
           setGeneratedTxnId(txnId);
           setPaymentStep('success');
-          fetchRequestHistory(user.email); // Refresh history
-          window.dispatchEvent(new Event("userUpgrade")); // Refresh layout header countdown banner instantly
+          fetchRequestHistory(user.email); 
+          window.dispatchEvent(new Event("userUpgrade")); 
           
-          // Auto close the modal after 4.5 seconds so user can read the transaction ID
           setTimeout(() => {
             setShowModal(false);
-            setPaymentStep('confirm'); // reset state
+            setPaymentStep('confirm'); 
             setGeneratedTxnId("");
+            setMockPurchaseData(null);
           }, 4500);
         } else {
-          toast.success("Plan request submitted successfully!");
-          setShowModal(false);
-          setPaymentStep('confirm'); // reset state
-          fetchRequestHistory(user.email); // Refresh history
+          toast.error("Payment verification failed.");
+          setPaymentStep('confirm');
         }
-      } else {
-        toast.error("Failed to submit request.");
-        if (demoPaid) setPaymentStep('confirm');
       }
+
     } catch (error) {
       console.error("Error submitting purchase:", error);
-      toast.error(error.response?.data?.message || "Failed to submit plan request.");
+      toast.error(error.response?.data?.message || error.message || "Failed to submit plan request.");
       if (demoPaid) setPaymentStep('confirm');
     } finally {
-      setSubmitting(false);
+      if (!demoPaid) setSubmitting(false);
     }
   };
 
@@ -375,10 +441,10 @@ const AdminMySubscription = () => {
 
                 <button 
                   className="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm"
-                  onClick={openConfirmation}
-                  disabled={!selectedPlanId}
+                  onClick={() => handleSubmitRequest(false)}
+                  disabled={!selectedPlanId || submitting}
                 >
-                  Review Request
+                  {submitting ? "Processing..." : "Proceed to Pay Online"}
                 </button>
               </div>
             </div>

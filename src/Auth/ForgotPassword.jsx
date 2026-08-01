@@ -104,14 +104,14 @@ const ForgotPassword = () => {
   };
 
   const validatePassword = (pass) => {
-    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    const passRegex = /^(?=.*\d)(?=.*[\W_]).{8,}$/;
     return passRegex.test(pass);
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (!validatePassword(newPassword)) {
-      toast.error("Password must be at least 8 characters, include uppercase, lowercase, number, and special character.");
+      toast.error("Password must be at least 8 characters, include a number and a special character.");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -277,12 +277,6 @@ const ForgotPassword = () => {
                 <div className="mb-3 text-start px-2" style={{fontSize: '0.8rem'}}>
                   <div className={newPassword.length >= 8 ? 'text-success' : 'text-danger'}>
                     <i className={`bi ${newPassword.length >= 8 ? 'bi-check-circle-fill' : 'bi-x-circle'} me-2`}></i> Min 8 characters
-                  </div>
-                  <div className={/[A-Z]/.test(newPassword) ? 'text-success' : 'text-danger'}>
-                    <i className={`bi ${/[A-Z]/.test(newPassword) ? 'bi-check-circle-fill' : 'bi-x-circle'} me-2`}></i> 1 Uppercase letter
-                  </div>
-                  <div className={/[a-z]/.test(newPassword) ? 'text-success' : 'text-danger'}>
-                    <i className={`bi ${/[a-z]/.test(newPassword) ? 'bi-check-circle-fill' : 'bi-x-circle'} me-2`}></i> 1 Lowercase letter
                   </div>
                   <div className={/\d/.test(newPassword) ? 'text-success' : 'text-danger'}>
                     <i className={`bi ${/\d/.test(newPassword) ? 'bi-check-circle-fill' : 'bi-x-circle'} me-2`}></i> 1 Number

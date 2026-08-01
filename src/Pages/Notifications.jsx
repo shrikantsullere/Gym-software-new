@@ -21,7 +21,7 @@ const Notifications = () => {
       try {
         const u = getUserFromLocalStorage();
         if (u && u.id) {
-          const res = await axiosInstance.get(`/notif/user/${u.id}/all`);
+          const res = await axiosInstance.get(`/app-notifications?limit=200`);
           if (res.data && res.data.notifications) {
             setNotifications(res.data.notifications);
           }
@@ -37,14 +37,23 @@ const Notifications = () => {
 
   const markNotificationRead = async (id) => {
     try {
-      await axiosInstance.put(`/notif/read/${id}`);
-      setNotifications(notifications.map(n => n.id === id ? { ...n, status: 'READ' } : n));
+      await axiosInstance.patch(`/app-notifications/${id}/read`);
+      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
   };
 
-  const unreadCount = notifications.filter(n => n.status === 'UNREAD').length;
+  const markAllRead = async () => {
+    try {
+      await axiosInstance.patch(`/app-notifications/read-all`);
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <div className="container-fluid mt-4">
@@ -52,11 +61,21 @@ const Notifications = () => {
         <div className="col-lg-10">
           <div className="card shadow-sm border-0" style={{ borderRadius: "10px" }}>
             <div className="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-              <h4 className="mb-0 text-dark fw-bold">All Notifications</h4>
+              <div className="d-flex align-items-center gap-3">
+                <h4 className="mb-0 text-dark fw-bold">All Notifications</h4>
+                {unreadCount > 0 && (
+                  <span className="badge bg-primary rounded-pill px-3 py-2" style={{ fontSize: "0.9rem" }}>
+                    {unreadCount} New
+                  </span>
+                )}
+              </div>
               {unreadCount > 0 && (
-                <span className="badge bg-primary rounded-pill px-3 py-2" style={{ fontSize: "0.9rem" }}>
-                  {unreadCount} New
-                </span>
+                <button 
+                  className="btn btn-sm btn-outline-secondary" 
+                  onClick={markAllRead}
+                >
+                  Mark all as read
+                </button>
               )}
             </div>
             
@@ -76,11 +95,11 @@ const Notifications = () => {
               ) : (
                 <ul className="list-group list-group-flush">
                   {notifications.map(n => (
-                    <li key={n.id} className={`list-group-item p-4 border-bottom ${n.status === 'UNREAD' ? 'bg-light' : ''}`} style={{ transition: "background-color 0.2s" }}>
+                    <li key={n.id} className={`list-group-item p-4 border-bottom ${!n.isRead ? 'bg-light' : ''}`} style={{ transition: "background-color 0.2s" }}>
                       <div className="d-flex w-100 justify-content-between align-items-center mb-2">
                         <div className="d-flex align-items-center gap-2">
-                          <h6 className="text-primary fw-bold mb-0">{n.type}</h6>
-                          {n.status === 'UNREAD' && <span className="badge bg-danger" style={{ fontSize: "0.6rem" }}>NEW</span>}
+                          <h6 className="text-primary fw-bold mb-0">{n.title || n.type}</h6>
+                          {!n.isRead && <span className="badge bg-danger" style={{ fontSize: "0.6rem" }}>NEW</span>}
                         </div>
                         <small className="text-muted fw-medium">{new Date(n.createdAt).toLocaleString()}</small>
                       </div>
@@ -103,7 +122,7 @@ const Notifications = () => {
                         ) : ""}
                       </p>
                       <div className="text-end">
-                        {n.status === 'UNREAD' ? (
+                        {!n.isRead ? (
                           <button 
                             className="btn btn-outline-primary btn-sm fw-bold"
                             onClick={() => markNotificationRead(n.id)}

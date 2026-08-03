@@ -21,6 +21,8 @@ const IntegrationsSettings = () => {
     lastTestStatus: "",
     lastTestMessage: ""
   });
+  const [upiQrFile, setUpiQrFile] = useState(null);
+  const [upiQrPreview, setUpiQrPreview] = useState(null);
 
   useEffect(() => {
     fetchIntegrations();
@@ -41,7 +43,12 @@ const IntegrationsSettings = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked, files } = e.target;
+    if (name === "upiQrCodeFile" && files && files[0]) {
+      setUpiQrFile(files[0]);
+      setUpiQrPreview(URL.createObjectURL(files[0]));
+      return;
+    }
     setIntegrations(prev => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value
@@ -108,66 +115,37 @@ const IntegrationsSettings = () => {
       <div className="row">
         <div className="col-md-6">
           <Form.Group className="mb-3">
-            <Form.Label className="fw-bold">UPI QR Code URL (Image)</Form.Label>
+            <Form.Label className="fw-bold">UPI QR Code (Image)</Form.Label>
             <Form.Control
-              type="text"
-              name="upiQrCode"
-              value={integrations.upiQrCode || ""}
+              type="file"
+              name="upiQrCodeFile"
+              accept="image/*"
               onChange={handleChange}
-              placeholder="https://..."
             />
-            <Form.Text className="text-muted">Upload an image of your QR code to an image hosting service and paste the URL here.</Form.Text>
-          </Form.Group>
-        </div>
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-bold">UPI ID (Optional)</Form.Label>
-            <Form.Control
-              type="text"
-              name="upiId"
-              value={integrations.upiId || ""}
-              onChange={handleChange}
-              placeholder="e.g. gym@ybl"
-            />
+            {(upiQrPreview || integrations.upiQrCode) && (
+              <div className="mt-2">
+                <img 
+                  src={upiQrPreview || integrations.upiQrCode} 
+                  alt="QR Preview" 
+                  style={{ maxHeight: '120px', borderRadius: '8px', border: '1px solid #ddd' }} 
+                />
+              </div>
+            )}
+            <Form.Text className="text-muted">Upload an image of your QR code.</Form.Text>
           </Form.Group>
         </div>
       </div>
 
-      <div className="row">
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-bold">Account Holder Name (Optional)</Form.Label>
-            <Form.Control
-              type="text"
-              name="upiAccountHolder"
-              value={integrations.upiAccountHolder || ""}
-              onChange={handleChange}
-              placeholder="e.g. John Fitness Club"
-            />
-          </Form.Group>
-        </div>
-        <div className="col-md-6">
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-bold">Instructions (Optional)</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              name="paymentInstructions"
-              value={integrations.paymentInstructions || ""}
-              onChange={handleChange}
-              placeholder="e.g. After payment, enter your UTR Number."
-            />
-          </Form.Group>
-        </div>
-      </div>
+
 
       <div className="d-flex gap-2 justify-content-end mb-4">
-        <Button onClick={() => handleUpdate("upi", {
-          upiQrCode: integrations.upiQrCode,
-          upiId: integrations.upiId,
-          upiAccountHolder: integrations.upiAccountHolder,
-          paymentInstructions: integrations.paymentInstructions
-        })} disabled={updating}>
+        <Button onClick={() => {
+          const formData = new FormData();
+          if (upiQrFile) {
+            formData.append("upiQrCodeFile", upiQrFile);
+          }
+          handleUpdate("upi", formData);
+        }} disabled={updating}>
           Save Payment Settings
         </Button>
       </div>

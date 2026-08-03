@@ -9,14 +9,14 @@ const PublicAttendance = () => {
   const adminId = searchParams.get('adminId');
   const branchId = searchParams.get('branchId');
 
-  const [phone, setPhone] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [role, setRole] = useState('Member');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleAttendance = async (actionType) => {
-    if (!phone || phone.length < 10) {
-      setMessage({ type: 'danger', text: 'Please enter a valid phone number.' });
+    if (!identifier || identifier.length < 5) {
+      setMessage({ type: 'danger', text: 'Please enter a valid phone number or email.' });
       return;
     }
     
@@ -33,7 +33,7 @@ const PublicAttendance = () => {
       const endpoint = `attendance/public/${role.toLowerCase()}/${actionType}`;
       
       const response = await axiosInstance.post(endpoint, {
-        phone,
+        identifier,
         adminId,
         branchId
       });
@@ -43,7 +43,7 @@ const PublicAttendance = () => {
           type: 'success', 
           text: `Successfully ${actionType === 'checkin' ? 'Checked In' : 'Checked Out'}!` 
         });
-        setPhone(''); // Reset phone
+        setIdentifier(''); // Reset identifier
       } else {
         setMessage({ type: 'danger', text: response.data.message || 'Action failed.' });
       }
@@ -98,12 +98,12 @@ const PublicAttendance = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label className="fw-bold text-secondary">Phone Number</Form.Label>
+              <Form.Label className="fw-bold text-secondary">Phone Number or Email</Form.Label>
               <Form.Control
-                type="tel"
-                placeholder="Enter 10-digit mobile number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                type="text"
+                placeholder="Enter registered mobile number or email"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 disabled={loading}
                 className="py-2"
                 style={{ fontSize: '1.1rem' }}

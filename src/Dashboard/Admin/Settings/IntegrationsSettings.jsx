@@ -23,6 +23,7 @@ const IntegrationsSettings = () => {
   });
   const [upiQrFile, setUpiQrFile] = useState(null);
   const [upiQrPreview, setUpiQrPreview] = useState(null);
+  const [deleteQrCode, setDeleteQrCode] = useState(false);
 
   useEffect(() => {
     fetchIntegrations();
@@ -47,6 +48,7 @@ const IntegrationsSettings = () => {
     if (name === "upiQrCodeFile" && files && files[0]) {
       setUpiQrFile(files[0]);
       setUpiQrPreview(URL.createObjectURL(files[0]));
+      setDeleteQrCode(false);
       return;
     }
     setIntegrations(prev => ({
@@ -122,13 +124,25 @@ const IntegrationsSettings = () => {
               accept="image/*"
               onChange={handleChange}
             />
-            {(upiQrPreview || integrations.upiQrCode) && (
-              <div className="mt-2">
+            {(upiQrPreview || integrations.upiQrCode) && !deleteQrCode && (
+              <div className="mt-2 position-relative d-inline-block">
                 <img 
                   src={upiQrPreview || integrations.upiQrCode} 
                   alt="QR Preview" 
                   style={{ maxHeight: '120px', borderRadius: '8px', border: '1px solid #ddd' }} 
                 />
+                <button 
+                  type="button" 
+                  className="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle shadow"
+                  onClick={() => {
+                    setUpiQrFile(null);
+                    setUpiQrPreview(null);
+                    setDeleteQrCode(true);
+                  }}
+                  style={{ width: '24px', height: '24px', padding: 0, lineHeight: 1, zIndex: 10 }}
+                >
+                  &times;
+                </button>
               </div>
             )}
             <Form.Text className="text-muted">Upload an image of your QR code.</Form.Text>
@@ -143,6 +157,9 @@ const IntegrationsSettings = () => {
           const formData = new FormData();
           if (upiQrFile) {
             formData.append("upiQrCodeFile", upiQrFile);
+          }
+          if (deleteQrCode) {
+            formData.append("deleteQrCode", "true");
           }
           handleUpdate("upi", formData);
         }} disabled={updating}>

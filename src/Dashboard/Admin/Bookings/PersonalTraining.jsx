@@ -549,15 +549,6 @@ const PersonalTraining = () => {
                       <strong>Trainer ID:</strong> {selectedBooking.trainerId || 'N/A'}
                     </div>
                     <div className="col-md-6">
-                      <strong>Session ID:</strong> {selectedBooking.sessionId || 'N/A'}
-                    </div>
-                    <div className="col-md-6">
-                      <strong>Class ID:</strong> {selectedBooking.classId || 'N/A'}
-                    </div>
-                    <div className="col-md-6">
-                      <strong>Branch ID:</strong> {selectedBooking.branchId || 'N/A'}
-                    </div>
-                    <div className="col-md-6">
                       <strong>Member Name:</strong> {selectedBooking.memberName}
                     </div>
                     <div className="col-md-6">

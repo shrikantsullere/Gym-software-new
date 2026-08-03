@@ -135,9 +135,6 @@ const IntegrationsSettings = () => {
         />
       </Form.Group>
       <div className="d-flex gap-2 justify-content-end mb-4">
-        <Button variant="outline-primary" onClick={() => handleTest("razorpay")} disabled={testing || updating}>
-          Verify Connection
-        </Button>
         <Button onClick={() => handleUpdate("razorpay", {
           razorpayKeyId: integrations.razorpayKeyId,
           razorpaySecret: integrations.razorpaySecret,
@@ -203,9 +200,6 @@ const IntegrationsSettings = () => {
         </div>
       </div>
       <div className="d-flex gap-2 justify-content-end mb-4">
-        <Button variant="outline-primary" onClick={() => handleTest("brevo")} disabled={testing || updating}>
-          Verify Connection
-        </Button>
         <Button onClick={() => handleUpdate("brevo", {
           brevoApiKey: integrations.brevoApiKey,
           brevoSenderEmail: integrations.brevoSenderEmail,
@@ -215,17 +209,6 @@ const IntegrationsSettings = () => {
           Save Brevo
         </Button>
       </div>
-
-      {integrations.lastTestStatus && (
-        <div className="mt-4 p-3 bg-light rounded">
-          <h6 className="mb-2">Integration Health Status</h6>
-          <div className="d-flex align-items-center gap-2">
-            Status: {integrations.isVerified ? <Badge bg="success">Connected</Badge> : <Badge bg="danger">Disconnected</Badge>}
-          </div>
-          {integrations.lastTestMessage && <div className="text-danger small mt-1">Error: {integrations.lastTestMessage}</div>}
-          <div className="text-muted small mt-1">Last Verified: {integrations.lastVerifiedAt ? new Date(integrations.lastVerifiedAt).toLocaleString() : 'Never'}</div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaSearch, FaUser, FaCalendarAlt, FaFileExcel, FaDownload } from 'react-icons/fa';
-import axiosInstance from '../../../Api/axiosInstance';
+import { Card, Spinner, Alert, Badge } from 'react-bootstrap';
+import { FaSearch, FaCalendarAlt, FaFileExcel, FaDownload, FaUser } from 'react-icons/fa';
+import axiosInstance from '../Api/axiosInstance';
 import * as XLSX from 'xlsx';
-import { Spinner, Alert } from 'react-bootstrap';
+import { format } from 'date-fns';
 
-const Membership = () => {
-    const [payments, setPayments] = useState([]);
-    const [filteredPayments, setFilteredPayments] = useState([]);
+const AttendanceHistory = () => {
+    const [attendance, setAttendance] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
@@ -24,13 +24,12 @@ const Membership = () => {
 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-    // Pagination state
+    // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     const branchId = userData.branchId || 'all';
-    const adminId = userData.roleId === 1 ? userData.id : (userData.adminId || userData.id);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -38,56 +37,47 @@ const Membership = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const fetchPayments = async () => {
+    const fetchAttendance = async () => {
         try {
             setLoading(true);
             setError(null);
             
-            const response = await axiosInstance.get(`/payments/branch/${branchId}`, {
+            // Use the updated daily endpoint which supports startDate and endDate
+            const response = await axiosInstance.get(`/memberattendence/daily`, {
                 params: {
-                    adminId,
+                    branchId,
                     startDate,
-                    endDate
+                    endDate,
+                    search: searchTerm || undefined
                 }
             });
 
             if (response.data.success) {
-                setPayments(response.data.payments || []);
+                setAttendance(response.data.attendance || []);
             } else {
-                setError(response.data.message || 'Failed to fetch payments');
+                setError(response.data.message || 'Failed to fetch attendance');
             }
         } catch (err) {
-            console.error("Error fetching payments:", err);
-            setError('An error occurred while fetching payment records.');
+            console.error("Error fetching attendance:", err);
+            setError('An error occurred while fetching attendance records.');
         } finally {
             setLoading(false);
         }
     };
 
-    // Initial fetch and fetch on date change
+    // Use debouncing for search
     useEffect(() => {
-        fetchPayments();
-    }, [startDate, endDate]);
+        const delayDebounceFn = setTimeout(() => {
+            fetchAttendance();
+        }, 500);
 
-    // Apply search filter locally
-    useEffect(() => {
-        if (!searchTerm) {
-            setFilteredPayments(payments);
-        } else {
-            setFilteredPayments(
-                payments.filter(p =>
-                    (p.memberName && p.memberName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                    (p.invoiceNo && p.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()))
-                )
-            );
-        }
-        setCurrentPage(1); // Reset to first page on search
-    }, [searchTerm, payments]);
+        return () => clearTimeout(delayDebounceFn);
+    }, [startDate, endDate, searchTerm]);
 
-    const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+    const totalPages = Math.ceil(attendance.length / itemsPerPage);
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
-    const currentPayments = filteredPayments.slice(indexOfFirst, indexOfLast);
+    const currentAttendance = attendance.slice(indexOfFirst, indexOfLast);
 
     const goToPage = (page) => {
         if (page >= 1 && page <= totalPages) {
@@ -96,36 +86,46 @@ const Membership = () => {
     };
 
     const handleExportExcel = () => {
-        if (filteredPayments.length === 0) return;
+        if (attendance.length === 0) return;
 
-        const exportData = filteredPayments.map(p => ({
-            'Invoice No': p.invoiceNo,
-            'Date': new Date(p.paymentDate).toLocaleDateString(),
-            'Member Name': p.memberName,
-            'Plan Name': p.planName,
-            'Amount Paid': p.amount,
-            'Collected By': p.collectedByName,
-            'Role': p.collectedByRole
+        const exportData = attendance.map(record => ({
+            'Date': format(new Date(record.checkIn), 'dd MMM yyyy'),
+            'Member Name': record.fullName || 'Unknown',
+            'Check-In Time': format(new Date(record.checkIn), 'hh:mm a'),
+            'Check-Out Time': record.checkOut ? format(new Date(record.checkOut), 'hh:mm a') : 'N/A',
+            'Status': record.computedStatus || (record.checkOut ? 'Completed' : 'Active'),
+            'Mode': record.mode || 'Manual'
         }));
 
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Payments");
-        XLSX.writeFile(wb, `Payment_Report_${startDate}_to_${endDate}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+        XLSX.writeFile(wb, `Attendance_Report_${startDate}_to_${endDate}.xlsx`);
+    };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return '-';
+        return format(new Date(dateString), 'hh:mm a');
+    };
+
+    const getStatusBadge = (status) => {
+        if (status === 'Active') return <Badge bg="primary">Active (In Gym)</Badge>;
+        if (status === 'Completed') return <Badge bg="success">Completed</Badge>;
+        return <Badge bg="secondary">{status}</Badge>;
     };
 
     return (
         <div className="container-fluid py-4 bg-light min-vh-100">
             <div className="row mb-4 align-items-center">
                 <div className="col-12 col-md-6 mb-3 mb-md-0">
-                    <h2 className="mb-1 text-primary fw-bold">Payment History</h2>
-                    <p className="text-muted mb-0">View, search, and export payment records</p>
+                    <h2 className="mb-1 text-primary fw-bold">Attendance History</h2>
+                    <p className="text-muted mb-0">View, search, and export attendance records</p>
                 </div>
                 <div className="col-12 col-md-6 text-md-end">
                     <button 
                         className="btn btn-success d-flex align-items-center justify-content-center mx-auto mx-md-0 ms-md-auto"
                         onClick={handleExportExcel}
-                        disabled={filteredPayments.length === 0 || loading}
+                        disabled={attendance.length === 0 || loading}
                     >
                         <FaFileExcel className="me-2" /> Export to Excel
                     </button>
@@ -143,7 +143,7 @@ const Membership = () => {
                                 <input
                                     type="text"
                                     className="form-control border-start-0 ps-0 bg-light"
-                                    placeholder="Search by member or invoice..."
+                                    placeholder="Search by member name or phone..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -178,16 +178,16 @@ const Membership = () => {
                     {loading ? (
                         <div className="text-center py-5">
                             <Spinner animation="border" variant="primary" />
-                            <p className="mt-2 text-muted">Loading payments...</p>
+                            <p className="mt-2 text-muted">Loading attendance...</p>
                         </div>
                     ) : error ? (
                         <div className="p-4">
                             <Alert variant="danger">{error}</Alert>
                         </div>
-                    ) : filteredPayments.length === 0 ? (
+                    ) : attendance.length === 0 ? (
                         <div className="text-center py-5">
                             <FaDownload className="text-muted mb-3" size={40} opacity={0.5} />
-                            <h5 className="text-muted">No payments found for this period</h5>
+                            <h5 className="text-muted">No attendance records found</h5>
                         </div>
                     ) : (
                         <div className="table-responsive">
@@ -195,26 +195,21 @@ const Membership = () => {
                                 <thead className="table-light text-muted">
                                     <tr>
                                         <th className="fw-medium px-4 py-3">Date</th>
-                                        <th className="fw-medium py-3">Invoice No</th>
                                         <th className="fw-medium py-3">Member</th>
-                                        <th className="fw-medium py-3">Plan</th>
-                                        <th className="fw-medium py-3">Amount</th>
-                                        <th className="fw-medium py-3">Collected By</th>
+                                        <th className="fw-medium py-3">Check In</th>
+                                        <th className="fw-medium py-3">Check Out</th>
+                                        <th className="fw-medium py-3">Status</th>
+                                        <th className="fw-medium py-3">Mode</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {currentPayments.map(payment => (
-                                        <tr key={payment.id + '-' + payment.invoiceNo}>
+                                    {currentAttendance.map(record => (
+                                        <tr key={record.id}>
                                             <td className="px-4">
                                                 <div className="d-flex align-items-center">
                                                     <FaCalendarAlt className="text-muted me-2" size={14} />
-                                                    {new Date(payment.paymentDate).toLocaleDateString()}
+                                                    {format(new Date(record.checkIn), 'dd MMM yyyy')}
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span className="badge bg-light text-dark border">
-                                                    {payment.invoiceNo}
-                                                </span>
                                             </td>
                                             <td>
                                                 <div className="d-flex align-items-center">
@@ -222,19 +217,23 @@ const Membership = () => {
                                                         <FaUser size={14} />
                                                     </div>
                                                     <div>
-                                                        <h6 className="mb-0">{payment.memberName}</h6>
+                                                        <h6 className="mb-0">{record.fullName || 'Unknown'}</h6>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className="text-secondary">{payment.planName}</span>
+                                                <span className="fw-medium text-success">{formatTime(record.checkIn)}</span>
                                             </td>
                                             <td>
-                                                <span className="fw-bold text-dark">₹{payment.amount}</span>
+                                                <span className={record.checkOut ? "fw-medium text-danger" : "text-muted"}>
+                                                    {formatTime(record.checkOut)}
+                                                </span>
                                             </td>
                                             <td>
-                                                <span className="d-block small text-dark">{payment.collectedByName}</span>
-                                                <span className="d-block small text-muted" style={{fontSize: '0.75rem'}}>{payment.collectedByRole}</span>
+                                                {getStatusBadge(record.computedStatus)}
+                                            </td>
+                                            <td>
+                                                <span className="text-muted small">{record.mode || 'Manual'}</span>
                                             </td>
                                         </tr>
                                     ))}
@@ -244,10 +243,10 @@ const Membership = () => {
                     )}
                 </div>
 
-                {!loading && filteredPayments.length > 0 && (
+                {!loading && attendance.length > 0 && (
                     <div className="card-footer bg-white py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center">
                         <span className="text-muted small mb-3 mb-md-0">
-                            Showing {indexOfFirst + 1} to {Math.min(indexOfLast, filteredPayments.length)} of {filteredPayments.length} entries
+                            Showing {indexOfFirst + 1} to {Math.min(indexOfLast, attendance.length)} of {attendance.length} entries
                         </span>
                         <nav aria-label="Page navigation">
                             <ul className="pagination pagination-sm mb-0">
@@ -273,4 +272,4 @@ const Membership = () => {
     );
 };
 
-export default Membership;
+export default AttendanceHistory;

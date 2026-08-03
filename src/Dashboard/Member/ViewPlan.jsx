@@ -739,7 +739,11 @@ const ViewPlans = () => {
     planId: '',
     paymentMode: 'Cash',
     amountPaid: '',
+    transactionId: '',
+    paymentProofImage: null,
   });
+
+  const [settings, setSettings] = useState(null);
 
   const [renewLoading, setRenewLoading] = useState(false);
 
@@ -808,16 +812,36 @@ const ViewPlans = () => {
     fetchPlans();
   }, [adminId]);
 
+  // Fetch global settings for QR
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (!adminId) return;
+      try {
+        const response = await axiosInstance.get(`global-settings/public/${adminId}`);
+        if (response.data.success) {
+          setSettings(response.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      }
+    };
+    fetchSettings();
+  }, [adminId]);
+
   const handleViewClick = () => setShowViewModal(true);
 
   const handleRenewClick = () => {
     setShowRenewModal(true);
-    setRenewData({ planId: '', paymentMode: 'Cash', amountPaid: '' });
+    setRenewData({ planId: '', paymentMode: 'Cash', amountPaid: '', transactionId: '', paymentProofImage: null });
   };
 
   const handleRenewChange = (e) => {
-    const { name, value } = e.target;
-    setRenewData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+    if (name === 'paymentProofImage') {
+      setRenewData((prev) => ({ ...prev, paymentProofImage: files[0] }));
+    } else {
+      setRenewData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleRenewSubmit = async (e) => {
@@ -844,14 +868,21 @@ const ViewPlans = () => {
     }
 
     try {
-      const payload = {
-        adminId: adminId,
-        amountPaid: Number(renewData.amountPaid),
-        paymentMode: renewData.paymentMode,
-        planId: Number(renewData.planId),
-      };
+      const formData = new FormData();
+      formData.append('adminId', adminId);
+      formData.append('amountPaid', Number(renewData.amountPaid));
+      formData.append('paymentMode', renewData.paymentMode);
+      formData.append('planId', Number(renewData.planId));
+      if (renewData.paymentMode === 'UPI') {
+        formData.append('transactionId', renewData.transactionId);
+        if (renewData.paymentProofImage) {
+          formData.append('paymentProofImage', renewData.paymentProofImage);
+        }
+      }
 
-      await axiosInstance.put(`members/renew/${userId}`, payload);
+      await axiosInstance.put(`members/renew/${userId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       // Show success toast
       setToast({ show: true, message: 'Membership renewed successfully!', variant: 'success' });
@@ -863,7 +894,7 @@ const ViewPlans = () => {
       // Close modal after delay
       setTimeout(() => {
         setShowRenewModal(false);
-        setRenewData({ planId: '', paymentMode: 'Cash', amountPaid: '' });
+        setRenewData({ planId: '', paymentMode: 'Cash', amountPaid: '', transactionId: '', paymentProofImage: null });
       }, 1000);
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to renew membership. Please try again.';
@@ -1588,6 +1619,39 @@ const ViewPlans = () => {
                 min="0"
               />
             </Form.Group>
+
+            {renewData.paymentMode === 'UPI' && (
+              <div className="p-3 mb-3 border rounded">
+                <h6 className="fw-bold mb-2">Scan to Pay</h6>
+                {settings?.upiQrCode && (
+                  <div className="text-center mb-3">
+                    <img src={settings.upiQrCode} alt="UPI QR Code" style={{ maxWidth: '200px', height: 'auto' }} />
+                  </div>
+                )}
+                
+                <Form.Group className="mb-3">
+                  <Form.Label>Transaction ID / UTR Number</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="transactionId"
+                    placeholder="Enter UTR after payment"
+                    value={renewData.transactionId}
+                    onChange={handleRenewChange}
+                    required={renewData.paymentMode === 'UPI'}
+                  />
+                </Form.Group>
+                
+                <Form.Group className="mb-2">
+                  <Form.Label>Payment Screenshot (Optional)</Form.Label>
+                  <Form.Control
+                    type="file"
+                    name="paymentProofImage"
+                    accept="image/*"
+                    onChange={handleRenewChange}
+                  />
+                </Form.Group>
+              </div>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>

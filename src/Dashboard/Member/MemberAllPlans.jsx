@@ -38,9 +38,11 @@ const MemberAllPlans = () => {
     const [bookingForm, setBookingForm] = useState({
         memberId: "",
         planId: "",
-        paymentMethod: "razorpay", // Default to razorpay
-        upiId: "",
+        paymentMethod: "upi", // Default to upi
+        transactionId: "",
+        paymentProofImage: null,
     });
+    const [settings, setSettings] = useState(null);
 
     const getUserFromStorage = () => {
         try {
@@ -93,7 +95,21 @@ const MemberAllPlans = () => {
             fetchRenewalRequests();
             fetchMembershipRequests();
         }
+        if (adminId) {
+            fetchSettings();
+        }
     }, [adminId, memberId]);
+
+    const fetchSettings = async () => {
+        try {
+            const response = await axiosInstance.get(`global-settings/public/${adminId}`);
+            if (response.data.success) {
+                setSettings(response.data.data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch settings:', err);
+        }
+    };
 
     // Fetch trainers when trainer type changes
     useEffect(() => {
@@ -442,22 +458,31 @@ const MemberAllPlans = () => {
                 
             } else {
                 // Cash/UPI Offline Booking Request (Needs admin/staff approval)
-                const requestPayload = {
-                    fullName: name || user?.fullName || "Member",
-                    email: user?.email || "",
-                    phone: user?.phone || "",
-                    gender: user?.gender || "Male",
-                    adminId: parseInt(adminId),
-                    branchId: branchId ? parseInt(branchId) : null,
-                    planId: parseInt(bookingForm.planId),
-                    price: planPrice,
-                    upiId: bookingForm.paymentMethod === "upi" ? (bookingForm.upiId || "Offline UPI") : "Cash",
-                    userId: parseInt(userId) // Pass userId so backend knows it's an existing member
-                };
+                const formData = new FormData();
+                formData.append('fullName', name || user?.fullName || "Member");
+                formData.append('email', user?.email || "");
+                formData.append('phone', user?.phone || "");
+                formData.append('gender', user?.gender || "Male");
+                formData.append('adminId', parseInt(adminId));
+                if (branchId) formData.append('branchId', parseInt(branchId));
+                formData.append('planId', parseInt(bookingForm.planId));
+                formData.append('price', planPrice);
+                formData.append('userId', parseInt(userId)); // Pass userId so backend knows it's an existing member
+                
+                const pm = bookingForm.paymentMethod === "upi" ? "UPI" : "Cash";
+                formData.append('paymentMode', pm);
+
+                if (pm === "UPI") {
+                    formData.append('upiId', bookingForm.transactionId);
+                    if (bookingForm.paymentProofImage) {
+                        formData.append('paymentProofImage', bookingForm.paymentProofImage);
+                    }
+                }
 
                 const response = await axiosInstance.post(
                     `${BaseUrl}booking/create`,
-                    requestPayload
+                    formData,
+                    { headers: { 'Content-Type': 'multipart/form-data' } }
                 );
 
                 if (response.data.success) {
@@ -467,11 +492,12 @@ const MemberAllPlans = () => {
                     setBookingForm({
                         memberId: "",
                         planId: "",
-                        paymentMethod: "razorpay",
-                        upiId: "",
+                        paymentMethod: "upi",
+                        transactionId: "",
+                        paymentProofImage: null
                     });
                     
-                    window.location.reload(); 
+                    window.location.reload();  
                 } else {
                     setError(response.data.message || "Failed to submit booking request.");
                 }
@@ -811,24 +837,42 @@ const MemberAllPlans = () => {
                                         setBookingForm({ ...bookingForm, paymentMethod: e.target.value })
                                     }
                                 >
-                                    <option value="razorpay">Online Payment (Razorpay)</option>
-                                    <option value="upi">Offline UPI</option>
-                                    <option value="cash">Cash</option>
+                                    <option value="upi">Offline UPI (Pay via QR)</option>
+                                    <option value="cash">Cash (Pay at Gym)</option>
                                 </Form.Select>
                             </Form.Group>
+                            
                             {bookingForm.paymentMethod === "upi" && (
-                                <Form.Group className="mb-3">
-                                    <Form.Label>UPI ID</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Enter UPI ID"
-                                        value={bookingForm.upiId}
-                                        onChange={(e) =>
-                                            setBookingForm({ ...bookingForm, upiId: e.target.value })
-                                        }
-                                        required
-                                    />
-                                </Form.Group>
+                                <div className="p-3 border rounded mb-3">
+                                    <h6 className="fw-bold mb-2">Scan to Pay</h6>
+                                    {settings?.upiQrCode && (
+                                        <div className="text-center mb-3">
+                                            <img src={settings.upiQrCode} alt="UPI QR Code" style={{ maxWidth: '200px', height: 'auto' }} />
+                                        </div>
+                                    )}
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Transaction ID / UTR Number</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter UTR"
+                                            value={bookingForm.transactionId}
+                                            onChange={(e) =>
+                                                setBookingForm({ ...bookingForm, transactionId: e.target.value })
+                                            }
+                                            required
+                                        />
+                                    </Form.Group>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Payment Screenshot (Optional)</Form.Label>
+                                        <Form.Control
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) =>
+                                                setBookingForm({ ...bookingForm, paymentProofImage: e.target.files[0] })
+                                            }
+                                        />
+                                    </Form.Group>
+                                </div>
                             )}
                         </Modal.Body>
                         <Modal.Footer>

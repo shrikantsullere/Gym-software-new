@@ -137,7 +137,9 @@ const CreatePlan = () => {
           requestedPlan: req.planName, // since it's a membership request
           price: "N/A", // not in response
           validity: "N/A",
-          upiId: "N/A",
+          upiId: req.upiId || "N/A",
+          paymentMode: req.paymentMode || "Cash",
+          paymentProofImage: req.paymentProofImage || null,
           requestedAt: req.createdAt || "N/A",
           status: req.bookingStatus === "pending" ? "pending" : "approved",
           requestType: "membership",
@@ -923,6 +925,17 @@ const CreatePlan = () => {
           {type === "renewal" ? req.requestedPlanType : "Membership"}
         </span>
       </td>
+      <td>
+        <div>{req.paymentMode || "Cash"}</div>
+        {req.upiId && req.upiId !== "N/A" && req.upiId !== "Offline UPI" && (
+          <div className="text-muted small">UTR: {req.upiId}</div>
+        )}
+        {req.paymentProofImage && (
+          <a href={req.paymentProofImage} target="_blank" rel="noreferrer" className="btn btn-sm btn-info text-white mt-1" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>
+            View Proof
+          </a>
+        )}
+      </td>
       <td>{formatDateTime(req.requestedAt)}</td>
       <td>
         {req.status === "pending" && (
@@ -1042,6 +1055,18 @@ const CreatePlan = () => {
             <span className="text-muted small">Validity: </span>
             {req.validity} days
           </div>
+        </div>
+        <div className="mb-2">
+          <span className="text-muted small">Payment: </span>
+          {req.paymentMode || "Cash"}
+          {req.upiId && req.upiId !== "N/A" && req.upiId !== "Offline UPI" && (
+            <span className="ms-2 text-muted small">(UTR: {req.upiId})</span>
+          )}
+          {req.paymentProofImage && (
+            <a href={req.paymentProofImage} target="_blank" rel="noreferrer" className="ms-2 btn btn-sm btn-info text-white" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>
+              View Proof
+            </a>
+          )}
         </div>
         <div className="mb-3">
           <span className="text-muted small">Requested: </span>
@@ -1430,6 +1455,7 @@ const CreatePlan = () => {
                               <th>Member</th>
                               <th>Requested Plan</th>
                               <th>Type</th>
+                              <th>Payment</th>
                               <th>Requested At</th>
                               <th>Status</th>
                               <th>Action</th>
@@ -1518,6 +1544,7 @@ const CreatePlan = () => {
                               <th>Member</th>
                               <th>Requested Plan</th>
                               <th>Type</th>
+                              <th>Payment</th>
                               <th>Requested At</th>
                               <th>Status</th>
                               <th>Action</th>

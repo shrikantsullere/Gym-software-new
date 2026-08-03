@@ -113,6 +113,8 @@ const AdminMember = () => {
     startDate: new Date().toISOString().split("T")[0],
     paymentMode: "cash",
     amountPaid: "",
+    transactionId: "",
+    paymentProofImage: null,
     interestedIn: "",
     status: "Active",
     profileImage: null, // Store file object directly
@@ -167,6 +169,22 @@ const AdminMember = () => {
         setCropperImage(reader.result);
         setCropperMode(isEdit ? 'edit' : 'add');
         setShowCropper(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePaymentProofChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image size should be less than 2MB");
+        e.target.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewMember({ ...newMember, paymentProofImage: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -230,6 +248,20 @@ const AdminMember = () => {
     const matchesStatus = filterStatus === "" || member.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  const [upiQrCode, setUpiQrCode] = useState(null);
+
+  useEffect(() => {
+    const fetchIntegrations = async () => {
+      try {
+        const res = await axiosInstance.get("integrations");
+        if (res.data?.success && res.data.data.upiQrCode) {
+          setUpiQrCode(res.data.data.upiQrCode);
+        }
+      } catch (err) {}
+    };
+    fetchIntegrations();
+  }, []);
 
   // Fetch members by admin ID or trainer ID
   const fetchMembersByAdminId = async () => {
@@ -545,6 +577,11 @@ const AdminMember = () => {
       );
       formData.append("amountPaid", newMember.amountPaid);
       formData.append("status", newMember.status);
+      
+      if (newMember.paymentMode === "upi") {
+        if (newMember.transactionId) formData.append("transactionId", newMember.transactionId);
+        if (newMember.paymentProofImage) formData.append("paymentProofImage", newMember.paymentProofImage);
+      }
 
       // Append image if selected
       if (newMember.profileImage) {
@@ -2491,6 +2528,42 @@ const handleDownloadReceipt = async (member) => {
                         required
                       />
                     </div>
+                    
+                    {newMember.paymentMode === "upi" && (
+                      <div className="col-12 mt-3 p-3 bg-light rounded border">
+                        <h6 className="text-primary mb-3">UPI Payment Details</h6>
+                        <div className="row">
+                          {upiQrCode && (
+                            <div className="col-12 col-md-4 text-center mb-3 mb-md-0">
+                              <p className="small text-muted mb-2">Scan to Pay</p>
+                              <img src={upiQrCode} alt="UPI QR" style={{ width: "120px", height: "120px", objectFit: "contain", borderRadius: "8px", border: "1px solid #ddd" }} />
+                            </div>
+                          )}
+                          <div className={`col-12 ${upiQrCode ? 'col-md-8' : ''}`}>
+                            <div className="mb-2">
+                              <label className="form-label small">Transaction ID / UTR <span className="text-danger">*</span></label>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Enter 12-digit UTR"
+                                value={newMember.transactionId}
+                                onChange={(e) => setNewMember({ ...newMember, transactionId: e.target.value })}
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="form-label small">Payment Screenshot (Optional)</label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="form-control form-control-sm"
+                                onChange={handlePaymentProofChange}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                   </div>
                   <div className="modal-footer mt-3">

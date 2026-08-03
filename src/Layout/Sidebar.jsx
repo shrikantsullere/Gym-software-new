@@ -152,6 +152,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           { label: "PT Bookings", path: "/admin/booking/personal-training" }
         ]
       },
+      {
+        name: "Payments",
+        icon: faMoneyCheckAlt,
+        key: "Payments",
+        subItems: [
+          { label: "Membership Payments", path: "/admin/payments/membership" }
+        ]
+      },
       { name: "Expenses & Profit",        icon: faCoins,              path: "/admin/expenses" },
       { name: "Body Builder",             icon: faHeartbeat,          path: "/bodybuilder-assessment" },
       { name: "Inventory",                icon: faBoxes,              path: "/admin/inventory" },

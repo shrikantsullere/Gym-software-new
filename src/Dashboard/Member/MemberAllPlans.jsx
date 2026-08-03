@@ -323,34 +323,17 @@ const MemberAllPlans = () => {
         setBookingForm({
             memberId: memberId,
             planId: plan.id,
-            paymentMethod: "razorpay",
-            upiId: "",
+            paymentMethod: "upi",
+            transactionId: "",
+            paymentProofImage: null,
         });
         setShowBookingModal(true);
     };
 
-    const loadRazorpayScript = () => {
-        return new Promise((resolve) => {
-            if (window.Razorpay) {
-                resolve(true);
-                return;
-            }
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.onload = () => {
-                resolve(true);
-            };
-            script.onerror = () => {
-                resolve(false);
-            };
-            document.body.appendChild(script);
-        });
-    };
-
     const handleBookingSubmit = async (e) => {
         e.preventDefault();
-        if (!bookingForm.upiId && bookingForm.paymentMethod === "upi") {
-            setError("Please provide UPI ID");
+        if (!bookingForm.transactionId && bookingForm.paymentMethod === "upi") {
+            setError("Please provide UPI transaction ID");
             return;
         }
 
@@ -379,84 +362,7 @@ const MemberAllPlans = () => {
                 return;
             }
 
-            if (bookingForm.paymentMethod === "razorpay") {
-                const res = await loadRazorpayScript();
-                if (!res) {
-                    setError("Razorpay SDK failed to load. Are you online?");
-                    setLoading(false);
-                    return;
-                }
 
-                // Call create-razorpay-order
-                const payload = {
-                    memberId: parseInt(bookingForm.memberId),
-                    planId: parseInt(bookingForm.planId),
-                    amount: planPrice
-                };
-
-                const orderRes = await axiosInstance.post(`${BaseUrl}payments/create-razorpay-order`, payload);
-
-                if (!orderRes.data.success) {
-                    setError(orderRes.data.message || "Failed to initiate payment");
-                    setLoading(false);
-                    return;
-                }
-
-                const { order, key } = orderRes.data;
-
-                const options = {
-                    key: key,
-                    amount: order.amount,
-                    currency: order.currency,
-                    name: "Gym Subscription",
-                    description: `Payment for ${plan.name}`,
-                    order_id: order.id,
-                    handler: async function (response) {
-                        try {
-                            setLoading(true);
-                            const verifyPayload = {
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                                memberId: parseInt(bookingForm.memberId),
-                                planId: parseInt(bookingForm.planId),
-                                amount: planPrice,
-                                adminId: parseInt(adminId)
-                            };
-
-                            const verifyRes = await axiosInstance.post(`${BaseUrl}payments/verify-member-payment`, verifyPayload);
-                            
-                            if (verifyRes.data.success) {
-                                alert("✅ Plan purchased successfully! Your plan has been activated.");
-                                setShowBookingModal(false);
-                                window.location.reload();
-                            } else {
-                                alert("Payment verification failed.");
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            alert("Payment verification error.");
-                        } finally {
-                            setLoading(false);
-                        }
-                    },
-                    prefill: {
-                        name: name || "Member",
-                        email: user?.email || "",
-                        contact: user?.phone || ""
-                    },
-                    theme: {
-                        color: customColor
-                    }
-                };
-
-                const paymentObject = new window.Razorpay(options);
-                paymentObject.on('payment.failed', function (response){
-                    alert("Payment failed! " + response.error.description);
-                });
-                paymentObject.open();
-                
-            } else {
                 // Cash/UPI Offline Booking Request (Needs admin/staff approval)
                 const formData = new FormData();
                 formData.append('fullName', name || user?.fullName || "Member");
@@ -501,7 +407,6 @@ const MemberAllPlans = () => {
                 } else {
                     setError(response.data.message || "Failed to submit booking request.");
                 }
-            }
         } catch (err) {
             console.error("Error purchasing plan:", err);
             setError(err.response?.data?.message || "Failed to purchase plan. Please try again.");

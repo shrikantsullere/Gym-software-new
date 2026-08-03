@@ -2150,8 +2150,6 @@ const handleDownloadReceipt = async (member) => {
                       >
                         <option value="cash">Cash</option>
                         <option value="upi">UPI</option>
-                        <option value="card">Card</option>
-                        <option value="bank">Bank Transfer</option>
                       </select>
                     </div>
                     {/* <div className="col-12 col-md-6">
@@ -2627,9 +2625,7 @@ const handleDownloadReceipt = async (member) => {
                       }
                     >
                       <option value="cash">Cash</option>
-                      <option value="card">Card</option>
                       <option value="upi">UPI</option>
-                      <option value="bank">Bank Transfer</option>
                     </select>
                   </div>
                   <div className="mb-3">

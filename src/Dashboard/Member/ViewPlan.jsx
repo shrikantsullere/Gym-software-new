@@ -1601,9 +1601,7 @@ const ViewPlans = () => {
                 required
               >
                 <option value="Cash">Cash</option>
-                <option value="Card">Card</option>
                 <option value="UPI">UPI</option>
-                <option value="Net Banking">Net Banking</option>
               </Form.Select>
             </Form.Group>
 

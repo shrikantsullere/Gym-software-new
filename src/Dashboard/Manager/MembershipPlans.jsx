@@ -493,7 +493,6 @@ const MembershipPlans = () => {
                         onChange={handleAssignFormChange}
                       >
                         <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
                         <option value="UPI">UPI</option>
                       </select>
                     </div>

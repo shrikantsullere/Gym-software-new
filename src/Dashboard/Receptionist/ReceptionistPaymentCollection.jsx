@@ -894,9 +894,7 @@ const ReceptionistPaymentCollection = () => {
                         onChange={(e) => setNewPayment({...newPayment, paymentMode: e.target.value})}
                         disabled={paymentModalType === 'view'}
                       >
-                        <option value="Razorpay">Razorpay</option>
                         <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
                         <option value="UPI">UPI</option>
                       </select>
                     </div>

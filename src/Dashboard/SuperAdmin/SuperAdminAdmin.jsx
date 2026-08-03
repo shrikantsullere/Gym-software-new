@@ -87,6 +87,17 @@ const SuperAdminAdmin = () => {
     fetchBranches();
   }, []);
 
+  // 🔁 LOAD RAZORPAY
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const getBranchNameById = (branchId) => {
     if (!branchId) return "Not Assigned";
     const branch = branches.find((b) => b.id === branchId);
@@ -403,7 +414,6 @@ const exportMembersToPDF = async () => {
       formData.append("subscriptionPlan", payload.subscriptionPlan || "Basic");
       formData.append("licenseExpiryDate", payload.licenseExpiryDate || "");
 
-
       if (modalType === "add") {
         formData.append("password", payload.password);
       }
@@ -412,31 +422,91 @@ const exportMembersToPDF = async () => {
         formData.append("profileImage", profileImageFile);
       }
 
-      let response;
-      if (modalType === "add") {
-        response = await axiosInstance.post("/auth/register", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else if (modalType === "edit" && selectedAdmin) {
-        response = await axiosInstance.put(`/auth/user/${selectedAdmin.id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
-
-      if (response?.data?.success) {
+      const executeRegistration = async (finalFormData) => {
+        let response;
         if (modalType === "add") {
-          setAdmins([response.data.user, ...admins]);
-          alert("New admin added successfully!");
-        } else {
-          const updatedAdmins = admins.map((admin) =>
-            admin.id === selectedAdmin.id ? response.data.user : admin
-          );
-          setAdmins(updatedAdmins);
-          alert("Admin updated successfully!");
+          response = await axiosInstance.post("/auth/register", finalFormData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } else if (modalType === "edit" && selectedAdmin) {
+          response = await axiosInstance.put(`/auth/user/${selectedAdmin.id}`, finalFormData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
         }
-        closeModal();
+
+        if (response?.data?.success) {
+          if (modalType === "add") {
+            setAdmins([response.data.user, ...admins]);
+            alert("New admin added successfully!");
+          } else {
+            const updatedAdmins = admins.map((admin) =>
+              admin.id === selectedAdmin.id ? response.data.user : admin
+            );
+            setAdmins(updatedAdmins);
+            alert("Admin updated successfully!");
+          }
+          closeModal();
+        } else {
+          throw new Error("Operation failed");
+        }
+      };
+
+      if (modalType === "add" && payload.paymentMethod === "Razorpay") {
+        // Razorpay Flow
+        const amount = parseFloat(payload.planPrice) || 0;
+        if (amount <= 0) {
+          alert("Cannot process Razorpay for a 0 amount plan.");
+          return;
+        }
+
+        const orderRes = await axiosInstance.post("/purchases/create-razorpay-order", { amount });
+        if (!orderRes.data.success) {
+          throw new Error(orderRes.data.message || "Failed to initialize payment");
+        }
+
+        const { order, key, isMock } = orderRes.data;
+
+        if (isMock) {
+          formData.append("paymentMethod", "Razorpay");
+          formData.append("razorpay_order_id", order.id);
+          formData.append("razorpay_payment_id", "pay_mock_" + Date.now());
+          formData.append("razorpay_signature", "mock_signature");
+          await executeRegistration(formData);
+          return;
+        }
+
+        const options = {
+          key: key,
+          amount: order.amount,
+          currency: order.currency,
+          name: "Gym SaaS Software",
+          description: `Admin Subscription: ${payload.planName}`,
+          order_id: order.id,
+          handler: async function (response) {
+            try {
+              formData.append("paymentMethod", "Razorpay");
+              formData.append("razorpay_order_id", response.razorpay_order_id);
+              formData.append("razorpay_payment_id", response.razorpay_payment_id);
+              formData.append("razorpay_signature", response.razorpay_signature);
+              await executeRegistration(formData);
+            } catch (vErr) {
+              console.error("Verification error:", vErr);
+              alert("Error verifying payment and creating admin.");
+            }
+          },
+          theme: { color: "#6EB2CC" }
+        };
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
+
+      } else if (modalType === "add") {
+        // Cash Flow
+        formData.append("paymentMethod", "Cash");
+        formData.append("transactionId", `CASH-${Date.now()}`);
+        await executeRegistration(formData);
       } else {
-        throw new Error("Operation failed");
+        // Edit mode
+        await executeRegistration(formData);
       }
     } catch (error) {
       console.error("Error saving admin:", error);
@@ -846,6 +916,7 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
     licenseExpiryDate: admin?.licenseExpiryDate
       ? new Date(admin.licenseExpiryDate).toISOString().split("T")[0]
       : "",
+    paymentMethod: "Cash",
   });
 
   const [profileImageFile, setProfileImageFile] = useState(null);
@@ -1302,6 +1373,28 @@ const AdminForm = ({ mode, admin, onCancel, onSubmit, plans, loadingPlans, branc
           </div>
         </div>
       </div>
+
+      {/* Payment Information */}
+      {isAdd && (
+        <div className="mb-4">
+          <h6 className="fw-bold mb-3 text-primary">Payment Information</h6>
+          <div className="row g-2">
+            <div className="col-12 col-md-6">
+              <label className="form-label fs-6">Payment Mode *</label>
+              <select
+                name="paymentMethod"
+                className="form-select form-select-sm"
+                value={formData.paymentMethod}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="Cash">Cash</option>
+                <option value="Razorpay">Razorpay (Online)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status */}
       <div className="d-flex align-items-center mb-3">

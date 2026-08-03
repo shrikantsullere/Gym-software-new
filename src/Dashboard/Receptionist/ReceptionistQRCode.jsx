@@ -17,6 +17,7 @@ const ReceptionistQRCode = () => {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -26,7 +27,7 @@ const ReceptionistQRCode = () => {
   // Fetch attendance data
   useEffect(() => {
     fetchAttendanceData();
-  }, [memberId, branchId]);
+  }, [memberId, branchId, selectedDate]);
 
   // Function to fetch attendance data
   const fetchAttendanceData = async () => {
@@ -34,8 +35,8 @@ const ReceptionistQRCode = () => {
       setLoading(true);
       setError(null);
 
-      // Using API endpoint for member attendance
-      const response = await axiosInstance.get(`memberattendence/${memberId}`);
+      // Using API endpoint for daily member attendance for the branch
+      const response = await axiosInstance.get(`memberattendence/daily?branchId=${branchId}&date=${selectedDate}`);
       const data = response.data;
 
       if (data.success && data.attendance) {
@@ -281,7 +282,14 @@ const ReceptionistQRCode = () => {
         <>
           {/* Filters Row */}
           <Row className="mb-4 g-2 g-md-3 align-items-center">
-            <Col xs={12} sm={6} md={4}>
+            <Col xs={12} sm={4} md={3}>
+              <Form.Control
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+            </Col>
+            <Col xs={12} sm={4} md={3}>
               <Form.Control
                 type="text"
                 placeholder="Filter by Member ID"
@@ -291,7 +299,7 @@ const ReceptionistQRCode = () => {
                 }
               />
             </Col>
-            <Col xs={12} sm={6} md={4}>
+            <Col xs={12} sm={4} md={3}>
               <Form.Control
                 type="text"
                 placeholder="Filter by Member Name"
@@ -301,7 +309,7 @@ const ReceptionistQRCode = () => {
                 }
               />
             </Col>
-            <Col xs={12} sm={6} md={4} className="d-flex justify-content-start justify-content-md-end">
+            <Col xs={12} sm={12} md={3} className="d-flex justify-content-start justify-content-md-end">
               {/* Export Data Dropdown */}
               <div className="dropdown">
                 <button

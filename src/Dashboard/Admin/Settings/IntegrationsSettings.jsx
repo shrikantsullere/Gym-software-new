@@ -97,50 +97,78 @@ const IntegrationsSettings = () => {
         </Alert>
       )}
 
-      {/* RAZORPAY */}
+      {/* MANUAL UPI / CASH PAYMENT SETTINGS */}
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-1">
-          <h5 className="fw-bold mb-0">Razorpay Payment Gateway</h5>
-          <Form.Check 
-            type="switch"
-            id="paymentGatewayEnabled"
-            name="paymentGatewayEnabled"
-            label={integrations.paymentGatewayEnabled ? "Enabled" : "Disabled"}
-            checked={integrations.paymentGatewayEnabled}
-            onChange={handleChange}
-          />
+          <h5 className="fw-bold mb-0">Manual Payment Verification (UPI / Cash)</h5>
         </div>
-        <p className="text-muted small">Configure your API keys to accept online payments from your members.</p>
+        <p className="text-muted small">Configure your UPI details. Members will pay manually and submit the UTR for your verification.</p>
       </div>
       
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-bold">Razorpay Key ID</Form.Label>
-        <Form.Control
-          type="text"
-          name="razorpayKeyId"
-          value={integrations.razorpayKeyId || ""}
-          onChange={handleChange}
-          placeholder="rzp_live_..."
-        />
-      </Form.Group>
+      <div className="row">
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold">UPI QR Code URL (Image)</Form.Label>
+            <Form.Control
+              type="text"
+              name="upiQrCode"
+              value={integrations.upiQrCode || ""}
+              onChange={handleChange}
+              placeholder="https://..."
+            />
+            <Form.Text className="text-muted">Upload an image of your QR code to an image hosting service and paste the URL here.</Form.Text>
+          </Form.Group>
+        </div>
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold">UPI ID (Optional)</Form.Label>
+            <Form.Control
+              type="text"
+              name="upiId"
+              value={integrations.upiId || ""}
+              onChange={handleChange}
+              placeholder="e.g. gym@ybl"
+            />
+          </Form.Group>
+        </div>
+      </div>
 
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-bold">Razorpay Key Secret</Form.Label>
-        <Form.Control
-          type="password"
-          name="razorpaySecret"
-          value={integrations.razorpaySecret || ""}
-          onChange={handleChange}
-          placeholder="Enter Key Secret"
-        />
-      </Form.Group>
+      <div className="row">
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold">Account Holder Name (Optional)</Form.Label>
+            <Form.Control
+              type="text"
+              name="upiAccountHolder"
+              value={integrations.upiAccountHolder || ""}
+              onChange={handleChange}
+              placeholder="e.g. John Fitness Club"
+            />
+          </Form.Group>
+        </div>
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold">Instructions (Optional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              name="paymentInstructions"
+              value={integrations.paymentInstructions || ""}
+              onChange={handleChange}
+              placeholder="e.g. After payment, enter your UTR Number."
+            />
+          </Form.Group>
+        </div>
+      </div>
+
       <div className="d-flex gap-2 justify-content-end mb-4">
-        <Button onClick={() => handleUpdate("razorpay", {
-          razorpayKeyId: integrations.razorpayKeyId,
-          razorpaySecret: integrations.razorpaySecret,
-          paymentGatewayEnabled: integrations.paymentGatewayEnabled
-        })} disabled={updating || testing}>
-          Save Razorpay
+        <Button onClick={() => handleUpdate("upi", {
+          upiQrCode: integrations.upiQrCode,
+          upiId: integrations.upiId,
+          upiAccountHolder: integrations.upiAccountHolder,
+          paymentInstructions: integrations.paymentInstructions
+        })} disabled={updating}>
+          Save Payment Settings
         </Button>
       </div>
 

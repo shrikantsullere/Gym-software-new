@@ -265,6 +265,50 @@ const MemberDashboard = () => {
             </div>
           </div>
         </div>
+
+
+        {/* Recent Payments Section */}
+        {dashboardData?.recentPayments && dashboardData.recentPayments.length > 0 && (
+          <div className="row mt-4">
+            <div className="col-12">
+              <div className="card shadow-sm border-0">
+                <div className="card-header bg-white border-0 pt-4 pb-0">
+                  <h3 className="h5 fw-semibold mb-0">Recent Payments</h3>
+                </div>
+                <div className="card-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover align-middle mb-0">
+                      <thead className="bg-light">
+                        <tr>
+                          <th className="fw-semibold">Invoice No</th>
+                          <th className="fw-semibold">Date</th>
+                          <th className="fw-semibold">Amount</th>
+                          <th className="fw-semibold">Mode</th>
+                          <th className="fw-semibold">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboardData.recentPayments.map(payment => (
+                          <tr key={payment.id}>
+                            <td>{payment.invoiceNo}</td>
+                            <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                            <td className="fw-bold">₹{payment.amount}</td>
+                            <td>{payment.paymentMode}</td>
+                            <td>
+                              <span className={`badge ${payment.status === 'Paid' || payment.status === 'Approved' ? 'bg-success' : payment.status === 'Pending' ? 'bg-warning' : 'bg-danger'}`}>
+                                {payment.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -41,6 +41,12 @@ const ReceptionistPaymentCollection = () => {
   const [attendanceEntriesPerPage, setAttendanceEntriesPerPage] = useState(10);
   const [attendanceCurrentPage, setAttendanceCurrentPage] = useState(1);
   
+  // Filter States for Payment & Attendance
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All"); // "All" or "Pending"
+  
   // Get User Details
   useEffect(() => {
     try {
@@ -94,17 +100,45 @@ const ReceptionistPaymentCollection = () => {
     fetchData();
   }, [activeTab, adminId, branchId]);
 
+  // Apply filters locally
+  const filteredPayments = payments.filter(p => {
+    let match = true;
+    if (searchQuery) match = match && (p.memberName?.toLowerCase().includes(searchQuery.toLowerCase()) || p.invoiceNo?.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (fromDate) match = match && new Date(p.paymentDate) >= new Date(fromDate);
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      match = match && new Date(p.paymentDate) <= to;
+    }
+    if (statusFilter !== "All") {
+      match = match && p.status === statusFilter;
+    }
+    return match;
+  });
+
+  const filteredAttendance = attendanceRecords.filter(a => {
+    let match = true;
+    if (searchQuery) match = match && a.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    if (fromDate) match = match && new Date(a.checkIn || a.date) >= new Date(fromDate);
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      match = match && new Date(a.checkIn || a.date) <= to;
+    }
+    return match;
+  });
+
   // Payment pagination logic
   const paymentIndexOfLastEntry = paymentCurrentPage * paymentEntriesPerPage;
   const paymentIndexOfFirstEntry = paymentIndexOfLastEntry - paymentEntriesPerPage;
-  const currentPayments = payments.slice(paymentIndexOfFirstEntry, paymentIndexOfLastEntry);
-  const paymentTotalPages = Math.max(1, Math.ceil(payments.length / paymentEntriesPerPage));
+  const currentPayments = filteredPayments.slice(paymentIndexOfFirstEntry, paymentIndexOfLastEntry);
+  const paymentTotalPages = Math.max(1, Math.ceil(filteredPayments.length / paymentEntriesPerPage));
   
   // Attendance pagination logic
   const attendanceIndexOfLastEntry = attendanceCurrentPage * attendanceEntriesPerPage;
   const attendanceIndexOfFirstEntry = attendanceIndexOfLastEntry - attendanceEntriesPerPage;
-  const currentAttendanceRecords = attendanceRecords.slice(attendanceIndexOfFirstEntry, attendanceIndexOfLastEntry);
-  const attendanceTotalPages = Math.max(1, Math.ceil(attendanceRecords.length / attendanceEntriesPerPage));
+  const currentAttendanceRecords = filteredAttendance.slice(attendanceIndexOfFirstEntry, attendanceIndexOfLastEntry);
+  const attendanceTotalPages = Math.max(1, Math.ceil(filteredAttendance.length / attendanceEntriesPerPage));
   
   const handlePaymentEntriesChange = (e) => {
     setPaymentEntriesPerPage(parseInt(e.target.value));
@@ -179,9 +213,40 @@ const ReceptionistPaymentCollection = () => {
         const refreshRes = await axiosInstance.get(`/payments/branch/${branchId}?adminId=${adminId}`);
         if(refreshRes.data.success) setPayments(refreshRes.data.payments || refreshRes.data.data || []);
       }
-    } catch (error) {
-      console.error("Payment submission failed:", error);
-      alert(error.response?.data?.message || "Failed to add payment. Please check details.");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Error recording payment');
+    }
+  };
+
+  const handleApprovePayment = async () => {
+    if(!window.confirm("Approve this payment?")) return;
+    try {
+      const res = await axiosInstance.post('/payments/verify-manual', { paymentId: selectedPayment.id, action: 'Approve' });
+      if(res.data.success) {
+        alert("Payment Approved!");
+        closePaymentModal();
+        setActiveTab(''); // hack to trigger reload
+        setTimeout(() => setActiveTab('payment'), 50);
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Approval Failed');
+    }
+  };
+
+  const handleRejectPayment = async () => {
+    const remark = window.prompt("Enter rejection remark (optional):");
+    if (remark === null) return; // Cancelled
+    try {
+      const res = await axiosInstance.post('/payments/verify-manual', { paymentId: selectedPayment.id, action: 'Reject', rejectionRemarks: remark });
+      if(res.data.success) {
+        alert("Payment Rejected!");
+        closePaymentModal();
+        setActiveTab(''); // hack to trigger reload
+        setTimeout(() => setActiveTab('payment'), 50);
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Rejection Failed');
     }
   };
 
@@ -226,6 +291,13 @@ const ReceptionistPaymentCollection = () => {
     if(!dateString) return "—";
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  // Format time only
+  const formatTimeOnly = (dateString) => {
+    if(!dateString) return "—";
+    const options = { hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleTimeString('en-US', options);
   };
 
   // When plan is selected, auto-fill amount
@@ -426,6 +498,40 @@ const ReceptionistPaymentCollection = () => {
                   </div>
                 </div>
 
+                {/* Payment Filters Section */}
+                <div className="row mb-4 align-items-center bg-light p-3 rounded mx-0 shadow-sm border">
+                  <div className="col-12 col-md-4 mb-3 mb-md-0">
+                    <input className="form-control" type="text" placeholder="Search Member or Invoice..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  </div>
+                  <div className="col-12 col-md-3 mb-3 mb-md-0 d-flex align-items-center gap-2">
+                    <label className="fw-semibold text-muted mb-0" style={{whiteSpace: 'nowrap'}}>From:</label>
+                    <input className="form-control" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                  </div>
+                  <div className="col-12 col-md-3 mb-3 mb-md-0 d-flex align-items-center gap-2">
+                    <label className="fw-semibold text-muted mb-0" style={{whiteSpace: 'nowrap'}}>To:</label>
+                    <input className="form-control" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                  </div>
+                  <div className="col-12 col-md-2 text-md-end">
+                    <button className="btn btn-outline-secondary btn-sm" onClick={() => { setSearchQuery(""); setFromDate(""); setToDate(""); setStatusFilter("All"); }}>Clear</button>
+                  </div>
+                </div>
+
+                {/* Status Tabs for Payments */}
+                <div className="d-flex gap-2 mb-3">
+                  <button 
+                    className={`btn btn-sm ${statusFilter === 'All' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setStatusFilter('All')}
+                  >
+                    All Payments
+                  </button>
+                  <button 
+                    className={`btn btn-sm ${statusFilter === 'Pending' ? 'btn-warning' : 'btn-outline-warning'}`}
+                    onClick={() => setStatusFilter('Pending')}
+                  >
+                    Pending Approvals ({payments.filter(p => p.status === 'Pending').length})
+                  </button>
+                </div>
+
                 {/* Show Entries Dropdown */}
                 <div className="row mb-3">
                   <div className="col-12 col-md-6">
@@ -488,7 +594,7 @@ const ReceptionistPaymentCollection = () => {
                 {/* Payment Pagination */}
                 <div className="row mt-3">
                   <div className="col-12 col-md-5">
-                    <span>Showing {Math.min(paymentIndexOfFirstEntry + 1, payments.length)} to {Math.min(paymentIndexOfLastEntry, payments.length)} of {payments.length} entries</span>
+                    <span>Showing {Math.min(paymentIndexOfFirstEntry + 1, filteredPayments.length)} to {Math.min(paymentIndexOfLastEntry, filteredPayments.length)} of {filteredPayments.length} entries</span>
                   </div>
                   <div className="col-12 col-md-7">
                     <nav className="d-flex justify-content-md-end">
@@ -586,6 +692,24 @@ const ReceptionistPaymentCollection = () => {
                   </div>
                 </div>
 
+                {/* Filters Section */}
+                <div className="row mb-4 align-items-center bg-light p-3 rounded mx-0 shadow-sm border">
+                  <div className="col-12 col-md-4 mb-3 mb-md-0">
+                    <input className="form-control" type="text" placeholder="Search Member Name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  </div>
+                  <div className="col-12 col-md-3 mb-3 mb-md-0 d-flex align-items-center gap-2">
+                    <label className="fw-semibold text-muted mb-0" style={{whiteSpace: 'nowrap'}}>From:</label>
+                    <input className="form-control" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                  </div>
+                  <div className="col-12 col-md-3 mb-3 mb-md-0 d-flex align-items-center gap-2">
+                    <label className="fw-semibold text-muted mb-0" style={{whiteSpace: 'nowrap'}}>To:</label>
+                    <input className="form-control" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                  </div>
+                  <div className="col-12 col-md-2 text-md-end">
+                    <button className="btn btn-outline-secondary btn-sm" onClick={() => { setSearchQuery(""); setFromDate(""); setToDate(""); }}>Clear</button>
+                  </div>
+                </div>
+
                 <div className="card shadow-sm border-0">
                   <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0">
@@ -594,18 +718,22 @@ const ReceptionistPaymentCollection = () => {
                           <th className="fw-semibold">MEMBER NAME</th>
                           <th className="fw-semibold">DATE</th>
                           <th className="fw-semibold">ROLE</th>
+                          <th className="fw-semibold">CHECK-IN</th>
+                          <th className="fw-semibold">CHECK-OUT</th>
                           <th className="fw-semibold">STATUS</th>
                           <th className="fw-semibold">MODE</th>
                         </tr>
                       </thead>
                       <tbody>
                         {currentAttendanceRecords.length === 0 ? (
-                          <tr><td colSpan="5" className="text-center py-4">No attendance records found</td></tr>
+                          <tr><td colSpan="7" className="text-center py-4">No attendance records found</td></tr>
                         ) : currentAttendanceRecords.map((record) => (
                           <tr key={record.id}>
                             <td><strong>{record.name || 'Unknown'}</strong></td>
                             <td>{formatDate(record.checkIn || record.date)}</td>
                             <td>{record.role || 'Member'}</td>
+                            <td>{formatTimeOnly(record.checkIn)}</td>
+                            <td>{formatTimeOnly(record.checkOut)}</td>
                             <td>{getAttendanceStatusBadge(record.status)}</td>
                             <td>{record.mode || 'QR'}</td>
                           </tr>
@@ -618,7 +746,7 @@ const ReceptionistPaymentCollection = () => {
                 {/* Attendance Pagination */}
                 <div className="row mt-3">
                   <div className="col-12 col-md-5">
-                    <span>Showing {Math.min(attendanceIndexOfFirstEntry + 1, attendanceRecords.length)} to {Math.min(attendanceIndexOfLastEntry, attendanceRecords.length)} of {attendanceRecords.length} entries</span>
+                    <span>Showing {Math.min(attendanceIndexOfFirstEntry + 1, filteredAttendance.length)} to {Math.min(attendanceIndexOfLastEntry, filteredAttendance.length)} of {filteredAttendance.length} entries</span>
                   </div>
                   <div className="col-12 col-md-7">
                     <nav className="d-flex justify-content-md-end">
@@ -807,6 +935,23 @@ const ReceptionistPaymentCollection = () => {
                       </div>
                     </div>
                   )}
+
+                  {paymentModalType === 'view' && selectedPayment?.transactionId && (
+                    <div className="row mb-3 g-3">
+                      <div className="col-12 col-md-6">
+                        <label className="form-label">Transaction / UTR ID</label>
+                        <input type="text" className="form-control rounded-3" value={selectedPayment.transactionId} readOnly />
+                      </div>
+                      {selectedPayment?.paymentProofImage && (
+                        <div className="col-12 col-md-6">
+                          <label className="form-label">Payment Proof</label>
+                          <div>
+                            <a href={selectedPayment.paymentProofImage} target="_blank" rel="noreferrer" className="btn btn-sm btn-info text-white">View Image</a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   </>
                   )}
 
@@ -814,6 +959,12 @@ const ReceptionistPaymentCollection = () => {
                     <button type="button" className="btn btn-light me-2" onClick={closePaymentModal}>Close</button>
                     {paymentModalType === 'add' && (
                       <button type="submit" className="btn text-white px-4" style={{ backgroundColor: '#6EB2CC' }}>Save Payment</button>
+                    )}
+                    {paymentModalType === 'view' && selectedPayment?.status === 'Pending' && (
+                      <>
+                        <button type="button" className="btn btn-success px-4 me-2" onClick={handleApprovePayment}>Approve Payment</button>
+                        <button type="button" className="btn btn-danger px-4" onClick={handleRejectPayment}>Reject</button>
+                      </>
                     )}
                   </div>
                 </form>

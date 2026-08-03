@@ -22,7 +22,10 @@ const DynamicPage = () => {
     email: '',
     gender: '', // 👈 existing field
     address: '', // 👈 new field
-    dateOfBirth: '' // 👈 new field
+    dateOfBirth: '', // 👈 new field
+    paymentMode: 'Cash', // UPI or Cash
+    transactionId: '',
+    paymentProofImage: null
   });
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -360,22 +363,30 @@ const DynamicPage = () => {
     setBookingMessage('');
 
     try {
-      const payload = {
-        fullName: fullName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        gender: gender, // ✅ Included in payload
-        address: address.trim(),
-        dateOfBirth: dateOfBirth,
-        planId: Number(selectedPlan.id),
-        price: Number(price),
-        adminId: Number(adminId),
-        upiId: upi.trim(),
-      };
+      const formData = new FormData();
+      formData.append('fullName', fullName.trim());
+      formData.append('email', email.trim());
+      formData.append('phone', phone.trim());
+      formData.append('gender', gender);
+      formData.append('address', address.trim());
+      formData.append('dateOfBirth', dateOfBirth);
+      formData.append('planId', Number(selectedPlan.id));
+      formData.append('amount', Number(price));
+      formData.append('adminId', Number(adminId));
+      formData.append('paymentMode', paymentDetails.paymentMode);
+      
+      if (paymentDetails.paymentMode === 'UPI') {
+        formData.append('transactionId', paymentDetails.transactionId.trim());
+        if (paymentDetails.paymentProofImage) {
+          formData.append('paymentProofImage', paymentDetails.paymentProofImage);
+        }
+      }
 
-      console.log('Sending booking payload:', payload);
+      console.log('Sending booking payload...');
 
-      const response = await axiosInstance.post('booking/create', payload);
+      const response = await axiosInstance.post('payments/public/submit', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (response.data.success || response.status === 200) {
         setBookingStatus('success');
@@ -386,7 +397,7 @@ const DynamicPage = () => {
         
         setTimeout(() => {
           setShowPaymentModal(false);
-          setPaymentDetails({ upi: '', fullName: '', phone: '', email: '', gender: '' });
+          setPaymentDetails({ upi: '', fullName: '', phone: '', email: '', gender: '', address: '', dateOfBirth: '', paymentMode: 'Cash', transactionId: '', paymentProofImage: null });
           setSelectedPlan(null);
         }, 2000);
       } else {
@@ -689,23 +700,59 @@ const DynamicPage = () => {
                 />
               </Form.Group>
 
-              {/* UPI */}
+              {/* Payment Mode */}
               <Form.Group className="mb-3">
                 <Form.Label style={{ color: '#333', fontWeight: '600', fontSize: '1rem' }}>
-                  UPI ID
+                  Payment Method
                 </Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="yourname@upi"
-                  value={paymentDetails.upi}
-                  onChange={(e) => setPaymentDetails(prev => ({ ...prev, upi: e.target.value }))}
-                  required
+                <Form.Select
+                  value={paymentDetails.paymentMode}
+                  onChange={(e) => setPaymentDetails(prev => ({ ...prev, paymentMode: e.target.value }))}
                   disabled={bookingStatus === 'success'}
-                />
-                <Form.Text className="text-muted">
-                  e.g., yourname@upi, yournumber@ybl
-                </Form.Text>
+                >
+                  <option value="Cash">Cash (Pay at Gym)</option>
+                  <option value="UPI">UPI (Pay Now)</option>
+                </Form.Select>
               </Form.Group>
+
+              {paymentDetails.paymentMode === 'UPI' && (
+                <div className="p-3 mb-3" style={{ border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fff' }}>
+                  <h6 className="fw-bold mb-2">Scan to Pay</h6>
+                  {settings?.upiQrCode && (
+                    <div className="text-center mb-3">
+                      <img src={settings.upiQrCode} alt="UPI QR Code" style={{ maxWidth: '200px', height: 'auto' }} />
+                    </div>
+                  )}
+                  {settings?.upiId && <p className="mb-1"><strong>UPI ID:</strong> {settings.upiId}</p>}
+                  {settings?.upiAccountHolder && <p className="mb-1"><strong>Account Name:</strong> {settings.upiAccountHolder}</p>}
+                  {settings?.paymentInstructions && <p className="mb-3 text-muted small">{settings.paymentInstructions}</p>}
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ color: '#333', fontWeight: '600', fontSize: '0.9rem' }}>
+                      Transaction ID / UTR Number
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter UTR after payment"
+                      value={paymentDetails.transactionId}
+                      onChange={(e) => setPaymentDetails(prev => ({ ...prev, transactionId: e.target.value }))}
+                      required={paymentDetails.paymentMode === 'UPI'}
+                      disabled={bookingStatus === 'success'}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ color: '#333', fontWeight: '600', fontSize: '0.9rem' }}>
+                      Payment Screenshot (Optional)
+                    </Form.Label>
+                    <Form.Control
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setPaymentDetails(prev => ({ ...prev, paymentProofImage: e.target.files[0] }))}
+                      disabled={bookingStatus === 'success'}
+                    />
+                  </Form.Group>
+                </div>
+              )}
 
               <div className="d-flex justify-content-center">
                 <Button

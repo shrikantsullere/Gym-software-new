@@ -199,6 +199,7 @@ const Membership = () => {
                                         <th className="fw-medium py-3">Member</th>
                                         <th className="fw-medium py-3">Plan</th>
                                         <th className="fw-medium py-3">Amount</th>
+                                        <th className="fw-medium py-3">Payment Details</th>
                                         <th className="fw-medium py-3">Collected By</th>
                                     </tr>
                                 </thead>
@@ -231,6 +232,23 @@ const Membership = () => {
                                             </td>
                                             <td>
                                                 <span className="fw-bold text-dark">₹{payment.amount}</span>
+                                            </td>
+                                            <td>
+                                                <div className="d-flex flex-column">
+                                                    <span className={`badge ${payment.paymentMode?.toLowerCase() === 'upi' ? 'bg-primary' : 'bg-success'} text-white mb-1`} style={{ width: 'fit-content' }}>
+                                                        {payment.paymentMode || 'Cash'}
+                                                    </span>
+                                                    {payment.transactionId && (
+                                                        <small className="text-muted text-break" style={{ fontSize: '0.75rem' }}>
+                                                            UTR: {payment.transactionId}
+                                                        </small>
+                                                    )}
+                                                    {payment.paymentProofImage && (
+                                                        <a href={payment.paymentProofImage} target="_blank" rel="noopener noreferrer" className="small text-decoration-none mt-1" style={{ fontSize: '0.75rem' }}>
+                                                            <FaDownload size={10} className="me-1" /> View Proof
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td>
                                                 <span className="d-block small text-dark">{payment.collectedByName}</span>

@@ -12,21 +12,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Test credentials for the existing roles in database
-  const testAccounts = [
-    { role: "Super Admin", email: "superadmin@gmail.com", password: "123456" },
-    { role: "Gym Owner (Admin)", email: "admin@gmail.com", password: "123456" },
-    { role: "Member (Customer)", email: "member@gmail.com", password: "123456" },
-    { role: "General Trainer", email: "generaltrainer1@gym.com", password: "123456" },
-    { role: "Personal Trainer", email: "personal@gmail.com", password: "123456" },
-    { role: "Receptionist", email: "receptionist@gmail.com", password: "123456" },
-    { role: "Sales Agent", email: "salesagent@gmail.com", password: "123456" },
-  ];
 
-  const fillCredentials = (testEmail, testPwd) => {
-    setEmail(testEmail);
-    setPassword(testPwd);
-  };
 
   const roleRedirectMap = {
     SUPERADMIN: "/superadmin/dashboard",
@@ -187,28 +173,6 @@ const Login = () => {
                   {loading ? "Logging in..." : "Login"}
                 </button>
               </form>
-
-              {/* Quick Login Section for Testing */}
-              <div className="mt-4 pt-3 border-top">
-                <h6 className="text-center fw-bold text-muted mb-3">Quick Login (Actual Roles)</h6>
-                <div className="d-flex flex-wrap gap-2 justify-content-center">
-                  {testAccounts.map((acc, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={() => fillCredentials(acc.email, acc.password)}
-                      title={`Email: ${acc.email} | Pass: ${acc.password}`}
-                    >
-                      {acc.role}
-                    </button>
-                  ))}
-                </div>
-                <small className="d-block text-center text-muted mt-2" style={{fontSize: "12px"}}>
-                  Click a role to autofill its Email & Password.
-                </small>
-              </div>
-
             </div>
           </div>
         </div>

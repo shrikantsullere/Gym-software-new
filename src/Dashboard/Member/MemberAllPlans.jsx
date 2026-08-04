@@ -742,7 +742,7 @@ const MemberAllPlans = () => {
                                         setBookingForm({ ...bookingForm, paymentMethod: e.target.value })
                                     }
                                 >
-                                    <option value="upi">Offline UPI (Pay via QR)</option>
+                                    <option value="upi">Online UPI (Pay via QR)</option>
                                     <option value="cash">Cash (Pay at Gym)</option>
                                 </Form.Select>
                             </Form.Group>
